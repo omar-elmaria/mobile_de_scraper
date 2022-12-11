@@ -26,6 +26,7 @@ class MobileDeSpider(scrapy.Spider):
     name = "mobile_de_spider" # Define the name of the spider
     custom_settings=custom_settings_dict # Define the custom settings of the spider
     url = "https://suchen.mobile.de/fahrzeuge/search.html?dam=0&isSearchRequest=true&ms=8600%3B2%3B%3B&ref=quickSearch&sb=rel&vc=Car" # Define the URL to be crawled
+    custom_settings["FEEDS"] = {"output.json": {"format": "json", "overwrite": True}}
 
     # Send an initial request to the URL to be crawled
     def start_requests(self):
@@ -99,7 +100,7 @@ class MobileDeSpider(scrapy.Spider):
                     return int(command)
                 except TypeError as err:
                     print(err)
-                    return None
+                    return ""
 
             yield {
                 "marke": "Ferrari",
