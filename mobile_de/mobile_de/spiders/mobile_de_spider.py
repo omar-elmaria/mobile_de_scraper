@@ -118,7 +118,7 @@ class MobileDeSpider(scrapy.Spider):
                 'getriebe': response.xpath("//div[text()='Getriebe']/following-sibling::div/text()").get(),
                 'leistung': handle_parse_errors(command=re.findall(pattern="(?<=\()\d+", string=response.xpath("//div[text()='Leistung']/following-sibling::div/text()").get())[0]),
                 'fahrzeughalter': handle_parse_errors(command=response.xpath("//div[text()='Fahrzeughalter']/following-sibling::div/text()").get()),
-                "standort": re.findall(pattern=".*(?=-)", string=response.xpath("//p[@id='seller-address']/text()").get())[0]
+                "standort": re.findall(pattern="[A-za-z]+(?=-)", string=response.xpath("//p[@id='seller-address']/text()").get())[0]
             }
             
         # Insert a new line to separate the results
