@@ -1,0 +1,5 @@
+__pycache__
+*.gdoc
+*.gsheet
+*.json
+*.env
