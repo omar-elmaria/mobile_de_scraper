@@ -31,7 +31,7 @@ class MobileDeSpider(scrapy.Spider):
     # Send an initial request to the URL to be crawled
     def start_requests(self):
         yield scrapy.Request(
-            client.scrapyGet(url=MobileDeSpider.url, country_code="de"),
+            client.scrapyGet(url=MobileDeSpider.url, country_code="eu"),
             callback=self.parse,
             dont_filter=True,  # Don't filter duplicate requests. We are sending multiple requests to overcome the captcha
             meta={"url_to_crawl": MobileDeSpider.url} # Passes the URL that we used in the scrapy.Request function to the next callback function
@@ -43,7 +43,7 @@ class MobileDeSpider(scrapy.Spider):
         if "akamai-recaptcha" in response.text:
             print(f"The bot was blocked by the website while it was trying to crawl {response.meta['url_to_crawl']}. Retrying again...\n")
             yield scrapy.Request(
-                client.scrapyGet(url=response.meta["url_to_crawl"], country_code="de"),
+                client.scrapyGet(url=response.meta["url_to_crawl"], country_code="eu"),
                 callback=self.parse,
                 dont_filter=True, # Don't filter duplicate requests. We are sending multiple requests to overcome the captcha
                 meta={"url_to_crawl": response.meta["url_to_crawl"]}
@@ -55,7 +55,7 @@ class MobileDeSpider(scrapy.Spider):
             # Send GET requests to all the listing pages from the first page until the last one
             for pg in range(1, last_page + 1):
                 yield scrapy.Request(
-                    client.scrapyGet(url=MobileDeSpider.url + f"&pageNumber={pg}", country_code="de"),
+                    client.scrapyGet(url=MobileDeSpider.url + f"&pageNumber={pg}", country_code="eu"),
                     callback=self.listing_page_parse,
                     meta={"total_num_pages": last_page, "url_to_crawl": MobileDeSpider.url + f"&pageNumber={pg}"}
                 )
@@ -65,7 +65,7 @@ class MobileDeSpider(scrapy.Spider):
         if "akamai-recaptcha" in response.text:
             print(f"The bot was blocked by the website while it was trying to crawl {response.meta['url_to_crawl']}. Retrying again...\n")
             yield scrapy.Request(
-                client.scrapyGet(url=response.meta["url_to_crawl"], country_code="de"),
+                client.scrapyGet(url=response.meta["url_to_crawl"], country_code="eu"),
                 callback=self.listing_page_parse,
                 dont_filter=True, # Don't filter duplicate requests. We are sending multiple requests to overcome the captcha
                 meta={"total_num_pages": response.meta["total_num_pages"], "url_to_crawl": response.meta["url_to_crawl"]}
@@ -75,7 +75,7 @@ class MobileDeSpider(scrapy.Spider):
             cars = response.xpath("//div[contains(@class, 'cBox-body cBox-body') and @class!='cBox-body cBox-body--topInCategory' and @class!='cBox-body cBox-body--topResultitem']")
             for car in cars:
                 yield scrapy.Request(
-                    client.scrapyGet(url=car.xpath("./a/@href").get(), country_code="de"),
+                    client.scrapyGet(url=car.xpath("./a/@href").get(), country_code="eu"),
                     callback=self.car_page_parse,
                     meta={
                         "total_num_pages": response.meta["total_num_pages"],
@@ -89,7 +89,7 @@ class MobileDeSpider(scrapy.Spider):
         if "akamai-recaptcha" in response.text or "ak-challenge-3-8.htm" in response.text or "crypto_message-3-8.htm" in response.text:
             print(f"The bot was blocked by the website while it was trying to crawl {re.findall(pattern='.*(?=&damageUnrepaired)', string=response.meta['url_to_crawl'])[0]}. Retrying again...\n")
             yield scrapy.Request(
-                client.scrapyGet(url=response.meta["url_to_crawl"], country_code="de"),
+                client.scrapyGet(url=response.meta["url_to_crawl"], country_code="eu"),
                 callback=self.car_page_parse,
                 dont_filter=True, # Don't filter duplicate requests. We are sending multiple requests to overcome the captcha
                 meta={"total_num_pages": response.meta["total_num_pages"], "page_rank": response.meta["page_rank"], "url_to_crawl": response.meta["url_to_crawl"]}
