@@ -101,24 +101,33 @@ class MobileDeSpider(scrapy.Spider):
                 except TypeError as err:
                     print(err)
                     return ""
+            
+            # Extract the vehicle description and join it
+            fahrzeug_beschreibung = response.xpath("//div[@class='g-col-12 description']//text()").getall()
+            if fahrzeug_beschreibung is not None:
+                fahrzeug_beschreibung = "\n".join(fahrzeug_beschreibung)
+            else:
+                fahrzeug_beschreibung = None
 
             yield {
                 "marke": "Ferrari",
                 "modell": "458",
                 "variante": "",
-                "url_to_crawl": response.meta["url_to_crawl"],
-                "page_rank": response.meta["page_rank"],
-                "total_num_pages": response.meta["total_num_pages"],
                 "titel": response.xpath("//h1[@id='ad-title']/text()").get() + " " + response.xpath("//div[@class='listing-subtitle']/text()").get(),
                 "form": response.xpath("//div[@id='category-v']/text()").get(),
+                "fahrzeugzustand": response.xpath("//div[@id='damageCondition-v']/text()").get(),
+                'leistung': handle_parse_errors(command=re.findall(pattern="(?<=\()\d+", string=response.xpath("//div[text()='Leistung']/following-sibling::div/text()").get())[0]),
+                'getriebe': response.xpath("//div[text()='Getriebe']/following-sibling::div/text()").get(),
                 "farbe": response.xpath("//div[@id='color-v']/text()").get(),
                 "preis": handle_parse_errors(command=''.join(re.findall(pattern="\d+", string=response.xpath("//span[@data-testid='prime-price']/text()").get()))),
                 'kilometer': handle_parse_errors(command=''.join(re.findall(pattern="\d+", string=response.xpath("//div[text()='Kilometerstand']/following-sibling::div/text()").get()))),
                 'erstzulassung': response.xpath("//div[text()='Erstzulassung']/following-sibling::div/text()").get(),
-                'getriebe': response.xpath("//div[text()='Getriebe']/following-sibling::div/text()").get(),
-                'leistung': handle_parse_errors(command=re.findall(pattern="(?<=\()\d+", string=response.xpath("//div[text()='Leistung']/following-sibling::div/text()").get())[0]),
                 'fahrzeughalter': handle_parse_errors(command=response.xpath("//div[text()='Fahrzeughalter']/following-sibling::div/text()").get()),
-                "standort": re.findall(pattern="[A-za-z]+(?=-)", string=response.xpath("//p[@id='seller-address']/text()").get())[0]
+                "standort": re.findall(pattern="[A-za-z]+(?=-)", string=response.xpath("//p[@id='seller-address']/text()").get())[0],
+                "fahrzeugbescheibung": fahrzeug_beschreibung,
+                "url_to_crawl": response.meta["url_to_crawl"],
+                "page_rank": response.meta["page_rank"],
+                "total_num_pages": response.meta["total_num_pages"],
             }
             
         # Insert a new line to separate the results
