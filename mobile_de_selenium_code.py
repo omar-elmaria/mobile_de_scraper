@@ -19,7 +19,7 @@ url = "https://suchen.mobile.de/fahrzeuge/search.html?dam=0&isSearchRequest=true
 # Set chrome options
 chrome_options = Options()
 chrome_options.add_argument('start-maximized') # Required for a maximized Viewport
-chrome_options.add_argument("--headless=chrome")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument('--no-sandbox')
 chrome_options.add_argument('--disable-gpu')
 chrome_options.add_argument("--window-size=1920x1080")
@@ -34,7 +34,7 @@ driver = webdriver.Chrome(chrome_options=chrome_options)
 driver.get(url)
 
 # Minimize the window
-driver.minimize_window()
+driver.maximize_window()
 
 # Solve the captcha using the 2captcha service
 def solve(sitekey, url):
