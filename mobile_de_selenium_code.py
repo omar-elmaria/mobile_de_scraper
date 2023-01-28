@@ -19,7 +19,10 @@ url = "https://suchen.mobile.de/fahrzeuge/search.html?dam=0&isSearchRequest=true
 # Set chrome options
 chrome_options = Options()
 chrome_options.add_argument('start-maximized') # Required for a maximized Viewport
-# chrome_options.headless = True
+chrome_options.add_argument("--headless=chrome")
+chrome_options.add_argument('--no-sandbox')
+chrome_options.add_argument('--disable-gpu')
+chrome_options.add_argument("--window-size=1920x1080")
 chrome_options.add_experimental_option('excludeSwitches', ['enable-logging', 'enable-automation'])
 chrome_options.add_experimental_option("detach", True)
 chrome_options.add_experimental_option('prefs', {'intl.accept_languages': 'en,en_US'})
