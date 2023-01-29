@@ -9,5 +9,5 @@ parallel_testing_spider.json
 sequential_testing_spider.json
 marke_and_modell.xlsx
 df_all_brands_data.json
-web-scraping-project-gcloud-credentials.json
+bq_credentials.json
 rolls_royce_and_ktm.json
