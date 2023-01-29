@@ -12,6 +12,7 @@ import time
 import json
 import re
 import pandas as pd
+from datetime import datetime
 
 # Step 1: Load environment variables
 load_dotenv()
@@ -32,10 +33,10 @@ chrome_options.add_argument('start-maximized') # Required for a maximized Viewpo
 chrome_options.add_experimental_option('excludeSwitches', ['enable-logging', 'enable-automation'])
 chrome_options.add_experimental_option("detach", True)
 chrome_options.add_experimental_option('prefs', {'intl.accept_languages': 'en,en_US'})
-# chrome_options.add_argument("--headless=new") # Operate Selenium in headless mode
-# chrome_options.add_argument('--no-sandbox')
-# chrome_options.add_argument('--disable-gpu')
-# chrome_options.add_argument("--window-size=1920x1080")
+chrome_options.add_argument("--headless=new") # Operate Selenium in headless mode
+chrome_options.add_argument('--no-sandbox')
+chrome_options.add_argument('--disable-gpu')
+chrome_options.add_argument("--window-size=1920x1080")
 
 # Step 5: Instantiate a browser object and navigate to the URL
 driver = webdriver.Chrome(chrome_options=chrome_options)
@@ -49,7 +50,6 @@ def solve_captcha(sitekey, url):
     except Exception as e:
         print(f"Captcha not solved...")
         captcha_key = None
-        exit(e)
 
     return captcha_key
 
@@ -70,14 +70,17 @@ def select_marke_modell(marke, modell):
     driver.find_element(by=By.XPATH, value="//button[@id='dsp-upper-search-btn']").click()
 
 # Step 8: Define a function to handle parsing errors on individual car pages
-def handle_none_elements(command):
+def handle_none_elements(xpath):
     try:
-        return command
+        web_element = driver.find_element(by=By.XPATH, value=xpath)
     except NoSuchElementException as err:
-        print(err)
-        return None
+        print(f"This xpath --> {xpath} was not found. Setting the result to None...")
+        return ""
+    
+    return web_element.text
 
 # Step 9.1: Navigate to the base URL from which we will start our search
+t1 = datetime.now()
 driver.get(base_url)
 print("\nNavigating to the base URL where we can apply the search criteria...")
 
@@ -86,7 +89,7 @@ driver.maximize_window()
 
 # Step 9.3: Wait for "Einverstanden" and click on it
 print("Waiting for the Einverstanden window to pop up so we can click on it...")
-WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//button[@class='sc-bczRLJ iBneUr mde-consent-accept-btn']")))
+WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, "//button[@class='sc-bczRLJ iBneUr mde-consent-accept-btn']")))
 driver.find_element(by=By.XPATH, value="//button[@class='sc-bczRLJ iBneUr mde-consent-accept-btn']").click()
 
 # Step 9.4: Apply the filters
@@ -131,7 +134,7 @@ last_page = int(last_page_web_element_list[-1].text)
 print(f"We have a total of {last_page} pages to loop through for the chosen marke and modell...")
 
 # Step 10.2: Loop through all the pages of the "marke" and "modell" combination
-all_brands_data_list = []
+all_pages_data_list = []
 for pg in range(2, last_page + 2):
     # Step 10.2.1: Get all the car URLs on the page. Don't crawl the "sponsored" or the "top in category" listings 
     print(f"Crawling the car links on page {pg - 1}...")
@@ -142,48 +145,53 @@ for pg in range(2, last_page + 2):
         car_page_url_list.append(car_page_url)
     
     # Step 10.2.2: Navigate to each individual car page and crawl the data
-    one_brand_data_list = []
+    one_page_data_list = []
     for idx, i in enumerate(car_page_url_list):
         print(f"Navigating to car page {idx + 1} out of {len(car_web_elements)} on page {pg - 1} out of {last_page}")
         driver.get(i)
 
+        # Sometimes a pop-up appears asking the user to fill in a survey. This command handles this situation
+        try:
+            WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.XPATH, "//input[@id='neinDankeDCoreOverlay']")))
+            driver.find_element(by=By.XPATH, value="//input[@id='neinDankeDCoreOverlay']").click()
+        except TimeoutException:
+            print("No survey pop-up found. Continuing as usual...")
+
         # Step 10.2.3: Extract the vehicle data
-        # Extract the vehicle description and join it
-        # fahrzeug_beschreibung = [x.get_attribute("text") for x in driver.find_elements(by=By.XPATH, value="//div[@class='g-col-12 description']")]
-        # if fahrzeug_beschreibung is not None:
-        #     fahrzeug_beschreibung = "\n".join(fahrzeug_beschreibung)
-        # else:
-        #     fahrzeug_beschreibung = None
+        # Extract the vehicle description
+        try:
+            fahrzeug_beschreibung = driver.find_element(by=By.XPATH, value="//div[@class='g-col-12 description']").get_attribute("textContent")
+        except NoSuchElementException:
+            fahrzeug_beschreibung = ""
 
         output_dict = {
             "marke": "Ferrari",
             "modell": "458",
             "variante": "",
-            "titel": handle_none_elements(command=driver.find_element(by=By.XPATH, value="//h1[@id='ad-title']").text) + " " + handle_none_elements(driver.find_element(by=By.XPATH, value="//div[@class='listing-subtitle']").text),
-            "form": handle_none_elements(command=driver.find_element(by=By.XPATH, value="//div[@id='category-v']").text),
-            "fahrzeugzustand": handle_none_elements(command=driver.find_element(by=By.XPATH, value="//div[@id='damageCondition-v']").text),
-            'leistung': handle_none_elements(command=driver.find_element(by=By.XPATH, value="//div[text()='Leistung']/following-sibling::div").text),
-            'getriebe': handle_none_elements(command=driver.find_element(by=By.XPATH, value="//div[text()='Getriebe']/following-sibling::div").text),
-            "farbe": handle_none_elements(command=driver.find_element(by=By.XPATH, value="//div[@id='color-v']").text),
-            "preis": handle_none_elements(command=driver.find_element(by=By.XPATH, value="//span[@data-testid='prime-price']")),
-            "kilometer": handle_none_elements(command=driver.find_element(by=By.XPATH, value="//div[text()='Kilometerstand']/following-sibling::div").text),
-            "erstzulassung": handle_none_elements(command=driver.find_element(by=By.XPATH, value="//div[text()='Erstzulassung']/following-sibling::div").text),
-            "fahrzeughalter": handle_none_elements(command=driver.find_element(by=By.XPATH, value="//div[text()='Fahrzeughalter']/following-sibling::div").text),
-            "standort": handle_none_elements(command=driver.find_element(by=By.XPATH, value="//p[@id='seller-address']").text),
-            # "fahrzeugbescheibung": fahrzeug_beschreibung,
+            "titel": handle_none_elements(xpath="//h1[@id='ad-title']") + " " + handle_none_elements("//div[@class='listing-subtitle']"),
+            "form": handle_none_elements(xpath="//div[@id='category-v']"),
+            "fahrzeugzustand": handle_none_elements(xpath="//div[@id='damageCondition-v']"),
+            'leistung': handle_none_elements(xpath="//div[text()='Leistung']/following-sibling::div"),
+            'getriebe': handle_none_elements(xpath="//div[text()='Getriebe']/following-sibling::div"),
+            "farbe": handle_none_elements(xpath="//div[@id='color-v']"),
+            "preis": handle_none_elements(xpath="//span[@data-testid='prime-price']"),
+            "kilometer": handle_none_elements(xpath="//div[text()='Kilometerstand']/following-sibling::div"),
+            "erstzulassung": handle_none_elements(xpath="//div[text()='Erstzulassung']/following-sibling::div"),
+            "fahrzeughalter": handle_none_elements(xpath="//div[text()='Fahrzeughalter']/following-sibling::div"),
+            "standort": handle_none_elements(xpath="//p[@id='seller-address']"),
+            "fahrzeugbescheibung": fahrzeug_beschreibung,
             "url_to_crawl": i,
             "page_rank": pg - 1,
             "total_num_pages": last_page,
         }
-        one_brand_data_list.append(output_dict)
-    df_one_brand_data = pd.concat(one_brand_data_list)
+        one_page_data_list.append(output_dict)
 
-    # Append the results to "all_brands_data_list"
-    all_brands_data_list.append(df_one_brand_data)
+    # Append the results to "all_pages_data_list"
+    all_pages_data_list.append(one_page_data_list)
 
     # Write the results to a JSON file
     with open("df_all_brands_data.json", mode="w", encoding="utf-8") as f:
-        json.dump(obj=all_brands_data_list, fp=f, ensure_ascii=False, indent=0)
+        json.dump(obj=all_pages_data_list, fp=f, ensure_ascii=False, indent=4)
     
     # Step 10.2.3: Navigate to the next page
     if pg <= last_page:
@@ -191,3 +199,22 @@ for pg in range(2, last_page + 2):
         driver.get(landing_page_url + f"&pageNumber={pg}")
     else:
         print("Reached the end of the results page...")
+
+# Step 11: Open the JSON file containing all car brands and convert it into a pandas data frame
+with open("df_all_brands_data.json", mode="r", encoding="utf-8") as f:
+    data = json.load(f)
+    f.close()
+
+df_data_all_car_brands = []
+for i in data: # Loop through every page
+    for j in i: # Loop through each car listing on a specific page
+        df_data_all_car_brands.append(j)
+
+df_data_all_car_brands = pd.DataFrame(df_data_all_car_brands)
+
+# Print the head of the data frame
+print(df_data_all_car_brands.head())
+
+# Print a status message marking the end of the script
+t2 = datetime.now()
+print(f"The script finished. It took {t2-t1} to crawl all the listings...")
