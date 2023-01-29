@@ -125,7 +125,7 @@ def crawl_func(dict_idx):
     # Step 10.3: Wait for "Einverstanden" and click on it
     print("Waiting for the Einverstanden window to pop up so we can click on it...")
     try:
-        WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, "//button[@class='sc-bczRLJ iBneUr mde-consent-accept-btn']")))
+        WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.XPATH, "//button[@class='sc-bczRLJ iBneUr mde-consent-accept-btn']")))
         driver.find_element(by=By.XPATH, value="//button[@class='sc-bczRLJ iBneUr mde-consent-accept-btn']").click()
     except TimeoutException:
         print("The Einverstanden/Accept Cookies window did not show up on the apply search criteria page. No need to click on anything...")
@@ -198,16 +198,23 @@ def crawl_func(dict_idx):
 
             # Sometimes a pop-up appears asking the user to fill in a survey or share their satisfaction with the website. This command handles this situation
             try: # Survey pop-up
-                WebDriverWait(driver, 1.25).until(EC.presence_of_element_located((By.XPATH, "//input[@id='neinDankeDCoreOverlay']")))
+                WebDriverWait(driver, 0.75).until(EC.presence_of_element_located((By.XPATH, "//input[@id='neinDankeDCoreOverlay']")))
                 driver.find_element(by=By.XPATH, value="//input[@id='neinDankeDCoreOverlay']").click()
             except TimeoutException:
                 print("No survey pop-up found. Continuing as usual...")
             
             try: # Satisfaction pop-up
-                WebDriverWait(driver, 1).until(EC.presence_of_element_located((By.XPATH, "//button[@data-testid='ces:modal:close']")))
+                WebDriverWait(driver, 0.75).until(EC.presence_of_element_located((By.XPATH, "//button[@data-testid='ces:modal:close']")))
                 driver.find_element(by=By.XPATH, value="//button[@data-testid='ces:modal:close']").click()
             except TimeoutException:
                 print("No satisfaction pop-up found. Continuing as usual...")
+
+            # You need to click on "Mehr anzeigen" to extract the color
+            try: # The "Mehr anzeigen" button
+                WebDriverWait(driver, 0.5).until(EC.presence_of_element_located((By.XPATH, "//div[@class='cBox-body cBox-body--technical-data']/following-sibling::div/div/a")))
+                driver.find_element(by=By.XPATH, value="//div[@class='cBox-body cBox-body--technical-data']/following-sibling::div/div/a").click()
+            except TimeoutException:
+                print("No Mehr Anzeigen link found. Continuing as usual...")
 
             # Step 11.3.1: Extract the vehicle data
             # Extract the vehicle description
