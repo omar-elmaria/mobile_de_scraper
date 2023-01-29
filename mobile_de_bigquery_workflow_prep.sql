@@ -6,7 +6,7 @@ CREATE TABLE `web-scraping-371310.crawled_datasets.lukas_mobile_de` (
   titel STRING OPTIONS (description = 'The title of the listing'),
   form STRING OPTIONS (description = 'The type of the vehicle (e.g., Cabrio / Roadster)'),
   fahrzeugzustand STRING OPTIONS (description = 'The state of the vehicle (e.g., Unfallfrei)'),
-  leistung STRING OPTIONS (description = 'The horse power of the vehicle'),
+  leistung FLOAT64 OPTIONS (description = 'The horse power of the vehicle'),
   getriebe STRING OPTIONS (description = 'The type of transmission (e.g., automatic)'),
   farbe STRING OPTIONS (description = 'The color of the vehicle'),
   preis INT64 OPTIONS (description = 'The price of the vehicle'),
