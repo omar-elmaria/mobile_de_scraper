@@ -247,7 +247,7 @@ def crawl_func(dict_idx):
 # Step 12: Loop through all the brands in the JSON file
 all_brands_data_list = []
 for idx, rec in enumerate(marke_and_modell_list):
-    if rec["marke"] not in ["Rolls-Royce", "KTM"]:
+    if rec["marke"] not in ["ALPINA", "Aston Martin", "Bentley", "Bugatti", "Gemballa", "Koenigsegg", "Pagani", "Ruf", "Techart", "Wiesmann", "Nissan GT-R", "Corvette C8", "Dodge Viper", "Ford GT", "Lexus LFA"]:
         continue
     else:
         all_brands_data_list.append(crawl_func(dict_idx=idx))
