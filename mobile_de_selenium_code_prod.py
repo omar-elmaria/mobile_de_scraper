@@ -158,98 +158,96 @@ def crawl_func(dict_idx):
             last_page = 1
         print(f"We have a total of {last_page} pages under {marke} {modell} to loop through...")
 
-        # Step 11.2: Loop through all the pages of the "marke" and "modell" combination
-        all_pages_data_list = []
+        # Step 11.2: Loop through all the pages of the "marke" and "modell" combination and crawl the individual car links that contain the information we want to crawl
+        car_page_url_list = []
         for pg in range(2, last_page + 2):
             # Step 11.2.1: Get all the car URLs on the page. Don't crawl the "sponsored" or the "top in category" listings 
             print(f"Crawling the car links on page {pg - 1}...")
             car_web_elements = driver.find_elements(by=By.XPATH, value="//div[contains(@class, 'cBox-body cBox-body') and @class!='cBox-body cBox-body--topInCategory' and @class!='cBox-body cBox-body--topResultitem']")
-            car_page_url_list = []
             for web in car_web_elements:
                 car_page_url = web.find_element(by=By.XPATH, value="./a").get_attribute("href")
                 car_page_url_list.append(car_page_url)
             
-            # Step 11.2.2: Navigate to each individual car page and crawl the data
-            one_page_data_list = []
-            for idx, i in enumerate(car_page_url_list):
-                print(f"Navigating to car page {idx + 1} out of {len(car_web_elements)} on page {pg - 1} out of {last_page}")
-                driver.get(i)
-
-                # Sometimes a pop-up appears asking the user to fill in a survey or share their satisfaction with the website. This command handles this situation
-                try: # Survey pop-up
-                    WebDriverWait(driver, 1.25).until(EC.presence_of_element_located((By.XPATH, "//input[@id='neinDankeDCoreOverlay']")))
-                    driver.find_element(by=By.XPATH, value="//input[@id='neinDankeDCoreOverlay']").click()
-                except TimeoutException:
-                    print("No survey pop-up found. Continuing as usual...")
-                
-                try: # Satisfaction pop-up
-                    WebDriverWait(driver, 1).until(EC.presence_of_element_located((By.XPATH, "//button[@data-testid='ces:modal:close']")))
-                    driver.find_element(by=By.XPATH, value="//button[@data-testid='ces:modal:close']").click()
-                except TimeoutException:
-                    print("No satisfaction pop-up found. Continuing as usual...")
-
-                # Step 11.2.3: Extract the vehicle data
-                # Extract the vehicle description
-                try:
-                    fahrzeug_beschreibung = driver.find_element(by=By.XPATH, value="//div[@class='g-col-12 description']").get_attribute("textContent")
-                except NoSuchElementException:
-                    fahrzeug_beschreibung = ""
-
-                output_dict = {
-                    "marke": marke,
-                    "modell": modell,
-                    "variante": "",
-                    "titel": handle_none_elements(xpath="//h1[@id='ad-title']") + " " + handle_none_elements("//div[@class='listing-subtitle']"),
-                    "form": handle_none_elements(xpath="//div[@id='category-v']"),
-                    "fahrzeugzustand": handle_none_elements(xpath="//div[@id='damageCondition-v']"),
-                    'leistung': handle_none_elements(xpath="//div[text()='Leistung']/following-sibling::div"),
-                    'getriebe': handle_none_elements(xpath="//div[text()='Getriebe']/following-sibling::div"),
-                    "farbe": handle_none_elements(xpath="//div[@id='color-v']"),
-                    "preis": handle_none_elements(xpath="//span[@data-testid='prime-price']"),
-                    "kilometer": handle_none_elements(xpath="//div[text()='Kilometerstand']/following-sibling::div"),
-                    "erstzulassung": handle_none_elements(xpath="//div[text()='Erstzulassung']/following-sibling::div"),
-                    "fahrzeughalter": handle_none_elements(xpath="//div[text()='Fahrzeughalter']/following-sibling::div"),
-                    "standort": handle_none_elements(xpath="//p[@id='seller-address']"),
-                    "fahrzeugbescheibung": fahrzeug_beschreibung,
-                    "url_to_crawl": i,
-                    "page_rank": pg - 1,
-                    "total_num_pages": last_page,
-                }
-                one_page_data_list.append(output_dict)
-
-            # Append the results to "all_pages_data_list"
-            all_pages_data_list.extend(one_page_data_list)
-            
-            # Step 11.2.3: Navigate to the next page
+            # Step 11.2.2: Navigate to the next page to collect the next batch of URLs
             if pg <= last_page:
                 print(f"\nMoving to the next page, page {pg}")
                 driver.get(landing_page_url + f"&pageNumber={pg}")
+                time.sleep(1)
                 # Sometimes, a captcha is shown after navigating to the next page under of a car brand. We need to invoke the captcha service here if that happens
                 try:
-                    # Check for the existence of the "Bot" header
-                    driver.find_element(by=By.XPATH, value="//h2[@class='u-pad-bottom-18 u-margin-top-18']").text
-                    print(f"Captcha found after navigating to page {pg} under {marke} {modell}. Solving it with the 2captcha service...")
+                    # Check for the existence of the "Angebote entsprechen Deinen Suchkriterien" header
+                    driver.find_element(by=By.XPATH, value="//h1[@data-testid='result-list-headline']").text
+                    # If the header doesn't exist, proceed normally to the next page
+                    print(f"No Captcha was found after navigating to page {pg} under {marke} {modell}. Proceeding normally...")
+                except NoSuchElementException:
+                    print(f"Captcha found while navigating to page {pg} under {marke} {modell}. Solving it with the 2captcha service...")
 
-                    # If there was no exception raised, this means that the header exists, so invoke the solve_captcha function
+                    # If there was a raised exception, this means that the header does not exist, so invoke the solve_captcha function
                     captcha_token = solve_captcha(sitekey=sitekey, url=driver.current_url)
 
                     # Invoke the callback function
                     invoke_callback_func(captcha_key=captcha_token)
-                except NoSuchElementException: # If the header doesn't exist, proceed normally to the next page
-                    print(f"No Captcha was found after navigating to page {pg} under {marke} {modell}. Proceeding normally...")
             else:
-                print(f"Reached the end of the results page for {marke} {modell}...")
-        
+                print(f"Crawled all the car links of {marke} {modell}...")
+            
+        # Step 11.3: Navigate to each individual car page and crawl the data
+        all_pages_data_list = []
+        for idx, i in enumerate(car_page_url_list):
+            print(f"{len(car_page_url_list)} links were crawled under {marke} {modell}. Navigating to car #{idx + 1} out of {len(car_page_url_list)}...")
+            driver.get(i)
+
+            # Sometimes a pop-up appears asking the user to fill in a survey or share their satisfaction with the website. This command handles this situation
+            try: # Survey pop-up
+                WebDriverWait(driver, 1.25).until(EC.presence_of_element_located((By.XPATH, "//input[@id='neinDankeDCoreOverlay']")))
+                driver.find_element(by=By.XPATH, value="//input[@id='neinDankeDCoreOverlay']").click()
+            except TimeoutException:
+                print("No survey pop-up found. Continuing as usual...")
+            
+            try: # Satisfaction pop-up
+                WebDriverWait(driver, 1).until(EC.presence_of_element_located((By.XPATH, "//button[@data-testid='ces:modal:close']")))
+                driver.find_element(by=By.XPATH, value="//button[@data-testid='ces:modal:close']").click()
+            except TimeoutException:
+                print("No satisfaction pop-up found. Continuing as usual...")
+
+            # Step 11.3.1: Extract the vehicle data
+            # Extract the vehicle description
+            try:
+                fahrzeug_beschreibung = driver.find_element(by=By.XPATH, value="//div[@class='g-col-12 description']").get_attribute("textContent")
+            except NoSuchElementException:
+                fahrzeug_beschreibung = ""
+
+            output_dict = {
+                "marke": marke,
+                "modell": modell,
+                "variante": "",
+                "titel": handle_none_elements(xpath="//h1[@id='ad-title']") + " " + handle_none_elements("//div[@class='listing-subtitle']"),
+                "form": handle_none_elements(xpath="//div[@id='category-v']"),
+                "fahrzeugzustand": handle_none_elements(xpath="//div[@id='damageCondition-v']"),
+                'leistung': handle_none_elements(xpath="//div[text()='Leistung']/following-sibling::div"),
+                'getriebe': handle_none_elements(xpath="//div[text()='Getriebe']/following-sibling::div"),
+                "farbe": handle_none_elements(xpath="//div[@id='color-v']"),
+                "preis": handle_none_elements(xpath="//span[@data-testid='prime-price']"),
+                "kilometer": handle_none_elements(xpath="//div[text()='Kilometerstand']/following-sibling::div"),
+                "erstzulassung": handle_none_elements(xpath="//div[text()='Erstzulassung']/following-sibling::div"),
+                "fahrzeughalter": handle_none_elements(xpath="//div[text()='Fahrzeughalter']/following-sibling::div"),
+                "standort": handle_none_elements(xpath="//p[@id='seller-address']"),
+                "fahrzeugbescheibung": fahrzeug_beschreibung,
+                "url_to_crawl": i,
+                "page_rank": pg - 1,
+                "total_num_pages": last_page,
+                "crawled_timestamp": datetime.now()
+            }
+            all_pages_data_list.append(output_dict)
         return all_pages_data_list
     else:
         # If the captcha solver did not return a token, return an empty list and proceed to the next marke-modell combination
         print(f"The captcha was not solved for the marke and modell chosen ({marke} {modell}). Continuing to the next combination...")
         return []
 
-# Step 11: Loop through all the brands in the JSON file
+# Step 12: Loop through all the brands in the JSON file
 all_brands_data_list = []
 for idx, rec in enumerate(marke_and_modell_list):
-    if rec["marke"] in ["ALPINA", "Bugatti", "Aston Martin", "Bentley", "Ferrari", "Lamborghini", "Maybach", "McLaren", "Porsche", "Rolls Royce"]:
+    if rec["marke"] not in ["Rolls-Royce", "KTM"]:
         continue
     else:
         all_brands_data_list.append(crawl_func(dict_idx=idx))
@@ -257,7 +255,7 @@ for idx, rec in enumerate(marke_and_modell_list):
         with open("df_all_brands_data.json", mode="w", encoding="utf-8") as f:
             json.dump(obj=all_brands_data_list, fp=f, ensure_ascii=False, indent=4)
 
-# Step 12: Open the JSON file containing all car brands and convert it into a pandas data frame
+# Step 13: Open the JSON file containing all car brands and convert it into a pandas data frame
 with open("df_all_brands_data.json", mode="r", encoding="utf-8") as f:
     data = json.load(f)
     f.close()
