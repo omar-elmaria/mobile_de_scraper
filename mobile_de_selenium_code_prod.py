@@ -270,6 +270,15 @@ df_data_all_car_brands = pd.DataFrame(df_data_all_car_brands)
 # Print the head of the data frame
 print(df_data_all_car_brands.head())
 
+# Clean the data
+df_data_all_car_brands_cleaned = df_data_all_car_brands.copy()
+df_data_all_car_brands_cleaned.replace(to_replace="", value=None, inplace=True)
+df_data_all_car_brands_cleaned["leistung"] = df_data_all_car_brands_cleaned["leistung"].apply(lambda x: int(re.findall(pattern="(?<=\()\d+", string=x)[0]) if x is not None else x)
+df_data_all_car_brands_cleaned["preis"] = df_data_all_car_brands_cleaned["preis"].apply(lambda x: int(''.join(re.findall(pattern="\d+", string=x))) if x is not None else x)
+df_data_all_car_brands_cleaned["kilometer"] = df_data_all_car_brands_cleaned["kilometer"].apply(lambda x: int(''.join(re.findall(pattern="\d+", string=x))) if x is not None else x)
+df_data_all_car_brands_cleaned["fahrzeughalter"] = df_data_all_car_brands_cleaned["fahrzeughalter"].apply(lambda x: int(x) if x is not None else x)
+df_data_all_car_brands_cleaned["standort"] = df_data_all_car_brands_cleaned["standort"].apply(lambda x: re.findall(pattern="[A-za-z]+(?=-)", string=x)[0] if x is not None else x)
+
 # Print a status message marking the end of the script
 t2 = datetime.now()
 print(f"The script finished at {t2}. It took {t2-t1} to crawl all listings...")
