@@ -13,7 +13,11 @@ import time
 import json
 import re
 import pandas as pd
+from google.cloud import bigquery
+from google.oauth2 import service_account
+import os
 from datetime import datetime
+from datetime import date
 
 # Step 1: Load environment variables and define an initial time instance to mark the start of the script
 load_dotenv()
@@ -38,10 +42,10 @@ chrome_options.add_experimental_option("detach", True)
 chrome_options.add_experimental_option('prefs', {'intl.accept_languages': 'en,en_US'})
 chrome_options.add_argument('--blink-settings=imagesEnabled=false') # Disable images
 chrome_options.add_argument('--disable-extensions') # Disable extensions
-# chrome_options.add_argument("--headless=new") # Operate Selenium in headless mode
-# chrome_options.add_argument('--no-sandbox')
-# chrome_options.add_argument('--disable-gpu')
-# chrome_options.add_argument("--window-size=1920x1080")
+chrome_options.add_argument("--headless=new") # Operate Selenium in headless mode
+chrome_options.add_argument('--no-sandbox')
+chrome_options.add_argument('--disable-gpu')
+chrome_options.add_argument("--window-size=1920x1080")
 
 # Step 5: Instantiate a browser object and navigate to the URL
 capabibilties = DesiredCapabilities().CHROME
@@ -277,7 +281,7 @@ df_data_all_car_brands = pd.DataFrame(df_data_all_car_brands)
 # Print the head of the data frame
 print(df_data_all_car_brands.head())
 
-# Clean the data
+# Step 14: Clean the data
 df_data_all_car_brands_cleaned = df_data_all_car_brands.copy()
 df_data_all_car_brands_cleaned.replace(to_replace="", value=None, inplace=True)
 df_data_all_car_brands_cleaned["leistung"] = df_data_all_car_brands_cleaned["leistung"].apply(lambda x: int(re.findall(pattern="(?<=\()\d+", string=x)[0]) if x is not None else x)
@@ -285,6 +289,47 @@ df_data_all_car_brands_cleaned["preis"] = df_data_all_car_brands_cleaned["preis"
 df_data_all_car_brands_cleaned["kilometer"] = df_data_all_car_brands_cleaned["kilometer"].apply(lambda x: int(''.join(re.findall(pattern="\d+", string=x))) if x is not None else x)
 df_data_all_car_brands_cleaned["fahrzeughalter"] = df_data_all_car_brands_cleaned["fahrzeughalter"].apply(lambda x: int(x) if x is not None else x)
 df_data_all_car_brands_cleaned["standort"] = df_data_all_car_brands_cleaned["standort"].apply(lambda x: re.findall(pattern="[A-za-z]+(?=-)", string=x)[0] if x is not None else x)
+
+# Step 15: Upload to bigquery
+# First, set the credentials
+key_path = os.getcwd() + "/bq_credentials.json"
+credentials = service_account.Credentials.from_service_account_file(
+    key_path, scopes=["https://www.googleapis.com/auth/cloud-platform"],
+)
+
+# Now, instantiate the client and upload the table to BigQuery
+client = bigquery.Client(project="web-scraping-371310", credentials=credentials)
+job_config = bigquery.LoadJobConfig(
+    schema = [
+        bigquery.SchemaField("marke", "STRING"),
+        bigquery.SchemaField("modell", "STRING"),
+        bigquery.SchemaField("variante", "STRING"),
+        bigquery.SchemaField("titel", "STRING"),
+        bigquery.SchemaField("form", "STRING"),
+        bigquery.SchemaField("fahrzeugzustand", "STRING"),
+        bigquery.SchemaField("leistung", "FLOAT64"),
+        bigquery.SchemaField("getriebe", "STRING"),
+        bigquery.SchemaField("farbe", "STRING"),
+        bigquery.SchemaField("preis", "INT64"),
+        bigquery.SchemaField("kilometer", "FLOAT64"),
+        bigquery.SchemaField("erstzulassung", "STRING"),
+        bigquery.SchemaField("fahrzeughalter", "FLOAT64"),
+        bigquery.SchemaField("standort", "STRING"),
+        bigquery.SchemaField("fahrzeugbescheibung", "STRING"),
+        bigquery.SchemaField("url_to_crawl", "STRING"),
+        bigquery.SchemaField("page_rank", "INT64"),
+        bigquery.SchemaField("total_num_pages", "INT64"),
+        bigquery.SchemaField("crawled_timestamp", "TIMESTAMP"),
+    ]
+)
+job_config.write_disposition = bigquery.WriteDisposition.WRITE_APPEND
+
+# Upload the table
+job = client.load_table_from_dataframe(
+    dataframe=df_data_all_car_brands_cleaned,
+    destination="web-scraping-371310.crawled_datasets.lukas_mobile_de",
+    job_config=job_config
+).result()
 
 # Print a status message marking the end of the script
 t2 = datetime.now()
