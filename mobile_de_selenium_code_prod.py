@@ -117,12 +117,15 @@ def crawl_func(dict_idx):
 
     # Step 9.6: If the a captcha token was returned, invoke the callback function and navigate to the results page
     if captcha_key is not None:
-        # html of the captcha is inside an iframe, selenium cannot see it if we first don't switch to the iframe
-        WebDriverWait(driver, 15).until(EC.frame_to_be_available_and_switch_to_it((By.ID, "sec-cpt-if")))
+        try: # Sometimes the captcha is solved without having to invoke the callback function. This piece of code handles this situation
+            # html of the captcha is inside an iframe, selenium cannot see it if we first don't switch to the iframe
+            WebDriverWait(driver, 5).until(EC.frame_to_be_available_and_switch_to_it((By.ID, "sec-cpt-if")))
 
-        # Inject the token into the inner HTML of g-recaptcha-response and invoke the callback function
-        driver.execute_script(f'document.getElementById("g-recaptcha-response").innerHTML="{captcha_key}"')
-        driver.execute_script(f"verifyAkReCaptcha('{captcha_key}')") # This step fails in Python but runs successfully in the console
+            # Inject the token into the inner HTML of g-recaptcha-response and invoke the callback function
+            driver.execute_script(f'document.getElementById("g-recaptcha-response").innerHTML="{captcha_key}"')
+            driver.execute_script(f"verifyAkReCaptcha('{captcha_key}')") # This step fails in Python but runs successfully in the console
+        except TimeoutException:
+            print("Captcha was solved without needing to invoke the callback function. Bypassing this part of the script to prevent raising an error")
 
         # Wait for "Einverstanden" and click on it
         print("Waiting to see if the Einverstanden window pops up again after landing on the results page...")
@@ -212,24 +215,35 @@ def crawl_func(dict_idx):
 
         # Append the results to "all_pages_data_list"
         all_pages_data_list.extend(one_page_data_list)
-
-        # Write the results to a JSON file
-        with open("df_all_brands_data.json", mode="a", encoding="utf-8") as f:
-            json.dump(obj=all_pages_data_list, fp=f, ensure_ascii=False, indent=4)
         
         # Step 10.2.3: Navigate to the next page
         if pg <= last_page:
             print(f"\nMoving to the next page, page {pg}")
             driver.get(landing_page_url + f"&pageNumber={pg}")
+            # Sometimes, a captcha is shown after navigating to the next page under of a car brand. We need to invoke the captcha service here if that happens
+            try:
+                # Check for the existence of the "Bot" header
+                driver.find_element(by=By.XPATH, value="//h2[@class='u-pad-bottom-18 u-margin-top-18']").text
+                print(f"Captcha found after navigating to page {pg} under {marke} {modell}. Solving it with the 2captcha service...")
+
+                captcha_key = solve_captcha(sitekey=sitekey, url=driver.current_url)
+            except NoSuchElementException: # If the header doesn't exist, proceed normally to the next page
+                print(f"No Captcha was found after navigating to page {pg} under {marke} {modell}. Proceeding normally...")
         else:
             print(f"Reached the end of the results page for {marke} {modell}...")
+    
+    return all_pages_data_list
 
 # Step 11: Loop through all the brands in the JSON file
+all_brands_data_list = []
 for idx, rec in enumerate(marke_and_modell_list):
-    if rec["marke"] in ["ALPINA", "Aston Martin", "Bentley", "Ferrari", "Lamborghini", "Maybach", "McLaren", "Porsche", "Rolls Royce"]:
+    if rec["marke"] in ["ALPINA", "Bugatti", "Aston Martin", "Bentley", "Ferrari", "Lamborghini", "Maybach", "McLaren", "Porsche", "Rolls Royce"]:
         continue
     else:
-        crawl_func(dict_idx=idx)
+        all_brands_data_list.append(crawl_func(dict_idx=idx))
+        # Write the results to a JSON file
+        with open("df_all_brands_data.json", mode="w", encoding="utf-8") as f:
+            json.dump(obj=all_brands_data_list, fp=f, ensure_ascii=False, indent=4)
 
 # Step 12: Open the JSON file containing all car brands and convert it into a pandas data frame
 with open("df_all_brands_data.json", mode="r", encoding="utf-8") as f:
