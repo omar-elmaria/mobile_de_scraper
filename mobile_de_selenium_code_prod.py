@@ -87,7 +87,7 @@ def handle_none_elements(xpath):
     return web_element.text
 
 # Step 9: Define a function to invoke the callback function
-def invoke_callback_func(captcha_key, marke, modell):
+def invoke_callback_func(captcha_key):
     try: # Sometimes the captcha is solved without having to invoke the callback function. This piece of code handles this situation
         # html of the captcha is inside an iframe, selenium cannot see it if we first don't switch to the iframe
         WebDriverWait(driver, 5).until(EC.frame_to_be_available_and_switch_to_it((By.ID, "sec-cpt-if")))
@@ -141,7 +141,7 @@ def crawl_func(dict_idx):
     # Step 10.6: If the a captcha token was returned, invoke the callback function and navigate to the results page
     if captcha_key is not None:
         # Invoke the callback function
-        invoke_callback_func(captcha_key=captcha_key, marke=marke, modell=modell)
+        invoke_callback_func(captcha_key=captcha_key)
 
         # Print the top title of the page
         tot_search_results = re.findall(pattern="\d+", string=driver.find_element(by=By.XPATH, value="//h1[@data-testid='result-list-headline']").text)[0]
@@ -234,7 +234,7 @@ def crawl_func(dict_idx):
                     captcha_token = solve_captcha(sitekey=sitekey, url=driver.current_url)
 
                     # Invoke the callback function
-                    invoke_callback_func(captcha_key=captcha_token, marke=marke, modell=modell)
+                    invoke_callback_func(captcha_key=captcha_token)
                 except NoSuchElementException: # If the header doesn't exist, proceed normally to the next page
                     print(f"No Captcha was found after navigating to page {pg} under {marke} {modell}. Proceeding normally...")
             else:
