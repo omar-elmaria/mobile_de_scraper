@@ -17,7 +17,6 @@ from google.cloud import bigquery
 from google.oauth2 import service_account
 import os
 from datetime import datetime
-from datetime import date
 
 # Step 1: Load environment variables and define an initial time instance to mark the start of the script
 load_dotenv()
@@ -202,20 +201,20 @@ def crawl_func(dict_idx):
 
             # Sometimes a pop-up appears asking the user to fill in a survey or share their satisfaction with the website. This command handles this situation
             try: # Survey pop-up
-                WebDriverWait(driver, 0.75).until(EC.presence_of_element_located((By.XPATH, "//input[@id='neinDankeDCoreOverlay']")))
+                WebDriverWait(driver, 1.5).until(EC.presence_of_element_located((By.XPATH, "//input[@id='neinDankeDCoreOverlay']")))
                 driver.find_element(by=By.XPATH, value="//input[@id='neinDankeDCoreOverlay']").click()
             except TimeoutException:
                 print("No survey pop-up found. Continuing as usual...")
             
             try: # Satisfaction pop-up
-                WebDriverWait(driver, 0.75).until(EC.presence_of_element_located((By.XPATH, "//button[@data-testid='ces:modal:close']")))
+                WebDriverWait(driver, 1.5).until(EC.presence_of_element_located((By.XPATH, "//button[@data-testid='ces:modal:close']")))
                 driver.find_element(by=By.XPATH, value="//button[@data-testid='ces:modal:close']").click()
             except TimeoutException:
                 print("No satisfaction pop-up found. Continuing as usual...")
 
             # You need to click on "Mehr anzeigen" to extract the color
             try: # The "Mehr anzeigen" button
-                WebDriverWait(driver, 0.5).until(EC.presence_of_element_located((By.XPATH, "//div[@class='cBox-body cBox-body--technical-data']/following-sibling::div/div/a")))
+                WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, "//div[@class='cBox-body cBox-body--technical-data']/following-sibling::div/div/a")))
                 driver.find_element(by=By.XPATH, value="//div[@class='cBox-body cBox-body--technical-data']/following-sibling::div/div/a").click()
             except TimeoutException:
                 print("No Mehr Anzeigen link found. Continuing as usual...")
@@ -245,8 +244,7 @@ def crawl_func(dict_idx):
                 "fahrzeugbescheibung": fahrzeug_beschreibung,
                 "url_to_crawl": i,
                 "page_rank": pg - 1,
-                "total_num_pages": last_page,
-                "crawled_timestamp": datetime.now()
+                "total_num_pages": last_page
             }
             all_pages_data_list.append(output_dict)
         return all_pages_data_list
@@ -258,13 +256,17 @@ def crawl_func(dict_idx):
 # Step 12: Loop through all the brands in the JSON file
 all_brands_data_list = []
 for idx, rec in enumerate(marke_and_modell_list):
-    if rec["marke"] not in ["ALPINA", "Aston Martin", "Bentley", "Bugatti", "Gemballa", "Koenigsegg", "Pagani", "Ruf", "Techart", "Wiesmann", "Nissan GT-R", "Corvette C8", "Dodge Viper", "Ford GT", "Lexus LFA"]:
+    if rec["marke"] not in ["ALPINA", "Aston Martin", "Bentley", "Bugatti", "Gemballa", "Pagani", "Ruf", "Techart", "Wiesmann", "Nissan GT-R", "Corvette C8", "Dodge Viper", "Ford GT", "Lexus LFA"]:
+    # if rec["marke"] not in ["Koenigsegg"]:
         continue
     else:
         all_brands_data_list.append(crawl_func(dict_idx=idx))
         # Write the results to a JSON file
         with open("df_all_brands_data.json", mode="w", encoding="utf-8") as f:
             json.dump(obj=all_brands_data_list, fp=f, ensure_ascii=False, indent=4)
+
+# Stop the driver
+driver.quit()
 
 # Step 13: Open the JSON file containing all car brands and convert it into a pandas data frame
 with open("df_all_brands_data.json", mode="r", encoding="utf-8") as f:
@@ -289,6 +291,7 @@ df_data_all_car_brands_cleaned["preis"] = df_data_all_car_brands_cleaned["preis"
 df_data_all_car_brands_cleaned["kilometer"] = df_data_all_car_brands_cleaned["kilometer"].apply(lambda x: int(''.join(re.findall(pattern="\d+", string=x))) if x is not None else x)
 df_data_all_car_brands_cleaned["fahrzeughalter"] = df_data_all_car_brands_cleaned["fahrzeughalter"].apply(lambda x: int(x) if x is not None else x)
 df_data_all_car_brands_cleaned["standort"] = df_data_all_car_brands_cleaned["standort"].apply(lambda x: re.findall(pattern="[A-za-z]+(?=-)", string=x)[0] if x is not None else x)
+df_data_all_car_brands_cleaned["crawled_timestamp"] = datetime.now()
 
 # Step 15: Upload to bigquery
 # First, set the credentials
