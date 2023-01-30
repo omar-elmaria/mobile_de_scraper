@@ -17,6 +17,7 @@ from google.cloud import bigquery
 from google.oauth2 import service_account
 import os
 from datetime import datetime
+import yagmail
 
 # Step 1: Load environment variables and define an initial time instance to mark the start of the script
 load_dotenv()
@@ -249,7 +250,7 @@ def crawl_func(dict_idx):
 # Step 12: Loop through all the brands in the JSON file
 all_brands_data_list = []
 for idx, rec in enumerate(marke_and_modell_list):
-    if rec["marke"] not in ["ALPINA", "Aston Martin", "Bentley", "Bugatti", "Gemballa", "Pagani", "Ruf", "Techart", "Wiesmann", "Nissan GT-R", "Corvette C8", "Dodge Viper", "Ford GT", "Lexus LFA"]:
+    if rec["marke"] not in ["Koenigsegg"]:
         continue
     else:
         all_brands_data_list.append(crawl_func(dict_idx=idx))
@@ -325,6 +326,13 @@ job = client.load_table_from_dataframe(
     destination="web-scraping-371310.crawled_datasets.lukas_mobile_de",
     job_config=job_config
 ).result()
+
+# Step 16: Send success E-mail
+yag = yagmail.SMTP("omarmoataz6@gmail.com", oauth2_file=os.getcwd()+"/email_authentication.json")
+contents = [
+    "This is an automated notification to inform you that the mobile.de scraper ran successfully"
+]
+yag.send(["omarmoataz6@gmail.com"], f"The Mobile.de Scraper Ran Successfully on {datetime.now()} CET", contents)
 
 # Print a status message marking the end of the script
 t2 = datetime.now()
