@@ -216,8 +216,16 @@ def crawl_func(dict_idx):
             try:
                 fahrzeug_beschreibung = driver.find_element(by=By.XPATH, value="//div[@class='g-col-12 description']").get_attribute("textContent")
             except NoSuchElementException:
+                print(f"This xpath --> //div[@class='g-col-12 description'] was not found. Setting the result to None...")
                 fahrzeug_beschreibung = ""
-
+            
+            # Extract the color as it does not follow the regular format of handle_none_elements func
+            try:
+                farbe = driver.find_element(by=By.XPATH, value="//div[@id='color-v']").get_attribute("textContent")
+            except NoSuchElementException:
+                farbe = ""
+                print("farbe not found")
+            
             output_dict = {
                 "marke": marke,
                 "modell": modell,
@@ -227,7 +235,7 @@ def crawl_func(dict_idx):
                 "fahrzeugzustand": handle_none_elements(driver=driver, xpath="//div[@id='damageCondition-v']"),
                 "leistung": handle_none_elements(driver=driver, xpath="//div[text()='Leistung']/following-sibling::div"),
                 "getriebe": handle_none_elements(driver=driver, xpath="//div[text()='Getriebe']/following-sibling::div"),
-                "farbe": handle_none_elements(driver=driver, xpath="//div[@id='color-v']"),
+                "farbe": farbe,
                 "preis": handle_none_elements(driver=driver, xpath="//span[@data-testid='prime-price']"),
                 "kilometer": handle_none_elements(driver=driver, xpath="//div[text()='Kilometerstand']/following-sibling::div"),
                 "erstzulassung": handle_none_elements(driver=driver, xpath="//div[text()='Erstzulassung']/following-sibling::div"),
@@ -252,7 +260,7 @@ def crawl_func(dict_idx):
 # Step 12: Loop through all the brands in the JSON file
 all_brands_data_list = []
 for idx, rec in enumerate(marke_and_modell_list):
-    if rec["marke"] not in ["Koenigsegg", "KTM"]:
+    if rec["marke"] not in ["Koenigsegg"]:
         continue
     else:
         all_brands_data_list.append(crawl_func(dict_idx=idx))
