@@ -211,25 +211,6 @@ def crawl_func(dict_idx):
             print(f"{len(car_page_url_list)} links were crawled under {marke} {modell}. Navigating to car #{idx + 1} out of {len(car_page_url_list)}...")
             driver.get(i)
 
-            # Sometimes a pop-up appears asking the user to fill in a survey or share their satisfaction with the website. This command handles this situation
-            try: # Survey pop-up
-                WebDriverWait(driver, 1.5).until(EC.presence_of_element_located((By.XPATH, "//input[@id='neinDankeDCoreOverlay']")))
-                driver.find_element(by=By.XPATH, value="//input[@id='neinDankeDCoreOverlay']").click()
-            except TimeoutException:
-                print("No survey pop-up found. Continuing as usual...")
-            
-            try: # Satisfaction pop-up
-                WebDriverWait(driver, 1.5).until(EC.presence_of_element_located((By.XPATH, "//button[@data-testid='ces:modal:close']")))
-                driver.find_element(by=By.XPATH, value="//button[@data-testid='ces:modal:close']").click()
-            except TimeoutException:
-                print("No satisfaction pop-up found. Continuing as usual...")
-
-            try: # The "Mehr anzeigen" button
-                WebDriverWait(driver, 1.5).until(EC.presence_of_element_located((By.XPATH, "//div[@class='cBox-body cBox-body--technical-data']/following-sibling::div/div/a")))
-                driver.find_element(by=By.XPATH, value="//div[@class='cBox-body cBox-body--technical-data']/following-sibling::div/div/a").click()
-            except TimeoutException:
-                print("No Mehr Anzeigen link found. Continuing as usual...")
-
             # Step 11.3.1: Extract the vehicle data
             # Extract the vehicle description
             try:
