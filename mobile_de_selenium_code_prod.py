@@ -142,7 +142,11 @@ def crawl_func(dict_idx):
 
     # Step 10.4: Apply the filters
     print(f"Applying the search filters for {marke} {modell}...")
-    select_marke_modell(driver=driver, marke=marke, modell=modell)
+    try:
+        select_marke_modell(driver=driver, marke=marke, modell=modell)
+    except NoSuchElementException:
+        print("Marke and Modell chosen not found on the page. Potentially check the spelling of the modell. Continuing to the next combination...")
+        return []
 
     # Step 10.5: Solve the captcha
     print(f"Applied the search filters for {marke} {modell}. Now, solving the captcha...")
@@ -201,12 +205,16 @@ def crawl_func(dict_idx):
                 print(f"Crawled all the car links of {marke} {modell}...")
             
         # Step 11.3.1: Disable Javascript to prevent ads from popping up
-        path = 'chrome://settings/content/javascript'
-        driver.get(path)
-        # clicking toggle button
-        time.sleep(1)
-        ActionChains(driver).send_keys(Keys.TAB).send_keys(Keys.TAB).send_keys(Keys.DOWN).perform()
-        
+        try:
+            path = 'chrome://settings/content/javascript'
+            driver.get(path)
+            # clicking toggle button
+            time.sleep(1)
+            ActionChains(driver).send_keys(Keys.TAB).send_keys(Keys.TAB).send_keys(Keys.DOWN).perform()
+        except TimeoutException:
+            print("TimeoutException: Timed out receiving message from renderer while trying to disable Javascript for a car page")
+            return []
+
         # Step 11.3.2: Navigate to each individual car page and crawl the data
         all_pages_data_list = []
         for idx, i in enumerate(car_page_url_list):
@@ -262,7 +270,22 @@ def crawl_func(dict_idx):
 # Step 12: Loop through all the brands in the JSON file
 all_brands_data_list = []
 for idx, rec in enumerate(marke_and_modell_list):
-    if rec["marke"] not in ["Koenigsegg"]:
+    if rec["marke"] not in [
+        "Bentley",
+        "Bugatti",
+        "Ferrari",
+        "Gemballa",
+        "Koenigsegg",
+        "KTM",
+        "Lamborghini",
+        "Maybach",
+        "McLaren",
+        "Pagani",
+        "Rolls Royce"
+        "Ruf",
+        "Techart",
+        "Wiesmann",
+    ]:
         continue
     else:
         all_brands_data_list.append(crawl_func(dict_idx=idx))
