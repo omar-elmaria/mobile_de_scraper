@@ -212,13 +212,6 @@ def crawl_func(dict_idx):
             except TimeoutException:
                 print("No satisfaction pop-up found. Continuing as usual...")
 
-            # You need to click on "Mehr anzeigen" to extract the color
-            try: # The "Mehr anzeigen" button
-                WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, "//div[@class='cBox-body cBox-body--technical-data']/following-sibling::div/div/a")))
-                driver.find_element(by=By.XPATH, value="//div[@class='cBox-body cBox-body--technical-data']/following-sibling::div/div/a").click()
-            except TimeoutException:
-                print("No Mehr Anzeigen link found. Continuing as usual...")
-
             # Step 11.3.1: Extract the vehicle data
             # Extract the vehicle description
             try:
@@ -257,7 +250,6 @@ def crawl_func(dict_idx):
 all_brands_data_list = []
 for idx, rec in enumerate(marke_and_modell_list):
     if rec["marke"] not in ["ALPINA", "Aston Martin", "Bentley", "Bugatti", "Gemballa", "Pagani", "Ruf", "Techart", "Wiesmann", "Nissan GT-R", "Corvette C8", "Dodge Viper", "Ford GT", "Lexus LFA"]:
-    # if rec["marke"] not in ["Koenigsegg"]:
         continue
     else:
         all_brands_data_list.append(crawl_func(dict_idx=idx))
