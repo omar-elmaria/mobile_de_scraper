@@ -7,6 +7,8 @@ from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver import ActionChains
+from selenium.webdriver.common.keys import Keys
 from dotenv import load_dotenv
 import os
 import time
@@ -194,7 +196,14 @@ def crawl_func(dict_idx):
             else:
                 print(f"Crawled all the car links of {marke} {modell}...")
             
-        # Step 11.3: Navigate to each individual car page and crawl the data
+        # Step 11.3.1: Disable Javascript to prevent ads from popping up
+        path = 'chrome://settings/content/javascript'
+        driver.get(path)
+        # clicking toggle button
+        time.sleep(1)
+        ActionChains(driver).send_keys(Keys.TAB).send_keys(Keys.TAB).send_keys(Keys.DOWN).perform()
+        
+        # Step 11.3.2: Navigate to each individual car page and crawl the data
         all_pages_data_list = []
         for idx, i in enumerate(car_page_url_list):
             print(f"{len(car_page_url_list)} links were crawled under {marke} {modell}. Navigating to car #{idx + 1} out of {len(car_page_url_list)}...")
@@ -279,7 +288,7 @@ print(df_data_all_car_brands.head())
 # Step 14: Clean the data
 df_data_all_car_brands_cleaned = df_data_all_car_brands.copy()
 df_data_all_car_brands_cleaned.replace(to_replace="", value=None, inplace=True)
-df_data_all_car_brands_cleaned["leistung"] = df_data_all_car_brands_cleaned["leistung"].apply(lambda x: int(re.findall(pattern="(?<=\()\d+", string=x)[0]) if x is not None else x)
+df_data_all_car_brands_cleaned["leistung"] = df_data_all_car_brands_cleaned["leistung"].apply(lambda x: int(re.findall(pattern="(?<=\().*(?=\sPS)", string=x)[0].replace(".", "")) if x is not None else x)
 df_data_all_car_brands_cleaned["preis"] = df_data_all_car_brands_cleaned["preis"].apply(lambda x: int(''.join(re.findall(pattern="\d+", string=x))) if x is not None else x)
 df_data_all_car_brands_cleaned["kilometer"] = df_data_all_car_brands_cleaned["kilometer"].apply(lambda x: int(''.join(re.findall(pattern="\d+", string=x))) if x is not None else x)
 df_data_all_car_brands_cleaned["fahrzeughalter"] = df_data_all_car_brands_cleaned["fahrzeughalter"].apply(lambda x: int(x) if x is not None else x)
