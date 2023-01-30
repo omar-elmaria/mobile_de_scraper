@@ -52,7 +52,6 @@ chrome_options.add_argument("--window-size=1920x1080")
 # Step 5: Instantiate a browser object and navigate to the URL
 capabibilties = DesiredCapabilities().CHROME
 capabibilties['pageLoadStrategy'] = 'eager' # Eafer pageLoadStrategy is used to speed up browsing
-driver = webdriver.Chrome(desired_capabilities=capabibilties, chrome_options=chrome_options)
 
 # Step 6: Define a function to solve the captcha using the 2captcha service
 def solve_captcha(sitekey, url):
@@ -67,7 +66,7 @@ def solve_captcha(sitekey, url):
     return captcha_key
 
 # Step 7: Define a function to select a "Marke" and a "Modell"
-def select_marke_modell(marke, modell):
+def select_marke_modell(driver, marke, modell):
     # Select the "Marke"
     select1 = Select(driver.find_element(by=By.XPATH, value="//select[@name='makeModelVariant1.makeId']"))
     select1.select_by_visible_text(marke)
@@ -83,7 +82,7 @@ def select_marke_modell(marke, modell):
     driver.find_element(by=By.XPATH, value="//button[@id='dsp-upper-search-btn']").click()
 
 # Step 8: Define a function to handle parsing errors on individual car pages
-def handle_none_elements(xpath):
+def handle_none_elements(driver, xpath):
     try:
         web_element = driver.find_element(by=By.XPATH, value=xpath)
     except NoSuchElementException:
@@ -93,7 +92,7 @@ def handle_none_elements(xpath):
     return web_element.text
 
 # Step 9: Define a function to invoke the callback function
-def invoke_callback_func(captcha_key):
+def invoke_callback_func(driver, captcha_key):
     try: # Sometimes the captcha is solved without having to invoke the callback function. This piece of code handles this situation
         # html of the captcha is inside an iframe, selenium cannot see it if we first don't switch to the iframe
         WebDriverWait(driver, 5).until(EC.frame_to_be_available_and_switch_to_it((By.ID, "sec-cpt-if")))
@@ -117,6 +116,9 @@ def invoke_callback_func(captcha_key):
 
 # Step 10: Define a function to navigate to the base URL, apply the search filters, bypass the captcha, crawl the data and return it to a JSON file
 def crawl_func(dict_idx):
+    # Instantiate the chrome driver
+    driver = webdriver.Chrome(desired_capabilities=capabibilties, chrome_options=chrome_options)
+
     # Step 10.0: Get the marke and modell based on the dict_idx 
     marke = marke_and_modell_list[dict_idx]["marke"]
     modell = marke_and_modell_list[dict_idx]["modell"]
@@ -138,7 +140,7 @@ def crawl_func(dict_idx):
 
     # Step 10.4: Apply the filters
     print(f"Applying the search filters for {marke} {modell}...")
-    select_marke_modell(marke=marke, modell=modell)
+    select_marke_modell(driver=driver, marke=marke, modell=modell)
 
     # Step 10.5: Solve the captcha
     print(f"Applied the search filters for {marke} {modell}. Now, solving the captcha...")
@@ -147,7 +149,7 @@ def crawl_func(dict_idx):
     # Step 10.6: If the a captcha token was returned, invoke the callback function and navigate to the results page
     if captcha_key is not None:
         # Invoke the callback function
-        invoke_callback_func(captcha_key=captcha_key)
+        invoke_callback_func(driver=driver, captcha_key=captcha_key)
 
         # Print the top title of the page
         tot_search_results = re.findall(pattern="\d+", string=driver.find_element(by=By.XPATH, value="//h1[@data-testid='result-list-headline']").text)[0]
@@ -192,7 +194,7 @@ def crawl_func(dict_idx):
                     captcha_token = solve_captcha(sitekey=sitekey, url=driver.current_url)
 
                     # Invoke the callback function
-                    invoke_callback_func(captcha_key=captcha_token)
+                    invoke_callback_func(driver=driver, captcha_key=captcha_token)
             else:
                 print(f"Crawled all the car links of {marke} {modell}...")
             
@@ -239,27 +241,31 @@ def crawl_func(dict_idx):
                 "marke": marke,
                 "modell": modell,
                 "variante": "",
-                "titel": handle_none_elements(xpath="//h1[@id='ad-title']") + " " + handle_none_elements("//div[@class='listing-subtitle']"),
-                "form": handle_none_elements(xpath="//div[@id='category-v']"),
-                "fahrzeugzustand": handle_none_elements(xpath="//div[@id='damageCondition-v']"),
-                "leistung": handle_none_elements(xpath="//div[text()='Leistung']/following-sibling::div"),
-                "getriebe": handle_none_elements(xpath="//div[text()='Getriebe']/following-sibling::div"),
-                "farbe": handle_none_elements(xpath="//div[@id='color-v']"),
-                "preis": handle_none_elements(xpath="//span[@data-testid='prime-price']"),
-                "kilometer": handle_none_elements(xpath="//div[text()='Kilometerstand']/following-sibling::div"),
-                "erstzulassung": handle_none_elements(xpath="//div[text()='Erstzulassung']/following-sibling::div"),
-                "fahrzeughalter": handle_none_elements(xpath="//div[text()='Fahrzeughalter']/following-sibling::div"),
-                "standort": handle_none_elements(xpath="//p[@id='seller-address']"),
+                "titel": handle_none_elements(driver=driver, xpath="//h1[@id='ad-title']") + " " + handle_none_elements(driver=driver, xpath="//div[@class='listing-subtitle']"),
+                "form": handle_none_elements(driver=driver, xpath="//div[@id='category-v']"),
+                "fahrzeugzustand": handle_none_elements(driver=driver, xpath="//div[@id='damageCondition-v']"),
+                "leistung": handle_none_elements(driver=driver, xpath="//div[text()='Leistung']/following-sibling::div"),
+                "getriebe": handle_none_elements(driver=driver, xpath="//div[text()='Getriebe']/following-sibling::div"),
+                "farbe": handle_none_elements(driver=driver, xpath="//div[@id='color-v']"),
+                "preis": handle_none_elements(driver=driver, xpath="//span[@data-testid='prime-price']"),
+                "kilometer": handle_none_elements(driver=driver, xpath="//div[text()='Kilometerstand']/following-sibling::div"),
+                "erstzulassung": handle_none_elements(driver=driver, xpath="//div[text()='Erstzulassung']/following-sibling::div"),
+                "fahrzeughalter": handle_none_elements(driver=driver, xpath="//div[text()='Fahrzeughalter']/following-sibling::div"),
+                "standort": handle_none_elements(driver=driver, xpath="//p[@id='seller-address']"),
                 "fahrzeugbescheibung": fahrzeug_beschreibung,
                 "url_to_crawl": i,
                 "page_rank": pg - 1,
                 "total_num_pages": last_page
             }
             all_pages_data_list.append(output_dict)
+        # Stop the driver
+        driver.quit()
         return all_pages_data_list
     else:
         # If the captcha solver did not return a token, return an empty list and proceed to the next marke-modell combination
         print(f"The captcha was not solved for the marke and modell chosen ({marke} {modell}). Continuing to the next combination...")
+        # Stop the driver
+        driver.quit()
         return []
 
 # Step 12: Loop through all the brands in the JSON file
@@ -272,9 +278,6 @@ for idx, rec in enumerate(marke_and_modell_list):
         # Write the results to a JSON file
         with open("df_all_brands_data.json", mode="w", encoding="utf-8") as f:
             json.dump(obj=all_brands_data_list, fp=f, ensure_ascii=False, indent=4)
-
-# Stop the driver
-driver.quit()
 
 # Step 13: Open the JSON file containing all car brands and convert it into a pandas data frame
 with open("df_all_brands_data.json", mode="r", encoding="utf-8") as f:
