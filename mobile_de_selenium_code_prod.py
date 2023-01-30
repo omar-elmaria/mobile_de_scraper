@@ -86,7 +86,7 @@ def select_marke_modell(marke, modell):
 def handle_none_elements(xpath):
     try:
         web_element = driver.find_element(by=By.XPATH, value=xpath)
-    except NoSuchElementException as err:
+    except NoSuchElementException:
         print(f"This xpath --> {xpath} was not found. Setting the result to None...")
         return ""
     
@@ -265,7 +265,7 @@ def crawl_func(dict_idx):
 # Step 12: Loop through all the brands in the JSON file
 all_brands_data_list = []
 for idx, rec in enumerate(marke_and_modell_list):
-    if rec["marke"] not in ["Koenigsegg"]:
+    if rec["marke"] not in ["Koenigsegg", "KTM"]:
         continue
     else:
         all_brands_data_list.append(crawl_func(dict_idx=idx))
@@ -289,7 +289,7 @@ for i in data: # Loop through every page
 df_data_all_car_brands = pd.DataFrame(df_data_all_car_brands)
 
 # Print the head of the data frame
-print(df_data_all_car_brands.head())
+print(df_data_all_car_brands[["titel", "farbe"]].head(10))
 
 # Step 14: Clean the data
 df_data_all_car_brands_cleaned = df_data_all_car_brands.copy()
@@ -300,6 +300,7 @@ df_data_all_car_brands_cleaned["kilometer"] = df_data_all_car_brands_cleaned["ki
 df_data_all_car_brands_cleaned["fahrzeughalter"] = df_data_all_car_brands_cleaned["fahrzeughalter"].apply(lambda x: int(x) if x is not None else x)
 df_data_all_car_brands_cleaned["standort"] = df_data_all_car_brands_cleaned["standort"].apply(lambda x: re.findall(pattern="[A-za-z]+(?=-)", string=x)[0] if x is not None else x)
 df_data_all_car_brands_cleaned["crawled_timestamp"] = datetime.now()
+print(df_data_all_car_brands[["titel", "farbe"]].head(10))
 
 # Step 15: Upload to bigquery
 # First, set the credentials
