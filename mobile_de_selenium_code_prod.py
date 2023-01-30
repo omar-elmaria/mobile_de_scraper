@@ -222,6 +222,12 @@ def crawl_func(dict_idx):
             except TimeoutException:
                 print("No satisfaction pop-up found. Continuing as usual...")
 
+            try: # The "Mehr anzeigen" button
+                WebDriverWait(driver, 1.5).until(EC.presence_of_element_located((By.XPATH, "//div[@class='cBox-body cBox-body--technical-data']/following-sibling::div/div/a")))
+                driver.find_element(by=By.XPATH, value="//div[@class='cBox-body cBox-body--technical-data']/following-sibling::div/div/a").click()
+            except TimeoutException:
+                print("No Mehr Anzeigen link found. Continuing as usual...")
+
             # Step 11.3.1: Extract the vehicle data
             # Extract the vehicle description
             try:
@@ -236,8 +242,8 @@ def crawl_func(dict_idx):
                 "titel": handle_none_elements(xpath="//h1[@id='ad-title']") + " " + handle_none_elements("//div[@class='listing-subtitle']"),
                 "form": handle_none_elements(xpath="//div[@id='category-v']"),
                 "fahrzeugzustand": handle_none_elements(xpath="//div[@id='damageCondition-v']"),
-                'leistung': handle_none_elements(xpath="//div[text()='Leistung']/following-sibling::div"),
-                'getriebe': handle_none_elements(xpath="//div[text()='Getriebe']/following-sibling::div"),
+                "leistung": handle_none_elements(xpath="//div[text()='Leistung']/following-sibling::div"),
+                "getriebe": handle_none_elements(xpath="//div[text()='Getriebe']/following-sibling::div"),
                 "farbe": handle_none_elements(xpath="//div[@id='color-v']"),
                 "preis": handle_none_elements(xpath="//span[@data-testid='prime-price']"),
                 "kilometer": handle_none_elements(xpath="//div[text()='Kilometerstand']/following-sibling::div"),
