@@ -27,7 +27,7 @@ t1 = datetime.now()
 print(f"The script started at {t1}")
 
 # Step 2: Load the marke_and_modell JSON file
-with open(file="marke_and_modell.json", mode="r", encoding="utf-8") as f:
+with open(file="marke_and_modell_detailed.json", mode="r", encoding="utf-8") as f:
     marke_and_modell_list = json.load(f)
     f.close()
 
@@ -59,7 +59,7 @@ def solve_captcha(sitekey, url):
         result = solver.recaptcha(sitekey=sitekey, url=url)
         captcha_key = result.get('code')
         print(f"Captcha solved. The key is: {captcha_key}\n")
-    except Exception as e:
+    except Exception:
         print(f"Captcha not solved...")
         captcha_key = None
 
@@ -70,6 +70,8 @@ def select_marke_modell(driver, marke, modell):
     # Select the "Marke"
     select1 = Select(driver.find_element(by=By.XPATH, value="//select[@name='makeModelVariant1.makeId']"))
     select1.select_by_visible_text(marke)
+
+    time.sleep(0.5)
     
     # Select the "Modell"
     if modell == "Beliebig":
@@ -281,7 +283,7 @@ for i in data: # Loop through every page
 df_data_all_car_brands = pd.DataFrame(df_data_all_car_brands)
 
 # Print the head of the data frame
-print(df_data_all_car_brands[["titel", "farbe"]].head(10))
+print(df_data_all_car_brands.head(10))
 
 # Step 14: Clean the data
 df_data_all_car_brands_cleaned = df_data_all_car_brands.copy()
@@ -292,7 +294,7 @@ df_data_all_car_brands_cleaned["kilometer"] = df_data_all_car_brands_cleaned["ki
 df_data_all_car_brands_cleaned["fahrzeughalter"] = df_data_all_car_brands_cleaned["fahrzeughalter"].apply(lambda x: int(x) if x is not None else x)
 df_data_all_car_brands_cleaned["standort"] = df_data_all_car_brands_cleaned["standort"].apply(lambda x: re.findall(pattern="[A-za-z]+(?=-)", string=x)[0] if x is not None else x)
 df_data_all_car_brands_cleaned["crawled_timestamp"] = datetime.now()
-print(df_data_all_car_brands[["titel", "farbe"]].head(10))
+print(df_data_all_car_brands.head(10))
 
 # Step 15: Upload to bigquery
 # First, set the credentials
