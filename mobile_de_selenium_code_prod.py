@@ -112,14 +112,6 @@ def invoke_callback_func(driver, captcha_key):
     except TimeoutException:
         print("Captcha was solved without needing to invoke the callback function. Bypassing this part of the script to prevent raising an error")
 
-    # Wait for "Einverstanden" and click on it
-    print("Waiting to see if the Einverstanden window pops up again after landing on the results page...")
-    try:
-        WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.XPATH, "//button[@class='sc-bczRLJ iBneUr mde-consent-accept-btn']")))
-        driver.find_element(by=By.XPATH, value="//button[@class='sc-bczRLJ iBneUr mde-consent-accept-btn']").click()
-    except TimeoutException:
-        print("The Einverstanden/Accept Cookies window did not show up on the results page. No need to click on anything...")
-
     # Wait for 0.5 seconds until the page is loaded
     time.sleep(0.5)
 
