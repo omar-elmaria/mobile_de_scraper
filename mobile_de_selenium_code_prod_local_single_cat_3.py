@@ -25,7 +25,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s  - %(levelname)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
-    filename="lukas_mobile_de_logs.log"
+    filename="lukas_mobile_de_logs_cat_3.log"
 )
 
 # Step 1: Load environment variables and define an initial time instance to mark the start of the script
@@ -281,7 +281,7 @@ def crawl_func(dict_idx):
 all_brands_data_list = []
 for idx, rec in enumerate(marke_and_modell_list):
     if rec["marke"] not in [
-        "Bugatti",
+        "Mercedes-Benz",
     ]:
         continue
     else:
