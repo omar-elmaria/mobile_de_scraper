@@ -31,7 +31,7 @@ logging.basicConfig(
 # Step 1: Load environment variables and define an initial time instance to mark the start of the script
 load_dotenv()
 t1 = datetime.now()
-print(f"The script started at {t1}")
+logging.info(f"The script started at {t1}")
 
 # Step 2: Load the marke_and_modell JSON file
 with open(file="marke_and_modell_detailed.json", mode="r", encoding="utf-8") as f:
@@ -65,10 +65,10 @@ def solve_captcha(sitekey, url):
     try:
         result = solver.recaptcha(sitekey=sitekey, url=url)
         captcha_key = result.get('code')
-        print(f"Captcha solved. The key is: {captcha_key}\n")
+        logging.info(f"Captcha solved. The key is: {captcha_key}\n")
     except Exception as err:
-        print(err)
-        print(f"Captcha not solved...")
+        logging.info(err)
+        logging.info(f"Captcha not solved...")
         captcha_key = None
 
     return captcha_key
@@ -97,7 +97,7 @@ def handle_none_elements(driver, xpath):
         web_element = driver.find_element(by=By.XPATH, value=xpath)
         return web_element.text
     except NoSuchElementException:
-        print(f"This xpath --> {xpath} was not found. Setting the result to None...")
+        logging.info(f"This xpath --> {xpath} was not found. Setting the result to None...")
         return ""
 
 # Step 9: Define a function to invoke the callback function
@@ -110,7 +110,7 @@ def invoke_callback_func(driver, captcha_key):
         driver.execute_script(f'document.getElementById("g-recaptcha-response").innerHTML="{captcha_key}"')
         driver.execute_script(f"verifyAkReCaptcha('{captcha_key}')") # This step fails in Python but runs successfully in the console
     except TimeoutException:
-        print("Captcha was solved without needing to invoke the callback function. Bypassing this part of the script to prevent raising an error")
+        logging.info("Captcha was solved without needing to invoke the callback function. Bypassing this part of the script to prevent raising an error")
 
     # Wait for 0.5 seconds until the page is loaded
     time.sleep(0.5)
@@ -126,31 +126,31 @@ def crawl_func(dict_idx):
 
     # Step 10.1: Navigate to the base URL from which we will start our search
     driver.get(base_url)
-    print("\nNavigating to the base URL where we can apply the search criteria...")
+    logging.info("\nNavigating to the base URL where we can apply the search criteria...")
 
     # Step 10.2: Maximize the window
     driver.maximize_window()
 
     # Step 10.3: Wait for "Einverstanden" and click on it
-    print("Waiting for the Einverstanden window to pop up so we can click on it...")
+    logging.info("Waiting for the Einverstanden window to pop up so we can click on it...")
     try:
         WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.XPATH, "//button[@class='sc-bczRLJ iBneUr mde-consent-accept-btn']")))
         driver.find_element(by=By.XPATH, value="//button[@class='sc-bczRLJ iBneUr mde-consent-accept-btn']").click()
     except TimeoutException:
-        print("The Einverstanden/Accept Cookies window did not show up on the apply search criteria page. No need to click on anything...")
+        logging.info("The Einverstanden/Accept Cookies window did not show up on the apply search criteria page. No need to click on anything...")
 
     # Step 10.4: Apply the filters
-    print(f"Applying the search filters for {marke} {modell}...")
+    logging.info(f"Applying the search filters for {marke} {modell}...")
     try:
         select_marke_modell(driver=driver, marke=marke, modell=modell)
     except NoSuchElementException:
-        print("Marke and Modell chosen not found on the page. Potentially check the spelling of the modell. Stopping the driver, returning an empty list and continuing to the next combination...")
+        logging.info("Marke and Modell chosen not found on the page. Potentially check the spelling of the modell. Stopping the driver, returning an empty list and continuing to the next combination...")
         # Stop the driver
         driver.quit()
         return []
 
     # Step 10.5: Solve the captcha
-    print(f"Applied the search filters for {marke} {modell}. Now, solving the captcha...")
+    logging.info(f"Applied the search filters for {marke} {modell}. Now, solving the captcha...")
     if driver.title == "Challenge Validation":
         captcha_key = solve_captcha(sitekey=sitekey, url=driver.current_url)
         if captcha_key is not None:
@@ -158,22 +158,22 @@ def crawl_func(dict_idx):
             try:
                 invoke_callback_func(driver=driver, captcha_key=captcha_key)
             except JavascriptException: # This error could occur because of a problem with setting injecting the g-recaptcha-response in the innerHTML
-                print("There is a problem with injecting the g-recaptcha-response in the innerHTML. Stopping the driver, returning an empty list, and continuing to the next combination...")
+                logging.info("There is a problem with injecting the g-recaptcha-response in the innerHTML. Stopping the driver, returning an empty list, and continuing to the next combination...")
                 # Stop the driver
                 driver.quit()
                 return []
         else:
             # If the captcha solver did not return a token, return an empty list and proceed to the next marke-modell combination
-            print(f"The captcha was not solved for the marke and modell chosen ({marke} {modell}). Stopping the driver, returning an empty list, and continuing to the next combination...")
+            logging.info(f"The captcha was not solved for the marke and modell chosen ({marke} {modell}). Stopping the driver, returning an empty list, and continuing to the next combination...")
             # Stop the driver
             driver.quit()
             return []
 
     # Step 10.6: If the a captcha token was returned, invoke the callback function and navigate to the results page
-    # print the top title of the page
+    # logging.info the top title of the page
     WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, "//h1[@data-testid='result-list-headline']")))
     tot_search_results = re.findall(pattern="\d+", string=driver.find_element(by=By.XPATH, value="//h1[@data-testid='result-list-headline']").text)[0]
-    print(f"The results page of {marke} {modell} has been retrieved. In total, we have {tot_search_results} listings to loop through...")
+    logging.info(f"The results page of {marke} {modell} has been retrieved. In total, we have {tot_search_results} listings to loop through...")
 
     # Continue on with the rest of the crawling
     # Step 11: We are at the results page now. We need to crawl the links to the individual car pages
@@ -184,13 +184,13 @@ def crawl_func(dict_idx):
         last_page = int(last_page_web_element_list[-1].text)
     except IndexError: # The index error can occur if the brand has only one page. In that case, set last_page to 1
         last_page = 1
-    print(f"We have a total of {last_page} pages under {marke} {modell} to loop through...")
+    logging.info(f"We have a total of {last_page} pages under {marke} {modell} to loop through...")
 
     # Step 11.2: Loop through all the pages of the "marke" and "modell" combination and crawl the individual car links that contain the information we want to crawl
     car_page_url_list = []
     for pg in range(2, last_page + 2):
         # Step 11.2.1: Get all the car URLs on the page. Don't crawl the "sponsored" or the "top in category" listings 
-        print(f"Crawling the car links on page {pg - 1}...")
+        logging.info(f"Crawling the car links on page {pg - 1}...")
         car_web_elements = driver.find_elements(by=By.XPATH, value="//div[contains(@class, 'cBox-body cBox-body') and @class!='cBox-body cBox-body--topInCategory' and @class!='cBox-body cBox-body--topResultitem']")
         for web in car_web_elements:
             car_page_url = web.find_element(by=By.XPATH, value="./a").get_attribute("href")
@@ -198,7 +198,7 @@ def crawl_func(dict_idx):
         
         # Step 11.2.2: Navigate to the next page to collect the next batch of URLs
         if pg <= last_page:
-            print(f"\nMoving to the next page, page {pg}")
+            logging.info(f"\nMoving to the next page, page {pg}")
             driver.get(landing_page_url + f"&pageNumber={pg}")
             time.sleep(1)
             # Sometimes, a captcha is shown after navigating to the next page under of a car brand. We need to invoke the captcha service here if that happens
@@ -206,9 +206,9 @@ def crawl_func(dict_idx):
                 # Check for the existence of the "Angebote entsprechen Deinen Suchkriterien" header
                 driver.find_element(by=By.XPATH, value="//h1[@data-testid='result-list-headline']").text
                 # If the header doesn't exist, proceed normally to the next page
-                print(f"No Captcha was found after navigating to page {pg} under {marke} {modell}. Proceeding normally...")
+                logging.info(f"No Captcha was found after navigating to page {pg} under {marke} {modell}. Proceeding normally...")
             except NoSuchElementException:
-                print(f"Captcha found while navigating to page {pg} under {marke} {modell}. Solving it with the 2captcha service...")
+                logging.info(f"Captcha found while navigating to page {pg} under {marke} {modell}. Solving it with the 2captcha service...")
 
                 # If there was a raised exception, this means that the header does not exist, so invoke the solve_captcha function
                 captcha_token = solve_captcha(sitekey=sitekey, url=driver.current_url)
@@ -216,17 +216,17 @@ def crawl_func(dict_idx):
                 # Invoke the callback function
                 invoke_callback_func(driver=driver, captcha_key=captcha_token)
         else:
-            print(f"Crawled all the car links of {marke} {modell}...")
+            logging.info(f"Crawled all the car links of {marke} {modell}...")
         
     # CLose the first driver
-    print("Closing the first chrome webpage after crawling all car links. We will now start crawling individual car pages...")
+    logging.info("Closing the first chrome webpage after crawling all car links. We will now start crawling individual car pages...")
     driver.quit()
 
     # Step 11.3.2: Navigate to each individual car page and crawl the data
     all_pages_data_list = []
     for idx, i in enumerate(car_page_url_list):
         # Instantiate a new web driver
-        print(f"Instantiating a new chrome driver and navigating to this URL --> {i.split('&')[0]}")
+        logging.info(f"Instantiating a new chrome driver and navigating to this URL --> {i.split('&')[0]}")
         driver2 = webdriver.Chrome(desired_capabilities=capabibilties, options=chrome_options)
 
         # Step 11.3.1: Disable Javascript to prevent ads from popping up
@@ -237,21 +237,21 @@ def crawl_func(dict_idx):
             time.sleep(1)
             ActionChains(driver2).send_keys(Keys.TAB).send_keys(Keys.TAB).send_keys(Keys.DOWN).perform()
         except TimeoutException:
-            print("TimeoutException: Timed out receiving message from renderer while trying to disable Javascript for a car page. Stopping the driver, returning an empty list, and continuing to the next combination...")
+            logging.info("TimeoutException: Timed out receiving message from renderer while trying to disable Javascript for a car page. Stopping the driver, returning an empty list, and continuing to the next combination...")
             # Stop the driver
             driver2.quit()
             return []
         
         # Navigate to the car page
-        print(f"{len(car_page_url_list)} links were crawled under {marke} {modell}. Navigating to car #{idx + 1} out of {len(car_page_url_list)}...")
+        logging.info(f"{len(car_page_url_list)} links were crawled under {marke} {modell}. Navigating to car #{idx + 1} out of {len(car_page_url_list)}...")
         driver2.get(i)
 
         # Wait until some elements on the page appear
         try:
             WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, "//h1[@id='ad-title']")))
-            print("The page has been loaded. Proceeding with crawling the page's web elements...")
+            logging.info("The page has been loaded. Proceeding with crawling the page's web elements...")
         except TimeoutException:
-            print("The title did not appear, so there is a problem with loading the page's content...")
+            logging.info("The title did not appear, so there is a problem with loading the page's content...")
             continue
 
         # Step 11.3.1: Extract the vehicle data
@@ -259,7 +259,7 @@ def crawl_func(dict_idx):
         try:
             fahrzeug_beschreibung = driver2.find_element(by=By.XPATH, value="//div[@class='g-col-12 description']").get_attribute("textContent")
         except NoSuchElementException:
-            print(f"This xpath --> //div[@class='g-col-12 description'] was not found. Setting the result to None...")
+            logging.info(f"This xpath --> //div[@class='g-col-12 description'] was not found. Setting the result to None...")
             fahrzeug_beschreibung = ""
         
         # Extract the color as it does not follow the regular format of handle_none_elements func
@@ -267,7 +267,7 @@ def crawl_func(dict_idx):
             farbe = driver2.find_element(by=By.XPATH, value="//div[@id='color-v']").get_attribute("textContent")
         except NoSuchElementException:
             farbe = ""
-            print("farbe not found")
+            logging.info("farbe not found")
         
         output_dict = {
             "marke": marke,
@@ -319,8 +319,8 @@ for i in data: # Loop through every page
 
 df_data_all_car_brands = pd.DataFrame(df_data_all_car_brands)
 
-# print the head of the data frame
-print(df_data_all_car_brands.head(10))
+# logging.info the head of the data frame
+logging.info(df_data_all_car_brands.head(10))
 
 # Step 14: Clean the data
 df_data_all_car_brands_cleaned = df_data_all_car_brands.copy()
@@ -331,7 +331,7 @@ df_data_all_car_brands_cleaned["kilometer"] = df_data_all_car_brands_cleaned["ki
 df_data_all_car_brands_cleaned["fahrzeughalter"] = df_data_all_car_brands_cleaned["fahrzeughalter"].apply(lambda x: int(x) if x is not None else x)
 df_data_all_car_brands_cleaned["standort"] = df_data_all_car_brands_cleaned["standort"].apply(lambda x: re.findall(pattern="[A-za-z]+(?=-)", string=x)[0] if x is not None else x)
 df_data_all_car_brands_cleaned["crawled_timestamp"] = datetime.now()
-print(df_data_all_car_brands.head(10))
+logging.info(df_data_all_car_brands.head(10))
 
 # Step 15: Upload to bigquery
 # First, set the credentials
@@ -392,6 +392,6 @@ contents = [
 ]
 yag.send(["omarmoataz6@gmail.com"], f"The Mobile.de Scraper Ran Successfully on {datetime.now()} CET", contents)
 
-# print a status message marking the end of the script
+# logging.info a status message marking the end of the script
 t2 = datetime.now()
-print(f"The script finished at {t2}. It took {t2-t1} to crawl all listings...")
+logging.info(f"The script finished at {t2}. It took {t2-t1} to crawl all listings...")
