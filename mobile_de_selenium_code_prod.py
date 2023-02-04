@@ -165,6 +165,7 @@ def crawl_func(dict_idx):
             return []
 
         # Print the top title of the page
+        WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, "//h1[@data-testid='result-list-headline']")))
         tot_search_results = re.findall(pattern="\d+", string=driver.find_element(by=By.XPATH, value="//h1[@data-testid='result-list-headline']").text)[0]
         print(f"The results page of {marke} {modell} has been retrieved. In total, we have {tot_search_results} listings to loop through...")
 
