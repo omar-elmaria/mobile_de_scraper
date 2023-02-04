@@ -118,7 +118,7 @@ def invoke_callback_func(driver, captcha_key):
 # Step 10: Define a function to navigate to the base URL, apply the search filters, bypass the captcha, crawl the data and return it to a JSON file
 def crawl_func(dict_idx):
     # Instantiate the chrome driver
-    driver = webdriver.Chrome(desired_capabilities=capabibilties, chrome_options=chrome_options)
+    driver = webdriver.Chrome(desired_capabilities=capabibilties, options=chrome_options)
 
     # Step 10.0: Get the marke and modell based on the dict_idx 
     marke = marke_and_modell_list[dict_idx]["marke"]
