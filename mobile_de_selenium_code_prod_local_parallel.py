@@ -52,10 +52,10 @@ chrome_options.add_experimental_option("detach", True)
 chrome_options.add_experimental_option('prefs', {'intl.accept_languages': 'en,en_US'})
 chrome_options.add_argument('--blink-settings=imagesEnabled=false') # Disable images
 chrome_options.add_argument('--disable-extensions') # Disable extensions
-# chrome_options.add_argument("--headless=new") # Operate Selenium in headless mode
-# chrome_options.add_argument('--no-sandbox')
-# chrome_options.add_argument('--disable-gpu')
-# chrome_options.add_argument("--window-size=1920x1080")
+chrome_options.add_argument("--headless=new") # Operate Selenium in headless mode
+chrome_options.add_argument('--no-sandbox')
+chrome_options.add_argument('--disable-gpu')
+chrome_options.add_argument("--window-size=1920x1080")
 
 # Step 5: Instantiate a browser object and navigate to the URL
 capabibilties = DesiredCapabilities().CHROME
