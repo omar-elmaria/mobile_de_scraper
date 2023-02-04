@@ -4,7 +4,7 @@ from twocaptcha import TwoCaptcha
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.ui import Select
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, JavascriptException
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver import ActionChains
@@ -20,6 +20,13 @@ from google.oauth2 import service_account
 import os
 from datetime import datetime
 import yagmail
+import logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s  - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    filename="lukas_mobile_de_logs.log"
+)
 
 # Step 1: Load environment variables and define an initial time instance to mark the start of the script
 load_dotenv()
@@ -59,7 +66,8 @@ def solve_captcha(sitekey, url):
         result = solver.recaptcha(sitekey=sitekey, url=url)
         captcha_key = result.get('code')
         print(f"Captcha solved. The key is: {captcha_key}\n")
-    except Exception:
+    except Exception as err:
+        print(err)
         print(f"Captcha not solved...")
         captcha_key = None
 
@@ -87,11 +95,10 @@ def select_marke_modell(driver, marke, modell):
 def handle_none_elements(driver, xpath):
     try:
         web_element = driver.find_element(by=By.XPATH, value=xpath)
+        return web_element.text
     except NoSuchElementException:
         print(f"This xpath --> {xpath} was not found. Setting the result to None...")
         return ""
-    
-    return web_element.text
 
 # Step 9: Define a function to invoke the callback function
 def invoke_callback_func(driver, captcha_key):
@@ -145,7 +152,9 @@ def crawl_func(dict_idx):
     try:
         select_marke_modell(driver=driver, marke=marke, modell=modell)
     except NoSuchElementException:
-        print("Marke and Modell chosen not found on the page. Potentially check the spelling of the modell. Continuing to the next combination...")
+        print("Marke and Modell chosen not found on the page. Potentially check the spelling of the modell. Stopping the driver, returning an empty list and continuing to the next combination...")
+        # Stop the driver
+        driver.quit()
         return []
 
     # Step 10.5: Solve the captcha
@@ -155,7 +164,13 @@ def crawl_func(dict_idx):
     # Step 10.6: If the a captcha token was returned, invoke the callback function and navigate to the results page
     if captcha_key is not None:
         # Invoke the callback function
-        invoke_callback_func(driver=driver, captcha_key=captcha_key)
+        try:
+            invoke_callback_func(driver=driver, captcha_key=captcha_key)
+        except JavascriptException: # This error could occur because of a problem with setting injecting the g-recaptcha-response in the innerHTML
+            print("There is a problem with injecting the g-recaptcha-response in the innerHTML. Stopping the driver, returning an empty list, and continuing to the next combination...")
+            # Stop the driver
+            driver.quit()
+            return []
 
         # Print the top title of the page
         tot_search_results = re.findall(pattern="\d+", string=driver.find_element(by=By.XPATH, value="//h1[@data-testid='result-list-headline']").text)[0]
@@ -212,7 +227,9 @@ def crawl_func(dict_idx):
             time.sleep(1)
             ActionChains(driver).send_keys(Keys.TAB).send_keys(Keys.TAB).send_keys(Keys.DOWN).perform()
         except TimeoutException:
-            print("TimeoutException: Timed out receiving message from renderer while trying to disable Javascript for a car page")
+            print("TimeoutException: Timed out receiving message from renderer while trying to disable Javascript for a car page. Stopping the driver, returning an empty list, and continuing to the next combination...")
+            # Stop the driver
+            driver.quit()
             return []
 
         # Step 11.3.2: Navigate to each individual car page and crawl the data
@@ -262,7 +279,7 @@ def crawl_func(dict_idx):
         return all_pages_data_list
     else:
         # If the captcha solver did not return a token, return an empty list and proceed to the next marke-modell combination
-        print(f"The captcha was not solved for the marke and modell chosen ({marke} {modell}). Continuing to the next combination...")
+        print(f"The captcha was not solved for the marke and modell chosen ({marke} {modell}). Stopping the driver, returning an empty list, and continuing to the next combination...")
         # Stop the driver
         driver.quit()
         return []
@@ -271,20 +288,7 @@ def crawl_func(dict_idx):
 all_brands_data_list = []
 for idx, rec in enumerate(marke_and_modell_list):
     if rec["marke"] not in [
-        "Bentley",
         "Bugatti",
-        "Ferrari",
-        "Gemballa",
-        "Koenigsegg",
-        "KTM",
-        "Lamborghini",
-        "Maybach",
-        "McLaren",
-        "Pagani",
-        "Rolls Royce"
-        "Ruf",
-        "Techart",
-        "Wiesmann",
     ]:
         continue
     else:
@@ -321,10 +325,18 @@ print(df_data_all_car_brands.head(10))
 
 # Step 15: Upload to bigquery
 # First, set the credentials
-key_path = os.getcwd() + "/bq_credentials.json"
-credentials = service_account.Credentials.from_service_account_file(
-    key_path, scopes=["https://www.googleapis.com/auth/cloud-platform"],
-)
+key_path_cwd = os.path.expanduser("~") + "/bq_credentials.json"
+key_path1_home_dir = os.getcwd() + "/bq_credentials.json"
+try:
+    credentials = service_account.Credentials.from_service_account_file(
+        key_path1_home_dir, scopes=["https://www.googleapis.com/auth/cloud-platform"],
+    )
+    email_flag = "home_dir"
+except FileNotFoundError:
+    credentials = service_account.Credentials.from_service_account_file(
+        key_path_cwd, scopes=["https://www.googleapis.com/auth/cloud-platform"],
+    )
+    email_flag = "cwd"
 
 # Now, instantiate the client and upload the table to BigQuery
 client = bigquery.Client(project="web-scraping-371310", credentials=credentials)
@@ -361,7 +373,10 @@ job = client.load_table_from_dataframe(
 ).result()
 
 # Step 16: Send success E-mail
-yag = yagmail.SMTP("omarmoataz6@gmail.com", oauth2_file=os.getcwd()+"/email_authentication.json")
+if email_flag == "home_dir":
+    yag = yagmail.SMTP("omarmoataz6@gmail.com", oauth2_file=os.path.expanduser("~")+"/email_authentication.json")
+else:
+    yag = yagmail.SMTP("omarmoataz6@gmail.com", oauth2_file=os.getcwd()+"/email_authentication.json")
 contents = [
     "This is an automated notification to inform you that the mobile.de scraper ran successfully"
 ]
