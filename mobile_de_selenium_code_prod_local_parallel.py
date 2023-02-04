@@ -279,7 +279,18 @@ def crawl_func(dict_idx):
     return all_pages_data_list
 
 # Step 12: Loop through all the brands in the JSON file
-one_brand_iter = Parallel(n_jobs=5, verbose=60)(delayed(crawl_func)(dict_idx=idx) for idx, rec in enumerate(marke_and_modell_list) if rec["marke"] == "Bugatti")
+list_of_car_brands = [
+    "Bugatti",
+    "Gemballa",
+    "Koenigsegg",
+    "KTM",
+    "Maybach",
+    "Pagani",
+    "Ruf",
+    "Techart",
+    "Wiesmann"
+] 
+one_brand_iter = Parallel(n_jobs=10, verbose=13)(delayed(crawl_func)(dict_idx=idx) for idx, rec in enumerate(marke_and_modell_list) if rec["marke"] in list_of_car_brands)
 all_brands_data_list = []
 for i in one_brand_iter:
     all_brands_data_list.extend(one_brand_iter)
