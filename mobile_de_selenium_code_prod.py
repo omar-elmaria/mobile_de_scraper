@@ -151,131 +151,131 @@ def crawl_func(dict_idx):
 
     # Step 10.5: Solve the captcha
     print(f"Applied the search filters for {marke} {modell}. Now, solving the captcha...")
-    captcha_key = solve_captcha(sitekey=sitekey, url=driver.current_url)
+    if driver.title == "Challenge Validation":
+        captcha_key = solve_captcha(sitekey=sitekey, url=driver.current_url)
+        if captcha_key is not None:
+            # Invoke the callback function
+            try:
+                invoke_callback_func(driver=driver, captcha_key=captcha_key)
+            except JavascriptException: # This error could occur because of a problem with setting injecting the g-recaptcha-response in the innerHTML
+                print("There is a problem with injecting the g-recaptcha-response in the innerHTML. Stopping the driver, returning an empty list, and continuing to the next combination...")
+                # Stop the driver
+                driver.quit()
+                return []
+        else:
+            # If the captcha solver did not return a token, return an empty list and proceed to the next marke-modell combination
+            print(f"The captcha was not solved for the marke and modell chosen ({marke} {modell}). Stopping the driver, returning an empty list, and continuing to the next combination...")
+            # Stop the driver
+            driver.quit()
+            return []
 
     # Step 10.6: If the a captcha token was returned, invoke the callback function and navigate to the results page
-    if captcha_key is not None:
-        # Invoke the callback function
-        try:
-            invoke_callback_func(driver=driver, captcha_key=captcha_key)
-        except JavascriptException: # This error could occur because of a problem with setting injecting the g-recaptcha-response in the innerHTML
-            print("There is a problem with injecting the g-recaptcha-response in the innerHTML. Stopping the driver, returning an empty list, and continuing to the next combination...")
-            # Stop the driver
-            driver.quit()
-            return []
+    # Print the top title of the page
+    WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, "//h1[@data-testid='result-list-headline']")))
+    tot_search_results = re.findall(pattern="\d+", string=driver.find_element(by=By.XPATH, value="//h1[@data-testid='result-list-headline']").text)[0]
+    print(f"The results page of {marke} {modell} has been retrieved. In total, we have {tot_search_results} listings to loop through...")
 
-        # Print the top title of the page
-        WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, "//h1[@data-testid='result-list-headline']")))
-        tot_search_results = re.findall(pattern="\d+", string=driver.find_element(by=By.XPATH, value="//h1[@data-testid='result-list-headline']").text)[0]
-        print(f"The results page of {marke} {modell} has been retrieved. In total, we have {tot_search_results} listings to loop through...")
+    # Continue on with the rest of the crawling
+    # Step 11: We are at the results page now. We need to crawl the links to the individual car pages
+    # Step 11.1: Get the landing page URL and last page of the brand-model combination
+    landing_page_url = driver.current_url
+    last_page_web_element_list = driver.find_elements(by=By.XPATH, value="//span[@class='btn btn--secondary btn--l']")
+    try:
+        last_page = int(last_page_web_element_list[-1].text)
+    except IndexError: # The index error can occur if the brand has only one page. In that case, set last_page to 1
+        last_page = 1
+    print(f"We have a total of {last_page} pages under {marke} {modell} to loop through...")
 
-        # Continue on with the rest of the crawling
-        # Step 11: We are at the results page now. We need to crawl the links to the individual car pages
-        # Step 11.1: Get the landing page URL and last page of the brand-model combination
-        landing_page_url = driver.current_url
-        last_page_web_element_list = driver.find_elements(by=By.XPATH, value="//span[@class='btn btn--secondary btn--l']")
-        try:
-            last_page = int(last_page_web_element_list[-1].text)
-        except IndexError: # The index error can occur if the brand has only one page. In that case, set last_page to 1
-            last_page = 1
-        print(f"We have a total of {last_page} pages under {marke} {modell} to loop through...")
-
-        # Step 11.2: Loop through all the pages of the "marke" and "modell" combination and crawl the individual car links that contain the information we want to crawl
-        car_page_url_list = []
-        for pg in range(2, last_page + 2):
-            # Step 11.2.1: Get all the car URLs on the page. Don't crawl the "sponsored" or the "top in category" listings 
-            print(f"Crawling the car links on page {pg - 1}...")
-            car_web_elements = driver.find_elements(by=By.XPATH, value="//div[contains(@class, 'cBox-body cBox-body') and @class!='cBox-body cBox-body--topInCategory' and @class!='cBox-body cBox-body--topResultitem']")
-            for web in car_web_elements:
-                car_page_url = web.find_element(by=By.XPATH, value="./a").get_attribute("href")
-                car_page_url_list.append(car_page_url)
-            
-            # Step 11.2.2: Navigate to the next page to collect the next batch of URLs
-            if pg <= last_page:
-                print(f"\nMoving to the next page, page {pg}")
-                driver.get(landing_page_url + f"&pageNumber={pg}")
-                time.sleep(1)
-                # Sometimes, a captcha is shown after navigating to the next page under of a car brand. We need to invoke the captcha service here if that happens
-                try:
-                    # Check for the existence of the "Angebote entsprechen Deinen Suchkriterien" header
-                    driver.find_element(by=By.XPATH, value="//h1[@data-testid='result-list-headline']").text
-                    # If the header doesn't exist, proceed normally to the next page
-                    print(f"No Captcha was found after navigating to page {pg} under {marke} {modell}. Proceeding normally...")
-                except NoSuchElementException:
-                    print(f"Captcha found while navigating to page {pg} under {marke} {modell}. Solving it with the 2captcha service...")
-
-                    # If there was a raised exception, this means that the header does not exist, so invoke the solve_captcha function
-                    captcha_token = solve_captcha(sitekey=sitekey, url=driver.current_url)
-
-                    # Invoke the callback function
-                    invoke_callback_func(driver=driver, captcha_key=captcha_token)
-            else:
-                print(f"Crawled all the car links of {marke} {modell}...")
-            
-        # Step 11.3.1: Disable Javascript to prevent ads from popping up
-        try:
-            path = 'chrome://settings/content/javascript'
-            driver.get(path)
-            # clicking toggle button
+    # Step 11.2: Loop through all the pages of the "marke" and "modell" combination and crawl the individual car links that contain the information we want to crawl
+    car_page_url_list = []
+    for pg in range(2, last_page + 2):
+        # Step 11.2.1: Get all the car URLs on the page. Don't crawl the "sponsored" or the "top in category" listings 
+        print(f"Crawling the car links on page {pg - 1}...")
+        car_web_elements = driver.find_elements(by=By.XPATH, value="//div[contains(@class, 'cBox-body cBox-body') and @class!='cBox-body cBox-body--topInCategory' and @class!='cBox-body cBox-body--topResultitem']")
+        for web in car_web_elements:
+            car_page_url = web.find_element(by=By.XPATH, value="./a").get_attribute("href")
+            car_page_url_list.append(car_page_url)
+        
+        # Step 11.2.2: Navigate to the next page to collect the next batch of URLs
+        if pg <= last_page:
+            print(f"\nMoving to the next page, page {pg}")
+            driver.get(landing_page_url + f"&pageNumber={pg}")
             time.sleep(1)
-            ActionChains(driver).send_keys(Keys.TAB).send_keys(Keys.TAB).send_keys(Keys.DOWN).perform()
-        except TimeoutException:
-            print("TimeoutException: Timed out receiving message from renderer while trying to disable Javascript for a car page. Stopping the driver, returning an empty list, and continuing to the next combination...")
-            # Stop the driver
-            driver.quit()
-            return []
-
-        # Step 11.3.2: Navigate to each individual car page and crawl the data
-        all_pages_data_list = []
-        for idx, i in enumerate(car_page_url_list):
-            print(f"{len(car_page_url_list)} links were crawled under {marke} {modell}. Navigating to car #{idx + 1} out of {len(car_page_url_list)}...")
-            driver.get(i)
-
-            # Step 11.3.1: Extract the vehicle data
-            # Extract the vehicle description
+            # Sometimes, a captcha is shown after navigating to the next page under of a car brand. We need to invoke the captcha service here if that happens
             try:
-                fahrzeug_beschreibung = driver.find_element(by=By.XPATH, value="//div[@class='g-col-12 description']").get_attribute("textContent")
+                # Check for the existence of the "Angebote entsprechen Deinen Suchkriterien" header
+                driver.find_element(by=By.XPATH, value="//h1[@data-testid='result-list-headline']").text
+                # If the header doesn't exist, proceed normally to the next page
+                print(f"No Captcha was found after navigating to page {pg} under {marke} {modell}. Proceeding normally...")
             except NoSuchElementException:
-                print(f"This xpath --> //div[@class='g-col-12 description'] was not found. Setting the result to None...")
-                fahrzeug_beschreibung = ""
-            
-            # Extract the color as it does not follow the regular format of handle_none_elements func
-            try:
-                farbe = driver.find_element(by=By.XPATH, value="//div[@id='color-v']").get_attribute("textContent")
-            except NoSuchElementException:
-                farbe = ""
-                print("farbe not found")
-            
-            output_dict = {
-                "marke": marke,
-                "modell": modell,
-                "variante": "",
-                "titel": handle_none_elements(driver=driver, xpath="//h1[@id='ad-title']") + " " + handle_none_elements(driver=driver, xpath="//div[@class='listing-subtitle']"),
-                "form": handle_none_elements(driver=driver, xpath="//div[@id='category-v']"),
-                "fahrzeugzustand": handle_none_elements(driver=driver, xpath="//div[@id='damageCondition-v']"),
-                "leistung": handle_none_elements(driver=driver, xpath="//div[text()='Leistung']/following-sibling::div"),
-                "getriebe": handle_none_elements(driver=driver, xpath="//div[text()='Getriebe']/following-sibling::div"),
-                "farbe": farbe,
-                "preis": handle_none_elements(driver=driver, xpath="//span[@data-testid='prime-price']"),
-                "kilometer": handle_none_elements(driver=driver, xpath="//div[text()='Kilometerstand']/following-sibling::div"),
-                "erstzulassung": handle_none_elements(driver=driver, xpath="//div[text()='Erstzulassung']/following-sibling::div"),
-                "fahrzeughalter": handle_none_elements(driver=driver, xpath="//div[text()='Fahrzeughalter']/following-sibling::div"),
-                "standort": handle_none_elements(driver=driver, xpath="//p[@id='seller-address']"),
-                "fahrzeugbescheibung": fahrzeug_beschreibung,
-                "url_to_crawl": i,
-                "page_rank": pg - 1,
-                "total_num_pages": last_page
-            }
-            all_pages_data_list.append(output_dict)
-        # Stop the driver
-        driver.quit()
-        return all_pages_data_list
-    else:
-        # If the captcha solver did not return a token, return an empty list and proceed to the next marke-modell combination
-        print(f"The captcha was not solved for the marke and modell chosen ({marke} {modell}). Stopping the driver, returning an empty list, and continuing to the next combination...")
+                print(f"Captcha found while navigating to page {pg} under {marke} {modell}. Solving it with the 2captcha service...")
+
+                # If there was a raised exception, this means that the header does not exist, so invoke the solve_captcha function
+                captcha_token = solve_captcha(sitekey=sitekey, url=driver.current_url)
+
+                # Invoke the callback function
+                invoke_callback_func(driver=driver, captcha_key=captcha_token)
+        else:
+            print(f"Crawled all the car links of {marke} {modell}...")
+        
+    # Step 11.3.1: Disable Javascript to prevent ads from popping up
+    try:
+        path = 'chrome://settings/content/javascript'
+        driver.get(path)
+        # clicking toggle button
+        time.sleep(1)
+        ActionChains(driver).send_keys(Keys.TAB).send_keys(Keys.TAB).send_keys(Keys.DOWN).perform()
+    except TimeoutException:
+        print("TimeoutException: Timed out receiving message from renderer while trying to disable Javascript for a car page. Stopping the driver, returning an empty list, and continuing to the next combination...")
         # Stop the driver
         driver.quit()
         return []
+
+    # Step 11.3.2: Navigate to each individual car page and crawl the data
+    all_pages_data_list = []
+    for idx, i in enumerate(car_page_url_list):
+        print(f"{len(car_page_url_list)} links were crawled under {marke} {modell}. Navigating to car #{idx + 1} out of {len(car_page_url_list)}...")
+        driver.get(i)
+
+        # Step 11.3.1: Extract the vehicle data
+        # Extract the vehicle description
+        try:
+            fahrzeug_beschreibung = driver.find_element(by=By.XPATH, value="//div[@class='g-col-12 description']").get_attribute("textContent")
+        except NoSuchElementException:
+            print(f"This xpath --> //div[@class='g-col-12 description'] was not found. Setting the result to None...")
+            fahrzeug_beschreibung = ""
+        
+        # Extract the color as it does not follow the regular format of handle_none_elements func
+        try:
+            farbe = driver.find_element(by=By.XPATH, value="//div[@id='color-v']").get_attribute("textContent")
+        except NoSuchElementException:
+            farbe = ""
+            print("farbe not found")
+        
+        output_dict = {
+            "marke": marke,
+            "modell": modell,
+            "variante": "",
+            "titel": handle_none_elements(driver=driver, xpath="//h1[@id='ad-title']") + " " + handle_none_elements(driver=driver, xpath="//div[@class='listing-subtitle']"),
+            "form": handle_none_elements(driver=driver, xpath="//div[@id='category-v']"),
+            "fahrzeugzustand": handle_none_elements(driver=driver, xpath="//div[@id='damageCondition-v']"),
+            "leistung": handle_none_elements(driver=driver, xpath="//div[text()='Leistung']/following-sibling::div"),
+            "getriebe": handle_none_elements(driver=driver, xpath="//div[text()='Getriebe']/following-sibling::div"),
+            "farbe": farbe,
+            "preis": handle_none_elements(driver=driver, xpath="//span[@data-testid='prime-price']"),
+            "kilometer": handle_none_elements(driver=driver, xpath="//div[text()='Kilometerstand']/following-sibling::div"),
+            "erstzulassung": handle_none_elements(driver=driver, xpath="//div[text()='Erstzulassung']/following-sibling::div"),
+            "fahrzeughalter": handle_none_elements(driver=driver, xpath="//div[text()='Fahrzeughalter']/following-sibling::div"),
+            "standort": handle_none_elements(driver=driver, xpath="//p[@id='seller-address']"),
+            "fahrzeugbescheibung": fahrzeug_beschreibung,
+            "url_to_crawl": i,
+            "page_rank": pg - 1,
+            "total_num_pages": last_page
+        }
+        all_pages_data_list.append(output_dict)
+    # Stop the driver
+    driver.quit()
+    return all_pages_data_list
 
 # Step 12: Loop through all the brands in the JSON file
 all_brands_data_list = []
