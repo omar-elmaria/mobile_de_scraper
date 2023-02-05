@@ -32,6 +32,28 @@ logging.basicConfig(
 load_dotenv()
 t1 = datetime.now()
 logging.info(f"The script started at {t1}")
+car_list = [
+    "Jaguar"
+]
+modell_list = [
+    "MK II",
+    "S-Type",
+    "XE",
+    "XF",
+    "XJ",
+    "XJ12",
+    "XJ40",
+    "XJ6",
+    "XJ8",
+    "XJR",
+    "XJS",
+    "XJSC",
+    "XK",
+    "XK8",
+    "XKR",
+    "X-Type",
+    "Andere"
+]
 
 # Step 2: Load the marke_and_modell JSON file
 with open(file="marke_and_modell_detailed.json", mode="r", encoding="utf-8") as f:
@@ -291,31 +313,16 @@ def crawl_func(dict_idx):
 # Step 12: Loop through all the brands in the JSON file
 all_brands_data_list = []
 for idx, rec in enumerate(marke_and_modell_list):
-    if rec["marke"] not in [
-        "ALPINA",
-        "Aston Martin",
-        "Bentley",
-        "Bugatti",
-        "Ferrari",
-        "Gemballa",
-        "Koenigsegg",
-        "KTM",
-        "Lamborghini",
-        "Maybach",
-        "McLaren",
-        "Pagani",
-        "Porsche",
-        "Rolls-Royce",
-        "Ruf",
-        "Techart",
-        "Wiesmann",
-    ]:
+    if rec["marke"] not in car_list:
         continue
     else:
-        all_brands_data_list.append(crawl_func(dict_idx=idx))
-        # Write the results to a JSON file
-        with open("df_all_brands_data.json", mode="w", encoding="utf-8") as f:
-            json.dump(obj=all_brands_data_list, fp=f, ensure_ascii=False, indent=4)
+        if rec["modell"] not in modell_list:
+            continue
+        else:
+            all_brands_data_list.append(crawl_func(dict_idx=idx))
+            # Write the results to a JSON file
+            with open("df_all_brands_data.json", mode="w", encoding="utf-8") as f:
+                json.dump(obj=all_brands_data_list, fp=f, ensure_ascii=False, indent=4)
 
 # Step 13: Open the JSON file containing all car brands and convert it into a pandas data frame
 with open("df_all_brands_data.json", mode="r", encoding="utf-8") as f:
@@ -398,7 +405,7 @@ if email_flag == "home_dir":
 else:
     yag = yagmail.SMTP("omarmoataz6@gmail.com", oauth2_file=os.getcwd()+"/email_authentication.json")
 contents = [
-    "This is an automated notification to inform you that the mobile.de scraper ran successfully"
+    f"This is an automated notification to inform you that the mobile.de scraper ran successfully.\nThe crawled brands are {car_list}"
 ]
 yag.send(["omarmoataz6@gmail.com"], f"The Mobile.de Scraper Ran Successfully on {datetime.now()} CET", contents)
 
