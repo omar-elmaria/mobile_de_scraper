@@ -16,7 +16,6 @@ def main():
             "Maybach",
             "McLaren",
             "Pagani",
-            "Porsche",
             "Rolls-Royce",
             "Ruf",
             "Techart",
