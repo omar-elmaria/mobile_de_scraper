@@ -4,7 +4,7 @@ from twocaptcha import TwoCaptcha
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.ui import Select
-from selenium.common.exceptions import TimeoutException, NoSuchElementException, JavascriptException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, JavascriptException, ElementClickInterceptedException
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver import ActionChains
@@ -146,6 +146,11 @@ def crawl_func(dict_idx):
         select_marke_modell(driver=driver, marke=marke, modell=modell)
     except NoSuchElementException:
         logging.info("Marke and Modell chosen not found on the page. Potentially check the spelling of the modell. Stopping the driver, returning an empty list and continuing to the next combination...")
+        # Stop the driver
+        driver.quit()
+        return []
+    except ElementClickInterceptedException:
+        logging.info(f"ElementClickInterceptedException error for {marke} {modell}. Stopping the driver, returning an empty list and continuing to the next combination...")
         # Stop the driver
         driver.quit()
         return []
