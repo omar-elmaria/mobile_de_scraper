@@ -171,9 +171,15 @@ def crawl_func(dict_idx):
 
     # Step 10.6: If the a captcha token was returned, invoke the callback function and navigate to the results page
     # logging.info the top title of the page
-    WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, "//h1[@data-testid='result-list-headline']")))
-    tot_search_results = re.findall(pattern="\d+", string=driver.find_element(by=By.XPATH, value="//h1[@data-testid='result-list-headline']").text)[0]
-    logging.info(f"The results page of {marke} {modell} has been retrieved. In total, we have {tot_search_results} listings to loop through...")
+    try:
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//h1[@data-testid='result-list-headline']")))
+        tot_search_results = re.findall(pattern="\d+", string=driver.find_element(by=By.XPATH, value="//h1[@data-testid='result-list-headline']").text)[0]
+        logging.info(f"The results page of {marke} {modell} has been retrieved. In total, we have {tot_search_results} listings to loop through...")
+    except TimeoutException:
+        logging.info("The header of the results page does not exist even after waiting for 10 seconds. Stopping the driver, returning an empty list, and continuing to the next combination...")
+        # Stop the driver
+        driver.quit()
+        return []
 
     # Continue on with the rest of the crawling
     # Step 11: We are at the results page now. We need to crawl the links to the individual car pages
