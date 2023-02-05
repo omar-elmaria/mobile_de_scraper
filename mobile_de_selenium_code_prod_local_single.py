@@ -33,12 +33,35 @@ load_dotenv()
 t1 = datetime.now()
 logging.info(f"The script started at {t1}")
 car_list = [
-    "Rolls-Royce"
+    "Rolls-Royce",
     "Ruf",
     "TECHART",
     "Wiesmann"
 ]
-modell_list = []
+modell_list = [
+    "Corniche",
+    "Cullinan",
+    "Dawn",
+    "Flying Spur",
+    "Ghost",
+    "Park Ward",
+    "Phantom",
+    "Silver Cloud",
+    "Silver Dawn",
+    "Silver Seraph",
+    "Silver Shadow",
+    "Silver Spirit",
+    "Silver Spur",
+    "Wraith",
+    "Andere",
+    "MF 25",
+    "MF 28",
+    "MF 3",
+    "MF 30",
+    "MF 35",
+    "MF 4",
+    "MF 5",
+]
 
 # Step 2: Load the marke_and_modell JSON file
 with open(file="marke_and_modell_detailed.json", mode="r", encoding="utf-8") as f:
@@ -303,7 +326,7 @@ for idx, rec in enumerate(marke_and_modell_list):
     else:
         if rec["modell"] not in modell_list:
             continue
-        elif rec["modell"] in modell_list or len(modell_list) == 0: # If modell is in list or list is completely empty (i.e., crawl all brands)
+        elif rec["modell"] in modell_list:
             all_brands_data_list.append(crawl_func(dict_idx=idx))
             # Write the results to a JSON file
             with open("df_all_brands_data.json", mode="w", encoding="utf-8") as f:
