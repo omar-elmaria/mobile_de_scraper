@@ -294,7 +294,7 @@ def mobile_de_local_single_func(category: str, car_list: list):
         else:
             all_brands_data_list.append(crawl_func(dict_idx=idx))
             # Write the results to a JSON file
-            with open("df_all_brands_data.json", mode="w", encoding="utf-8") as f:
+            with open(f"df_all_brands_data_{category}.json", mode="w", encoding="utf-8") as f:
                 json.dump(obj=all_brands_data_list, fp=f, ensure_ascii=False, indent=4)
 
     # Step 13: Open the JSON file containing all car brands and convert it into a pandas data frame
