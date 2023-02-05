@@ -28,11 +28,17 @@ class MobileZyteAPISpider(scrapy.Spider):
 
     def start_requests(self):
         yield scrapy.Request(
-            url = url,
+            url=url,
             meta={
                 "zyte_api_automap": {
                     "browserHtml": True,
+                    "javascript": True,
                     "actions": [
+                        {
+                            "action": "waitForTimeout",
+                            "timeout": 10,
+                            "onError": "return"
+                        },
                         {
                             "action": "click",
                             "delay": 0,
@@ -72,6 +78,11 @@ class MobileZyteAPISpider(scrapy.Spider):
                                 "type": "css",
                                 "value": "button#dsp-upper-search-btn > span > span"
                             }
+                        },
+                        {
+                            "action": "waitForTimeout",
+                            "timeout": 15,
+                            "onError": "return"
                         }
                     ],
                 },
