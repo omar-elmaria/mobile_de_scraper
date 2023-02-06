@@ -107,7 +107,7 @@ def mobile_de_local_single_func(category: str, car_list: list):
     def invoke_callback_func(driver, captcha_key):
         try: # Sometimes the captcha is solved without having to invoke the callback function. This piece of code handles this situation
             # html of the captcha is inside an iframe, selenium cannot see it if we first don't switch to the iframe
-            WebDriverWait(driver, 5).until(EC.frame_to_be_available_and_switch_to_it((By.ID, "sec-cpt-if")))
+            WebDriverWait(driver, 15).until(EC.frame_to_be_available_and_switch_to_it((By.ID, "sec-cpt-if")))
 
             # Inject the token into the inner HTML of g-recaptcha-response and invoke the callback function
             driver.execute_script(f'document.getElementById("g-recaptcha-response").innerHTML="{captcha_key}"')
