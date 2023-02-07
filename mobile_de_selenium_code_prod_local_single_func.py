@@ -213,22 +213,26 @@ def mobile_de_local_single_func(category: str, car_list: list):
             # Step 11.2.2: Navigate to the next page to collect the next batch of URLs
             if pg <= last_page:
                 logging.info(f"\nMoving to the next page, page {pg}")
-                driver.get(landing_page_url + f"&pageNumber={pg}")
-                time.sleep(1)
-                # Sometimes, a captcha is shown after navigating to the next page under of a car brand. We need to invoke the captcha service here if that happens
                 try:
-                    # Check for the existence of the "Angebote entsprechen Deinen Suchkriterien" header
-                    driver.find_element(by=By.XPATH, value="//h1[@data-testid='result-list-headline']").text
-                    # If the header doesn't exist, proceed normally to the next page
-                    logging.info(f"No Captcha was found after navigating to page {pg} under {marke} {modell}. Proceeding normally...")
-                except NoSuchElementException:
-                    logging.info(f"Captcha found while navigating to page {pg} under {marke} {modell}. Solving it with the 2captcha service...")
+                    driver.get(landing_page_url + f"&pageNumber={pg}")
+                    time.sleep(1)
+                    # Sometimes, a captcha is shown after navigating to the next page under of a car brand. We need to invoke the captcha service here if that happens
+                    try:
+                        # Check for the existence of the "Angebote entsprechen Deinen Suchkriterien" header
+                        driver.find_element(by=By.XPATH, value="//h1[@data-testid='result-list-headline']").text
+                        # If the header doesn't exist, proceed normally to the next page
+                        logging.info(f"No Captcha was found after navigating to page {pg} under {marke} {modell}. Proceeding normally...")
+                    except NoSuchElementException:
+                        logging.info(f"Captcha found while navigating to page {pg} under {marke} {modell}. Solving it with the 2captcha service...")
 
-                    # If there was a raised exception, this means that the header does not exist, so invoke the solve_captcha function
-                    captcha_token = solve_captcha(sitekey=sitekey, url=driver.current_url)
+                        # If there was a raised exception, this means that the header does not exist, so invoke the solve_captcha function
+                        captcha_token = solve_captcha(sitekey=sitekey, url=driver.current_url)
 
-                    # Invoke the callback function
-                    invoke_callback_func(driver=driver, captcha_key=captcha_token)
+                        # Invoke the callback function
+                        invoke_callback_func(driver=driver, captcha_key=captcha_token)
+                except TimeoutException:
+                    logging.info("TimeoutException: Timed out receiving message from renderer while trying to navigate to the next page. Continuing to the next page...")
+                    continue
             else:
                 logging.info(f"Crawled all the car links of {marke} {modell}...")
             
