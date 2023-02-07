@@ -299,7 +299,7 @@ def crawl_func(dict_idx):
         
         output_dict = {
             "marke": marke,
-            "modell": modell,
+            "modell": modell.strip(),
             "variante": "",
             "titel": handle_none_elements(driver=driver, xpath="//h1[@id='ad-title']") + " " + handle_none_elements(driver=driver, xpath="//div[@class='listing-subtitle']"),
             "form": handle_none_elements(driver=driver, xpath="//div[@id='category-v']"),
