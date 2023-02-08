@@ -389,7 +389,7 @@ def mobile_de_local_single_func(category: str, car_list: list):
     contents = [
         f"This is an automated notification to inform you that the mobile.de scraper for {category} ran successfully.\nThe crawled brands are {car_list}"
     ]
-    yag.send(["omarmoataz6@gmail.com"], f"The Mobile.de Scraper For {category} Ran Successfully on {datetime.now()} CET", contents)
+    yag.send(["omarmoataz6@gmail.com", "stukenborg.lukas@gmx.de"], f"The Mobile.de Scraper For {category} Ran Successfully on {datetime.now()} CET", contents)
 
     # logging.info a status message marking the end of the script
     t2 = datetime.now()
