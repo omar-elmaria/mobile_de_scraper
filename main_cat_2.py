@@ -5,6 +5,20 @@ def main():
         category="cat_2",
         car_list=[
             "Audi"
+        ],
+        modell_list=[
+            "quattro",
+            "R8",
+            "RS2",
+            "RS3",
+            "RS4",
+            "RS5",
+            "RS6",
+            "RS7",
+            "RSQ3",
+            "RSQ7",
+            "    TT RS",
+            "e-tron",
         ]
     )
 

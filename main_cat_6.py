@@ -5,6 +5,34 @@ def main():
         category="cat_6",
         car_list=[
             "Porsche"
+        ],
+        modell_list=[
+            "356",
+            "    911 Urmodell",
+            "    930",
+            "    964",
+            "    991",
+            "    992",
+            "    993",
+            "    996",
+            "    997",
+            "912",
+            "914",
+            "918",
+            "924",
+            "928",
+            "944",
+            "959",
+            "962",
+            "968",
+            "Boxster",
+            "Carrera GT",
+            "Cayenne",
+            "Cayman",
+            "Macan",
+            "Panamera",
+            "Taycan",
+            "Andere",
         ]
     )
 

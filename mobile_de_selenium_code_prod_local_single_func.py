@@ -4,7 +4,7 @@ from twocaptcha import TwoCaptcha
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support.ui import Select
-from selenium.common.exceptions import TimeoutException, NoSuchElementException, JavascriptException, ElementClickInterceptedException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, JavascriptException, ElementClickInterceptedException, InvalidArgumentException
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver import ActionChains
@@ -22,7 +22,7 @@ from datetime import datetime
 import yagmail
 
 
-def mobile_de_local_single_func(category: str, car_list: list):
+def mobile_de_local_single_func(category: str, car_list: list, modell_list: list):
     import logging
     logging.basicConfig(
         level=logging.INFO,
@@ -46,7 +46,7 @@ def mobile_de_local_single_func(category: str, car_list: list):
     sitekey = "6Lfwdy4UAAAAAGDE3YfNHIT98j8R1BW1yIn7j8Ka"
     base_url = "https://suchen.mobile.de/fahrzeuge/search.html"
 
-    # Step 4: Set the chrome options
+    # Step 4: Set the chrome options (adding --no-sandbox makes thing worse security-wise; removing --disable-gpu makes things worse as well security-wise)
     chrome_options = Options()
     chrome_options.add_argument('start-maximized') # Required for a maximized Viewport
     chrome_options.add_experimental_option('excludeSwitches', ['enable-logging', 'enable-automation', 'disable-popup-blocking']) # Disable pop-ups to speed up browsing
@@ -55,8 +55,7 @@ def mobile_de_local_single_func(category: str, car_list: list):
     chrome_options.add_argument('--blink-settings=imagesEnabled=false') # Disable images
     chrome_options.add_argument('--disable-extensions') # Disable extensions
     chrome_options.add_argument("--headless=new") # Operate Selenium in headless mode
-    chrome_options.add_argument('--no-sandbox')
-    chrome_options.add_argument('--disable-gpu')
+    chrome_options.add_experimental_option('extensionLoadTimeout', 45000) #  Fixes the problem of renderer timeout for a slow PC
     chrome_options.add_argument("--window-size=1920x1080")
 
     # Step 5: Instantiate a browser object and navigate to the URL
@@ -120,6 +119,9 @@ def mobile_de_local_single_func(category: str, car_list: list):
 
     # Step 10: Set the mileage filters
     def mileage_filter_func(driver, km_min, km_max):
+        # Wait for the mileage filter to appear
+        WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, "//select[@id='minMileage-s']")))
+        
         # Set the minimum mileage filter
         driver.find_element(by=By.XPATH, value="//select[@id='minMileage-s']").send_keys(km_min)
         time.sleep(1)
@@ -149,25 +151,22 @@ def mobile_de_local_single_func(category: str, car_list: list):
     
     # Step 12: Enable Javascript to be able to apply the mileage filters
     def javascript_func(driver, is_disable):
-        try:
-            path = 'chrome://settings/content/javascript'
-            driver.get(path)
-            # clicking toggle button
-            time.sleep(1)
-            if is_disable == True:
-                ActionChains(driver).send_keys(Keys.TAB).send_keys(Keys.TAB).send_keys(Keys.DOWN).perform()
-            else:
-                ActionChains(driver).send_keys(Keys.TAB).send_keys(Keys.TAB).send_keys(Keys.UP).perform()
-        except TimeoutException:
-            logging.info("TimeoutException: Timed out receiving message from renderer while trying to enable Javascript for a car page. Stopping the driver, returning an empty list, and continuing to the next combination...")
-            # Stop the driver
-            driver.quit()
-            return []
+        path = 'chrome://settings/content/javascript'
+        driver.get(path)
+        # clicking toggle button
+        time.sleep(1)
+        if is_disable == True:
+            ActionChains(driver).send_keys(Keys.TAB).send_keys(Keys.TAB).send_keys(Keys.DOWN).perform()
+        else:
+            ActionChains(driver).send_keys(Keys.TAB).send_keys(Keys.TAB).send_keys(Keys.UP).perform()
     
     # Step 13: Define a function to navigate to the base URL, apply the search filters, bypass the captcha, crawl the data and return it to a JSON file
     def crawl_func(dict_idx):
         # Instantiate the chrome driver
         driver = webdriver.Chrome(desired_capabilities=capabibilties, options=chrome_options)
+
+        # Set page_load_timeout to 45 seconds to avoid renderer timeout
+        driver.set_page_load_timeout(45)
 
         # Step 13.0: Get the marke and modell based on the dict_idx 
         marke = marke_and_modell_list[dict_idx]["marke"]
@@ -246,14 +245,22 @@ def mobile_de_local_single_func(category: str, car_list: list):
         all_pages_data_list = []
         for km in mileage_filters:
             # Set the mileage filters
-            mileage_filter_func(driver=driver, km_min=km[0], km_max=km[1])
+            try:
+                mileage_filter_func(driver=driver, km_min=km[0], km_max=km[1])
+            except TimeoutException:
+                logging.info("Timeout Exception. Did not find the mileage XPATH selector. Continuing to the next mileage range...")
+                continue
 
             # Sometimes, a captcha is shown after applying the mileage filters. We need to invoke the captcha service here if that happens
-            check_for_captcha_and_solve_it_func(
-                driver=driver,
-                try_txt=f"No Captcha was found after applying the mileage filters {km[0]} to {km[1]} for {marke} {modell}. Proceeding normally...",
-                except_txt=f"Captcha found after applying the mileage filters {km[0]} to {km[1]} for {marke} {modell}. Solving it with the 2captcha service..."
-            )
+            try:
+                check_for_captcha_and_solve_it_func(
+                    driver=driver,
+                    try_txt=f"No Captcha was found after applying the mileage filters {km[0]} to {km[1]} for {marke} {modell}. Proceeding normally...",
+                    except_txt=f"Captcha found after applying the mileage filters {km[0]} to {km[1]} for {marke} {modell}. Solving it with the 2captcha service..."
+                )
+            except JavascriptException:
+                logging.info("Javascript Exception: Javascript error. Cannot set properties of null (setting 'innerHTML'). Continuing to the next mileage range...")
+                continue
 
             # Continue on with the rest of the crawling
             # Step 14: We are at the results page now. We need to crawl the links to the individual car pages
@@ -271,10 +278,13 @@ def mobile_de_local_single_func(category: str, car_list: list):
             for pg in range(2, last_page + 2):
                 # Step 14.2.1: Get all the car URLs on the page. Don't crawl the "sponsored" or the "top in category" listings 
                 logging.info(f"Crawling the car links on page {pg - 1}...")
-                car_web_elements = driver.find_elements(by=By.XPATH, value="//div[contains(@class, 'cBox-body cBox-body') and @class!='cBox-body cBox-body--topInCategory' and @class!='cBox-body cBox-body--topResultitem']")
-                for web in car_web_elements:
-                    car_page_url = web.find_element(by=By.XPATH, value="./a").get_attribute("href")
-                    car_page_url_list.append(car_page_url)
+                try:
+                    car_web_elements = driver.find_elements(by=By.XPATH, value="//div[contains(@class, 'cBox-body cBox-body') and @class!='cBox-body cBox-body--topInCategory' and @class!='cBox-body cBox-body--topResultitem']")
+                    for web in car_web_elements:
+                        car_page_url = web.find_element(by=By.XPATH, value="./a").get_attribute("href")
+                        car_page_url_list.append(car_page_url)
+                except InvalidArgumentException as err: # Sometimes, the find_elements method produces this error --> Message: invalid argument: uniqueContextId not found
+                    logging.info(err)
                 
                 # Step 14.2.2: Navigate to the next page to collect the next batch of URLs
                 if pg <= last_page:
@@ -291,16 +301,28 @@ def mobile_de_local_single_func(category: str, car_list: list):
                     except TimeoutException:
                         logging.info("TimeoutException: Timed out receiving message from renderer while trying to navigate to the next page. Continuing to the next page...")
                         continue
+                    except JavascriptException:
+                        logging.info("JavascriptException: Javascript error. Cannot set properties of null (setting 'innerHTML'). Continuing to the next page...")
+                        continue
                 else:
                     logging.info(f"Crawled all the car links of {marke} {modell}...")
                 
             # Step 14.3.1: Disable Javascript to prevent ads from popping up
-            javascript_func(driver=driver, is_disable=True)
+            try:
+                javascript_func(driver=driver, is_disable=True)
+            except TimeoutException:
+                logging.info("TimeoutException: Timed out receiving message from renderer while trying to disable Javascript for a car page. Continuing to the next combination...")
+                continue
 
             # Step 14.3.2: Navigate to each individual car page and crawl the data
             for idx, i in enumerate(car_page_url_list):
                 logging.info(f"{len(car_page_url_list)} links were crawled under {marke} {modell}. Navigating to car #{idx + 1} out of {len(car_page_url_list)}...")
-                driver.get(i)
+                try:
+                    driver.get(i)
+                except TimeoutException:
+                    logging.info("TimeoutException: Timed out receiving message from renderer while trying to navigate to another car page. Returning the items that have been crawled thus far and continuing to the next combination...")
+                    driver.quit()
+                    return all_pages_data_list
 
                 # Step 14.3.1: Extract the vehicle data
                 # Extract the vehicle description
@@ -342,17 +364,27 @@ def mobile_de_local_single_func(category: str, car_list: list):
             # If the "modell" belongs to any of the Porsche models specified above, then do some extra steps before moving to the next iteration of the "km" for loop
             if marke == "Porsche" and modell in ["    911 Urmodell", "    991", "    992", "Boxster", "Cayenne", "Macan", "Panamera", "Taycan"]:
                 # Step 14.3.1: Enable Javascript to be able to apply the mileage filters
-                javascript_func(driver=driver, is_disable=False)
+                try:
+                    javascript_func(driver=driver, is_disable=False)
+                except TimeoutException:
+                    logging.info("TimeoutException: Timed out receiving message from renderer while trying to enable Javascript for a car page. Returning the items that have been crawled thus far and continuing to the next combination...")
+                    driver.quit()
+                    return all_pages_data_list
 
                 # Return back to the original results page before applying the mileage filters
                 driver.get(results_page_url)
 
                 # Sometimes, a captcha is shown after navigating to the original results page. We need to invoke the captcha service here if that happens
-                check_for_captcha_and_solve_it_func(
-                    driver=driver,
-                    try_txt=f"No Captcha was found after navigating to the original results page of {marke} {modell}. Proceeding normally...",
-                    except_txt=f"Captcha found while after navigating to the original results page of {marke} {modell}. Solving it with the 2captcha service..."
-                )
+                try:
+                    check_for_captcha_and_solve_it_func(
+                        driver=driver,
+                        try_txt=f"No Captcha was found after navigating to the original results page of {marke} {modell}. Proceeding normally...",
+                        except_txt=f"Captcha found while after navigating to the original results page of {marke} {modell}. Solving it with the 2captcha service..."
+                    )
+                except JavascriptException:
+                    logging.info("JavascriptException: Javascript error. Cannot set properties of null (setting 'innerHTML'). Returning the items that have been crawled thus far and continuing to the next combination...")
+                    driver.quit()
+                    return all_pages_data_list
 
         # Stop the driver
         driver.quit()
@@ -361,7 +393,7 @@ def mobile_de_local_single_func(category: str, car_list: list):
     # Step 15: Loop through all the brands in the JSON file
     all_brands_data_list = []
     for idx, rec in enumerate(marke_and_modell_list):
-        if rec["marke"] not in car_list:
+        if rec["marke"] not in car_list or rec["modell"] not in modell_list:
             continue
         else:
             all_brands_data_list.append(crawl_func(dict_idx=idx))

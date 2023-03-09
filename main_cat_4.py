@@ -5,6 +5,19 @@ def main():
         category="cat_4",
         car_list=[
             "BMW"
+        ],
+        modell_list=[
+            "    1er M Coupé",
+            "    M2",
+            "    M3",
+            "    M4",
+            "    M5",
+            "    M6",
+            "    M8",
+            "    X3 M",
+            "    X4 M",
+            "    X5 M",
+            "    X6 M",
         ]
     )
 
