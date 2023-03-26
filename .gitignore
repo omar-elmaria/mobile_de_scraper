@@ -15,8 +15,6 @@ df_all_brands_data_cat_3.json
 df_all_brands_data_cat_4.json
 df_all_brands_data_cat_5.json
 df_all_brands_data_cat_6.json
-df_all_brands_data_cat_3_part_1.json
-df_all_brands_data_cat_4_part_1.json
 bq_credentials.json
 rolls_royce_and_ktm.json
 koenigsegg.json
@@ -28,3 +26,4 @@ aston_martin.json
 *.log
 df_all_brands_data_cat_5_part_1.json
 test.py
+*.pdf
