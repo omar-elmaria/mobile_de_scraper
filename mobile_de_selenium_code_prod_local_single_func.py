@@ -54,6 +54,10 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
     chrome_options.add_experimental_option('prefs', {'intl.accept_languages': 'en,en_US'})
     chrome_options.add_argument('--blink-settings=imagesEnabled=false') # Disable images
     chrome_options.add_argument('--disable-extensions') # Disable extensions
+    chrome_options.add_argument("--disable-gpu") # Combats the renderer timeout problem
+    chrome_options.add_argument("--no-sandbox") # Combats the renderer timeout problem
+    chrome_options.add_argument("enable-features=NetworkServiceInProcess") # Combats the renderer timeout problem
+    chrome_options.add_argument("disable-features=NetworkService") # Combats the renderer timeout problem
     chrome_options.add_argument("--headless=new") # Operate Selenium in headless mode
     chrome_options.add_experimental_option('extensionLoadTimeout', 45000) #  Fixes the problem of renderer timeout for a slow PC
     chrome_options.add_argument("--window-size=1920x1080")
@@ -432,18 +436,10 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
 
     # Step 18: Upload to bigquery
     # First, set the credentials
-    key_path_cwd = os.getcwd() + "/bq_credentials.json"
     key_path_home_dir = os.path.expanduser("~") + "/bq_credentials.json"
-    try:
-        credentials = service_account.Credentials.from_service_account_file(
-            key_path_home_dir, scopes=["https://www.googleapis.com/auth/cloud-platform"],
-        )
-        email_flag = "home_dir"
-    except FileNotFoundError:
-        credentials = service_account.Credentials.from_service_account_file(
-            key_path_cwd, scopes=["https://www.googleapis.com/auth/cloud-platform"],
-        )
-        email_flag = "cwd"
+    credentials = service_account.Credentials.from_service_account_file(
+        key_path_home_dir, scopes=["https://www.googleapis.com/auth/cloud-platform"],
+    )
 
     # Now, instantiate the client and upload the table to BigQuery
     client = bigquery.Client(project="web-scraping-371310", credentials=credentials)
@@ -480,10 +476,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
     ).result()
 
     # Step 19: Send success E-mail
-    if email_flag == "home_dir":
-        yag = yagmail.SMTP("omarmoataz6@gmail.com", oauth2_file=os.path.expanduser("~")+"/email_authentication.json")
-    else:
-        yag = yagmail.SMTP("omarmoataz6@gmail.com", oauth2_file=os.getcwd()+"/email_authentication.json")
+    yag = yagmail.SMTP("omarmoataz6@gmail.com", oauth2_file=os.path.expanduser("~")+"/email_authentication.json")
     contents = [
         f"This is an automated notification to inform you that the mobile.de scraper for {category} ran successfully.\nThe crawled brands are {car_list}"
     ]
