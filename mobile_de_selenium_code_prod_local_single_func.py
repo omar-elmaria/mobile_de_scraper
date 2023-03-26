@@ -154,7 +154,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
         path = 'chrome://settings/content/javascript'
         driver.get(path)
         # clicking toggle button
-        time.sleep(1)
+        time.sleep(2.5)
         if is_disable == True:
             ActionChains(driver).send_keys(Keys.TAB).send_keys(Keys.TAB).send_keys(Keys.DOWN).perform()
         else:
@@ -432,11 +432,11 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
 
     # Step 18: Upload to bigquery
     # First, set the credentials
-    key_path_cwd = os.path.expanduser("~") + "/bq_credentials.json"
-    key_path1_home_dir = os.getcwd() + "/bq_credentials.json"
+    key_path_cwd = os.getcwd() + "/bq_credentials.json"
+    key_path_home_dir = os.path.expanduser("~") + "/bq_credentials.json"
     try:
         credentials = service_account.Credentials.from_service_account_file(
-            key_path1_home_dir, scopes=["https://www.googleapis.com/auth/cloud-platform"],
+            key_path_home_dir, scopes=["https://www.googleapis.com/auth/cloud-platform"],
         )
         email_flag = "home_dir"
     except FileNotFoundError:
@@ -473,7 +473,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
     job_config.write_disposition = bigquery.WriteDisposition.WRITE_APPEND
 
     # Upload the table
-    job = client.load_table_from_dataframe(
+    client.load_table_from_dataframe(
         dataframe=df_data_all_car_brands_cleaned,
         destination="web-scraping-371310.crawled_datasets.lukas_mobile_de",
         job_config=job_config
