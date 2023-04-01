@@ -16,7 +16,7 @@ def main():
             "RS6",
             "RS7",
             "RSQ3",
-            "RSQ7",
+            "RSQ8",
             "    TT RS",
             "e-tron",
         ]
