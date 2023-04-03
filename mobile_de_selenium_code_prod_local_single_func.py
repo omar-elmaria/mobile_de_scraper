@@ -18,7 +18,7 @@ import pandas as pd
 from google.cloud import bigquery
 from google.oauth2 import service_account
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import yagmail
 
 
@@ -54,6 +54,10 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
     chrome_options.add_experimental_option('prefs', {'intl.accept_languages': 'en,en_US'})
     chrome_options.add_argument('--blink-settings=imagesEnabled=false') # Disable images
     chrome_options.add_argument('--disable-extensions') # Disable extensions
+    chrome_options.add_argument("--disable-gpu") # Combats the renderer timeout problem
+    chrome_options.add_argument("--no-sandbox") # Combats the renderer timeout problem
+    chrome_options.add_argument("enable-features=NetworkServiceInProcess") # Combats the renderer timeout problem
+    chrome_options.add_argument("disable-features=NetworkService") # Combats the renderer timeout problem
     chrome_options.add_argument("--headless=new") # Operate Selenium in headless mode
     chrome_options.add_experimental_option('extensionLoadTimeout', 45000) #  Fixes the problem of renderer timeout for a slow PC
     chrome_options.add_argument("--window-size=1920x1080")
@@ -120,7 +124,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
     # Step 10: Set the mileage filters
     def mileage_filter_func(driver, km_min, km_max):
         # Wait for the mileage filter to appear
-        WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, "//select[@id='minMileage-s']")))
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//select[@id='minMileage-s']")))
         
         # Set the minimum mileage filter
         driver.find_element(by=By.XPATH, value="//select[@id='minMileage-s']").send_keys(km_min)
@@ -149,7 +153,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
             # Invoke the callback function
             invoke_callback_func(driver=driver, captcha_key=captcha_token)
     
-    # Step 12: Enable Javascript to be able to apply the mileage filters
+    # Step 12.1: Enable Javascript to be able to apply the mileage filters
     def javascript_func(driver, is_disable):
         path = 'chrome://settings/content/javascript'
         driver.get(path)
@@ -160,6 +164,57 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
         else:
             ActionChains(driver).send_keys(Keys.TAB).send_keys(Keys.TAB).send_keys(Keys.UP).perform()
     
+    # Step 12.2: Define a function to navigate to the filters page and apply the filter
+    def nav_and_apply_filters_func(driver, marke, modell):
+        # Step 12.2.1: Navigate to the base URL from which we will start our search
+        # Declare initial variables before the while loop
+        base_url_nav_try_counter = 1
+        base_url_nav_is_pass = False
+
+        # Keep trying to navigate to the base URL until it succeeds or 3 tries are exhausted
+        while base_url_nav_try_counter <= 3 and base_url_nav_is_pass == False:
+            try:
+                driver.get(base_url)
+                logging.info("\nNavigating to the base URL where we can apply the search criteria...")
+
+                # Step 12.2.2: Maximize the window
+                driver.maximize_window()
+
+                # Step 12.2.3: Wait for "Einverstanden" and click on it
+                logging.info("Waiting for the Einverstanden window to pop up so we can click on it...")
+                try:
+                    WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.XPATH, "//button[@class='sc-bczRLJ iBneUr mde-consent-accept-btn']")))
+                    driver.find_element(by=By.XPATH, value="//button[@class='sc-bczRLJ iBneUr mde-consent-accept-btn']").click()
+                except TimeoutException:
+                    logging.info("The Einverstanden/Accept Cookies window did not show up on the apply search criteria page. No need to click on anything...")
+
+                # Step 12.2.4: Apply the filters
+                logging.info(f"Applying the search filters for {marke} {modell}...")
+                try:
+                    select_marke_modell(driver=driver, marke=marke, modell=modell)
+                except NoSuchElementException:
+                    logging.info("Marke and Modell chosen not found on the page. Potentially check the spelling of the modell. Stopping the driver, returning an empty list and continuing to the next combination...")
+                    # Stop the driver
+                    driver.quit()
+                    return []
+                except ElementClickInterceptedException:
+                    logging.info(f"ElementClickInterceptedException error for {marke} {modell}. Stopping the driver, returning an empty list and continuing to the next combination...")
+                    # Stop the driver
+                    driver.quit()
+                    return []
+                base_url_nav_is_pass = True
+            except TimeoutException: # This exception catches this error --> Timed out receiving message from renderer
+                logging.info("Was not able to navigate to the base URL to apply the filters. Setting base_url_nav_is_pass to False, incrementing base_url_nav_try_counter, and retrying the whole process again starting driver.get(base_url)")
+                base_url_nav_is_pass = False
+                base_url_nav_try_counter += 1
+            
+            # If we exhausted the 3 tries and we were still unable to navigate to the base_url, return an empty list and continue to the next combination
+            if base_url_nav_try_counter > 3 and base_url_nav_is_pass == False:
+                logging.info("There is a problem navigating to the base URL due to the timeout receiving message from renderer error. Stopping the driver, returning an empty list, and continuing to the next combination...")
+                # Stop the driver
+                driver.quit()
+                return []
+
     # Step 13: Define a function to navigate to the base URL, apply the search filters, bypass the captcha, crawl the data and return it to a JSON file
     def crawl_func(dict_idx):
         # Instantiate the chrome driver
@@ -173,33 +228,8 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
         modell = marke_and_modell_list[dict_idx]["modell"]
 
         # Step 13.1: Navigate to the base URL from which we will start our search
-        driver.get(base_url)
-        logging.info("\nNavigating to the base URL where we can apply the search criteria...")
-
-        # Step 13.2: Maximize the window
-        driver.maximize_window()
-
-        # Step 13.3: Wait for "Einverstanden" and click on it
-        logging.info("Waiting for the Einverstanden window to pop up so we can click on it...")
-        try:
-            WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.XPATH, "//button[@class='sc-bczRLJ iBneUr mde-consent-accept-btn']")))
-            driver.find_element(by=By.XPATH, value="//button[@class='sc-bczRLJ iBneUr mde-consent-accept-btn']").click()
-        except TimeoutException:
-            logging.info("The Einverstanden/Accept Cookies window did not show up on the apply search criteria page. No need to click on anything...")
-
-        # Step 13.4: Apply the filters
-        logging.info(f"Applying the search filters for {marke} {modell}...")
-        try:
-            select_marke_modell(driver=driver, marke=marke, modell=modell)
-        except NoSuchElementException:
-            logging.info("Marke and Modell chosen not found on the page. Potentially check the spelling of the modell. Stopping the driver, returning an empty list and continuing to the next combination...")
-            # Stop the driver
-            driver.quit()
-            return []
-        except ElementClickInterceptedException:
-            logging.info(f"ElementClickInterceptedException error for {marke} {modell}. Stopping the driver, returning an empty list and continuing to the next combination...")
-            # Stop the driver
-            driver.quit()
+        nav_func_var = nav_and_apply_filters_func(driver=driver, marke=marke, modell=modell)
+        if nav_func_var == []:
             return []
 
         # Step 13.5: Solve the captcha
@@ -207,14 +237,41 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
         if driver.title == "Challenge Validation":
             captcha_key = solve_captcha(sitekey=sitekey, url=driver.current_url)
             if captcha_key is not None:
-                # Invoke the callback function
-                try:
-                    invoke_callback_func(driver=driver, captcha_key=captcha_key)
-                except JavascriptException: # This error could occur because of a problem with setting injecting the g-recaptcha-response in the innerHTML
-                    logging.info("There is a problem with injecting the g-recaptcha-response in the innerHTML. Stopping the driver, returning an empty list, and continuing to the next combination...")
-                    # Stop the driver
-                    driver.quit()
-                    return []
+                # Declare initial variables before the while loop
+                inject_captcha_try_counter = 1
+                is_pass = False
+
+                # Keep trying to inject the captcha until it succeeds or 3 tries are exhausted
+                while inject_captcha_try_counter <= 3 and is_pass == False:
+                    # Invoke the callback function
+                    try:
+                        invoke_callback_func(driver=driver, captcha_key=captcha_key)
+                        is_pass = True
+                    except JavascriptException: # This error could occur because of a problem with setting injecting the g-recaptcha-response in the innerHTML
+                        logging.info("Was not able to inject the g-recaptcha-response in the innerHTML. Setting is_pass to False, incrementing inject_captcha_try_counter, and retrying the whole process again starting from the base URL")
+                        is_pass = False
+                        inject_captcha_try_counter += 1
+                        
+                        # Quit the driver
+                        driver.quit()
+                        
+                        # Re-instantiate a new driver
+                        driver = webdriver.Chrome(desired_capabilities=capabibilties, options=chrome_options)
+
+                        # Set page_load_timeout to 45 seconds to avoid renderer timeout
+                        driver.set_page_load_timeout(45)
+
+                        # Repeat the navigation steps
+                        nav_func_var2 = nav_and_apply_filters_func(driver=driver, marke=marke, modell=modell)
+                        if nav_func_var2 == []:
+                            return []
+                    
+                    # If we exhausted the 3 tries and the captcha box still did not appear, return an empty list and continue to the next combination
+                    if inject_captcha_try_counter > 3 and is_pass == False:
+                        logging.info("There is a problem with injecting the g-recaptcha-response in the innerHTML. Stopping the driver, returning an empty list, and continuing to the next combination...")
+                        # Stop the driver
+                        driver.quit()
+                        return []
             else:
                 # If the captcha solver did not return a token, return an empty list and proceed to the next marke-modell combination
                 logging.info(f"The captcha was not solved for the marke and modell chosen ({marke} {modell}). Stopping the driver, returning an empty list, and continuing to the next combination...")
@@ -231,6 +288,11 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
             logging.info(f"The results page of {marke} {modell} has been retrieved. In total, we have {tot_search_results} listings to loop through...")
         except TimeoutException:
             logging.info("The header of the results page does not exist even after waiting for 10 seconds. Stopping the driver, returning an empty list, and continuing to the next combination...")
+            # Stop the driver
+            driver.quit()
+            return []
+        except NoSuchElementException: # Another version of the timeout exception where the result-list-headline was not found
+            logging.info("The header of the results page was not found due to a 'NoSuchElementException found' error. Stopping the driver, returning an empty list, and continuing to the next combination...")
             # Stop the driver
             driver.quit()
             return []
@@ -427,23 +489,15 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
     df_data_all_car_brands_cleaned["kilometer"] = df_data_all_car_brands_cleaned["kilometer"].apply(lambda x: int(''.join(re.findall(pattern="\d+", string=x))) if x is not None else x)
     df_data_all_car_brands_cleaned["fahrzeughalter"] = df_data_all_car_brands_cleaned["fahrzeughalter"].apply(lambda x: int(x) if x is not None else x)
     df_data_all_car_brands_cleaned["standort"] = df_data_all_car_brands_cleaned["standort"].apply(lambda x: re.findall(pattern="[A-za-z]+(?=-)", string=x)[0] if x is not None else x)
-    df_data_all_car_brands_cleaned["crawled_timestamp"] = datetime.now()
+    df_data_all_car_brands_cleaned["crawled_timestamp"] = datetime.now() - timedelta(days = 1)
     logging.info(df_data_all_car_brands.head(10))
 
     # Step 18: Upload to bigquery
     # First, set the credentials
-    key_path_cwd = os.getcwd() + "/bq_credentials.json"
     key_path_home_dir = os.path.expanduser("~") + "/bq_credentials.json"
-    try:
-        credentials = service_account.Credentials.from_service_account_file(
-            key_path_home_dir, scopes=["https://www.googleapis.com/auth/cloud-platform"],
-        )
-        email_flag = "home_dir"
-    except FileNotFoundError:
-        credentials = service_account.Credentials.from_service_account_file(
-            key_path_cwd, scopes=["https://www.googleapis.com/auth/cloud-platform"],
-        )
-        email_flag = "cwd"
+    credentials = service_account.Credentials.from_service_account_file(
+        key_path_home_dir, scopes=["https://www.googleapis.com/auth/cloud-platform"],
+    )
 
     # Now, instantiate the client and upload the table to BigQuery
     client = bigquery.Client(project="web-scraping-371310", credentials=credentials)
@@ -480,10 +534,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
     ).result()
 
     # Step 19: Send success E-mail
-    if email_flag == "home_dir":
-        yag = yagmail.SMTP("omarmoataz6@gmail.com", oauth2_file=os.path.expanduser("~")+"/email_authentication.json")
-    else:
-        yag = yagmail.SMTP("omarmoataz6@gmail.com", oauth2_file=os.getcwd()+"/email_authentication.json")
+    yag = yagmail.SMTP("omarmoataz6@gmail.com", oauth2_file=os.path.expanduser("~")+"/email_authentication.json")
     contents = [
         f"This is an automated notification to inform you that the mobile.de scraper for {category} ran successfully.\nThe crawled brands are {car_list}"
     ]
