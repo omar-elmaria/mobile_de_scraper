@@ -228,7 +228,9 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
         modell = marke_and_modell_list[dict_idx]["modell"]
 
         # Step 13.1: Navigate to the base URL from which we will start our search
-        nav_and_apply_filters_func(driver=driver, marke=marke, modell=modell)
+        nav_func_var = nav_and_apply_filters_func(driver=driver, marke=marke, modell=modell)
+        if nav_func_var == []:
+            return []
 
         # Step 13.5: Solve the captcha
         logging.info(f"Applied the search filters for {marke} {modell}. Now, solving the captcha...")
@@ -260,7 +262,9 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
                         driver.set_page_load_timeout(45)
 
                         # Repeat the navigation steps
-                        nav_and_apply_filters_func(driver=driver, marke=marke, modell=modell)
+                        nav_func_var2 = nav_and_apply_filters_func(driver=driver, marke=marke, modell=modell)
+                        if nav_func_var2 == []:
+                            return []
                     
                     # If we exhausted the 3 tries and the captcha box still did not appear, return an empty list and continue to the next combination
                     if inject_captcha_try_counter > 3 and is_pass == False:
