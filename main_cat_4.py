@@ -7,6 +7,7 @@ def main():
             "BMW"
         ],
         modell_list=[
+            # BMW
             "    1er M Coupé",
             "    M2",
             "    M3",
@@ -18,6 +19,8 @@ def main():
             "    X4 M",
             "    X5 M",
             "    X6 M",
+            "    Z3 M",
+            "    Z8",
         ]
     )
 
