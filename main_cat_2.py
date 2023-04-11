@@ -7,6 +7,8 @@ def main():
             "Audi"
         ],
         modell_list=[
+            # Audi
+            "e-tron",
             "quattro",
             "R8",
             "RS2",
@@ -17,8 +19,8 @@ def main():
             "RS7",
             "RSQ3",
             "RSQ8",
+            "S8",
             "    TT RS",
-            "e-tron",
         ]
     )
 
