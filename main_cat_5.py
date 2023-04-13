@@ -31,7 +31,6 @@ def main():
             # Alfa Romeo
             "4C",
             "8C",
-            "Giulia",
 
             # Jaguar
             "F-Type",
