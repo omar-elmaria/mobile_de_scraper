@@ -1,7 +1,6 @@
 [
 {"marke": "Alfa Romeo", "modell": "4C"},
 {"marke": "Alfa Romeo", "modell": "8C"},
-{"marke": "Alfa Romeo", "modell": "Giulia"},
 {"marke": "ALPINA", "modell": "Andere"},
 {"marke": "Aston Martin", "modell": "DB"},
 {"marke": "Aston Martin", "modell": "DB11"},
@@ -12,6 +11,7 @@
 {"marke": "Aston Martin", "modell": "V12 Vantage"},
 {"marke": "Aston Martin", "modell": "V8 Vantage"},
 {"marke": "Aston Martin", "modell": "Vanquish"},
+{"marke": "Aston Martin", "modell": "Virage"},
 {"marke": "Aston Martin", "modell": "Andere"},
 {"marke": "Audi", "modell": "e-tron"},
 {"marke": "Audi", "modell": "quattro"},
@@ -46,6 +46,7 @@
 {"marke": "BMW", "modell": "    X5 M"},
 {"marke": "BMW", "modell": "    X6 M"},
 {"marke": "BMW", "modell": "    Z3 M"},
+{"marke": "BMW", "modell": "    Z4 M"},
 {"marke": "BMW", "modell": "    Z8"},
 {"marke": "Bugatti", "modell": "Chiron"},
 {"marke": "Bugatti", "modell": "EB 110"},

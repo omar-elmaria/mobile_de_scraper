@@ -31,6 +31,7 @@ def main():
             "V12 Vantage",
             "V8 Vantage",
             "Vanquish",
+            "Virage",
             "Andere",
 
             # Bentley
