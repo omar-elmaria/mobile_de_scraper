@@ -296,6 +296,11 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
             # Stop the driver
             driver.quit()
             return []
+        except InvalidArgumentException:
+            logging.info("The header of the results page was not found due to an 'InvalidArgumentException found' error. Stopping the driver, returning an empty list, and continuing to the next combination...")
+            # Stop the driver
+            driver.quit()
+            return []
 
         # Create mileage filters for the Porsche brands that have more than 1000 results
         if marke == "Porsche" and modell in ["    911 Urmodell", "    991", "    992", "Boxster", "Cayenne", "Macan", "Panamera", "Taycan"]:
@@ -307,11 +312,12 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
         all_pages_data_list = []
         for km in mileage_filters:
             # Set the mileage filters
-            try:
-                mileage_filter_func(driver=driver, km_min=km[0], km_max=km[1])
-            except TimeoutException:
-                logging.info("Timeout Exception. Did not find the mileage XPATH selector. Continuing to the next mileage range...")
-                continue
+            if km != ("", ""):
+                try:
+                    mileage_filter_func(driver=driver, km_min=km[0], km_max=km[1])
+                except TimeoutException:
+                    logging.info("Timeout Exception. Did not find the mileage XPATH selector. Continuing to the next mileage range...")
+                    continue
 
             # Sometimes, a captcha is shown after applying the mileage filters. We need to invoke the captcha service here if that happens
             try:
