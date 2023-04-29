@@ -37,7 +37,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
     logging.info(f"The script started at {t1}")
 
     # Step 2: Load the marke_and_modell JSON file
-    with open(file="marke_and_modell_detailed.json", mode="r", encoding="utf-8") as f:
+    with open(file="mobile_de/marke_and_modell_detailed.json", mode="r", encoding="utf-8") as f:
         marke_and_modell_list = json.load(f)
         f.close()
 
