@@ -1,7 +1,12 @@
+from dotenv import load_dotenv
 import json
 import logging
+import os
 
 import scrapy
+
+# Load environment variables
+load_dotenv()
 
 # Define custom settings for the spider
 custom_settings_dict = {
@@ -15,6 +20,21 @@ custom_settings_dict = {
     "FEEDS": {"df_all_brands_data_cat_all.json":{"format": "json", "overwrite": True, "encoding": "utf-8"}}, # Set the name of the output JSON file
     "LOG_FILE": "mobile_logs_cat_all.log", # Set the name of the log file
     "LOG_LEVEL": "DEBUG", # Set the level of logging to DEBUG
+    # Zyte settings
+    "DOWNLOAD_HANDLERS": {
+        "http": "scrapy_zyte_api.ScrapyZyteAPIDownloadHandler",
+        "https": "scrapy_zyte_api.ScrapyZyteAPIDownloadHandler",
+    },
+    "DOWNLOADER_MIDDLEWARES": {
+        "scrapy_zyte_api.ScrapyZyteAPIDownloaderMiddleware": 1000,
+    },
+    "REQUEST_FINGERPRINTER_CLASS": "scrapy_zyte_api.ScrapyZyteAPIRequestFingerprinter",
+    "TWISTED_REACTOR": "twisted.internet.asyncioreactor.AsyncioSelectorReactor",
+    "ZYTE_API_KEY": os.getenv("ZYTE_API_KEY"),
+    "ZYTE_API_LOG_REQUESTS": True,
+    "ZYTE_API_TRANSPARENT_MODE": True,
+    "ZYTE_API_SKIP_HEADERS": ["Cookie", "User-Agent"],
+    "ZYTE_API_RETRY_POLICY": "retry_policies.CUSTOM_RETRY_POLICY"
 }
 
 class CarPageSpider(scrapy.Spider):
