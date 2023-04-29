@@ -350,9 +350,6 @@ def main():
     # Drop the duplicates because the mileage filters applied above could have produced duplicates
     df_data_all_car_brands = df_data_all_car_brands.drop_duplicates(["url_to_crawl"])
 
-    # logging.info the head of the data frame
-    logging.info(df_data_all_car_brands.head(10))
-
     # Step 17: Clean the data
     df_data_all_car_brands_cleaned = df_data_all_car_brands.copy()
     df_data_all_car_brands_cleaned.replace(to_replace="", value=None, inplace=True)
@@ -362,7 +359,6 @@ def main():
     df_data_all_car_brands_cleaned["fahrzeughalter"] = df_data_all_car_brands_cleaned["fahrzeughalter"].apply(lambda x: int(x) if x is not None else x)
     df_data_all_car_brands_cleaned["standort"] = df_data_all_car_brands_cleaned["standort"].apply(lambda x: re.findall(pattern="[A-za-z]+(?=-)", string=x)[0] if x is not None else x)
     df_data_all_car_brands_cleaned["crawled_timestamp"] = datetime.now()
-    logging.info(df_data_all_car_brands.head(10))
 
     # Step 18: Upload to bigquery
     # First, set the credentials

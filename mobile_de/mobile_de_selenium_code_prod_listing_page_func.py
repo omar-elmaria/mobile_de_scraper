@@ -27,7 +27,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
         level=logging.INFO,
         format='%(asctime)s  - %(levelname)s - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S',
-        filename=f"mobile_selenium_logs_{category}.log"
+        filename=f"mobile_logs_{category}.log"
     )
 
     # Step 1: Load environment variables and define an initial time instance to mark the start of the script
@@ -57,7 +57,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
     chrome_options.add_argument("--no-sandbox") # Combats the renderer timeout problem
     chrome_options.add_argument("enable-features=NetworkServiceInProcess") # Combats the renderer timeout problem
     chrome_options.add_argument("disable-features=NetworkService") # Combats the renderer timeout problem
-    # chrome_options.add_argument("--headless=new") # Operate Selenium in headless mode
+    chrome_options.add_argument("--headless=new") # Operate Selenium in headless mode
     chrome_options.add_experimental_option('extensionLoadTimeout', 45000) #  Fixes the problem of renderer timeout for a slow PC
     chrome_options.add_argument("--window-size=1920x1080")
 
