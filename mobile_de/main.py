@@ -1,15 +1,17 @@
-from scrapy.crawler import CrawlerProcess
-from mobile_de_selenium_code_prod_listing_page_func import mobile_de_local_single_func
-from mobile_de.spiders.mobile_de_zyte_api_car_page_spider import CarPageSpider
 import json
-from datetime import datetime
-import re
-import os
-import pandas as pd
 import logging
+import os
+import re
+from datetime import datetime
+
+import pandas as pd
+import yagmail
 from google.cloud import bigquery
 from google.oauth2 import service_account
-import yagmail
+from scrapy.crawler import CrawlerProcess
+
+from mobile_de.spiders.mobile_de_zyte_api_car_page_spider import CarPageSpider
+from mobile_de_selenium_code_prod_listing_page_func import mobile_de_local_single_func
 
 
 def main():

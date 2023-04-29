@@ -1,6 +1,7 @@
-import scrapy
-import logging
 import json
+import logging
+
+import scrapy
 
 # Define custom settings for the spider
 custom_settings_dict = {
@@ -11,9 +12,9 @@ custom_settings_dict = {
     "CONCURRENT_REQUESTS": 5, # The maximum number of concurrent (i.e. simultaneous) requests that will be performed by the Scrapy downloader
     "DOWNLOAD_TIMEOUT": 60, # Setting the timeout parameter to 60 seconds as per the ScraperAPI documentation
     "ROBOTSTXT_OBEY": False, # Don't obey the Robots.txt rules
-    "FEEDS": {"df_all_brands_data_cat_all.json":{"format": "json", "overwrite": True, "encoding": "utf-8"}},
-    "LOG_FILE": "mobile_scrapy_logs_cat_all.log",
-    "LOG_LEVEL": "DEBUG",
+    "FEEDS": {"df_all_brands_data_cat_all.json":{"format": "json", "overwrite": True, "encoding": "utf-8"}}, # Set the name of the output JSON file
+    "LOG_FILE": "mobile_scrapy_logs_cat_all.log", # Set the name of the log file
+    "LOG_LEVEL": "DEBUG", # Set the level of logging to DEBUG
 }
 
 class CarPageSpider(scrapy.Spider):
@@ -34,8 +35,10 @@ class CarPageSpider(scrapy.Spider):
             for j in i: # Loop through each car listing on a specific page
                 df_all_car_page_urls.append(j)
 
+        # Print a status message indicating the number of URLs to crawl
         logging.info(f"The total number of URLs to crawl is {len(df_all_car_page_urls)}")
 
+        # Send GET requests to the URLs
         for url in df_all_car_page_urls:
             # Extract the values of the dictionary's keys and print a status message
             marke = url["marke"]
@@ -60,7 +63,7 @@ class CarPageSpider(scrapy.Spider):
 
     # Get the last page of the brand-model combo and send parallel requests to all pages from the first page until the last one 
     def parse(self, response):
-        logging.info(f"Received a response. Now, scraping the data of the car page under {response.meta['marke']} {response.meta['modell']} with URL {response.meta['url']}")
+        logging.info(f"Received a response. Now, scraping the data of the car page under {response.meta['marke']} {response.meta['modell']} with URL {response.meta['url_to_crawl']}")
 
         # Extract the title
         title_1 = response.xpath("//h1[@id='ad-title']/text()").get()
@@ -107,6 +110,7 @@ class CarPageSpider(scrapy.Spider):
         else:
             fahrzeug_beschreibung = None
 
+        # Yield the output JSON file
         yield {
             "marke": response.meta["marke"],
             "modell": response.meta["modell"],
