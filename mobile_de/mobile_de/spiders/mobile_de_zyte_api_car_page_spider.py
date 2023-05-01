@@ -132,8 +132,8 @@ class CarPageSpider(scrapy.Spider):
 
         # Yield the output JSON file
         yield {
-            "marke": response.meta["marke"],
-            "modell": response.meta["modell"],
+            "marke": response.meta["marke"].strip(),
+            "modell": response.meta["modell"].strip(),
             "variante": "",
             "titel": title,
             "form": form,

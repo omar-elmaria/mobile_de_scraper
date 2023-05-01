@@ -406,7 +406,7 @@ def main():
     contents = [
         f"This is an automated notification to inform you that the mobile.de scraper ran successfully.\nThe crawled brands are {df_data_all_car_brands_cleaned['marke'].unique()}"
     ]
-    yag.send(["omarmoataz6@gmail.com"], f"The Mobile.de Scraper Ran Successfully on {datetime.now()} CET", contents)
+    yag.send(["omarmoataz6@gmail.com", "stukenborg.lukas@gmx.de"], f"The Mobile.de Scraper Ran Successfully on {datetime.now()} CET", contents)
 
     # logging.info a status message marking the end of the script
     t2 = datetime.now()
