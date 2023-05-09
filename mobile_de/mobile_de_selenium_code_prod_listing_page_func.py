@@ -168,7 +168,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
                     logging.info("The Einverstanden/Accept Cookies window did not show up on the apply search criteria page. No need to click on anything...")
 
                 # Step 11.2.4: Apply the filters
-                logging.info(f"Applying the search filters for {marke} {modell}...")
+                logging.info(f"Applying the search filters for {marke} {modell.strip()}...")
                 try:
                     select_marke_modell(driver=driver, marke=marke, modell=modell)
                 except NoSuchElementException:
@@ -177,7 +177,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
                     driver.quit()
                     return []
                 except ElementClickInterceptedException:
-                    logging.info(f"ElementClickInterceptedException error for {marke} {modell}. Stopping the driver, returning an empty list and continuing to the next combination...")
+                    logging.info(f"ElementClickInterceptedException error for {marke} {modell.strip()}. Stopping the driver, returning an empty list and continuing to the next combination...")
                     # Stop the driver
                     driver.quit()
                     return []
@@ -212,7 +212,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
             return []
 
         # Step 12.5: Solve the captcha
-        logging.info(f"Applied the search filters for {marke} {modell}. Now, solving the captcha...")
+        logging.info(f"Applied the search filters for {marke} {modell.strip()}. Now, solving the captcha...")
         if driver.title == "Challenge Validation":
             captcha_key = solve_captcha(sitekey=sitekey, url=driver.current_url)
             if captcha_key is not None:
@@ -253,7 +253,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
                         return []
             else:
                 # If the captcha solver did not return a token, return an empty list and proceed to the next marke-modell combination
-                logging.info(f"The captcha was not solved for the marke and modell chosen ({marke} {modell}). Stopping the driver, returning an empty list, and continuing to the next combination...")
+                logging.info(f"The captcha was not solved for the marke and modell chosen ({marke} {modell.strip()}). Stopping the driver, returning an empty list, and continuing to the next combination...")
                 # Stop the driver
                 driver.quit()
                 return []
@@ -263,7 +263,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
         try:
             WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//h1[@data-testid='result-list-headline']")))
             tot_search_results = re.findall(pattern="\d+", string=driver.find_element(by=By.XPATH, value="//h1[@data-testid='result-list-headline']").text)[0]
-            logging.info(f"The results page of {marke} {modell} has been retrieved. In total, we have {tot_search_results} listings to loop through...")
+            logging.info(f"The results page of {marke} {modell.strip()} has been retrieved. In total, we have {tot_search_results} listings to loop through...")
         except TimeoutException:
             logging.info("The header of the results page does not exist even after waiting for 10 seconds. Stopping the driver, returning an empty list, and continuing to the next combination...")
             # Stop the driver
@@ -301,8 +301,8 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
             try:
                 check_for_captcha_and_solve_it_func(
                     driver=driver,
-                    try_txt=f"No Captcha was found after applying the mileage filters {km[0]} to {km[1]} for {marke} {modell}. Proceeding normally...",
-                    except_txt=f"Captcha found after applying the mileage filters {km[0]} to {km[1]} for {marke} {modell}. Solving it with the 2captcha service..."
+                    try_txt=f"No Captcha was found after applying the mileage filters {km[0]} to {km[1]} for {marke} {modell.strip()}. Proceeding normally...",
+                    except_txt=f"Captcha found after applying the mileage filters {km[0]} to {km[1]} for {marke} {modell.strip()}. Solving it with the 2captcha service..."
                 )
             except JavascriptException:
                 logging.info("Javascript Exception: Javascript error. Cannot set properties of null (setting 'innerHTML'). Continuing to the next mileage range...")
@@ -317,7 +317,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
                 last_page = int(last_page_web_element_list[-1].text)
             except IndexError: # The index error can occur if the brand has only one page. In that case, set last_page to 1
                 last_page = 1
-            logging.info(f"We have a total of {last_page} pages under {marke} {modell} to loop through...")
+            logging.info(f"We have a total of {last_page} pages under {marke} {modell.strip()} to loop through...")
 
             # Step 14.2: Loop through all the pages of the "marke" and "modell" combination and crawl the individual car links that contain the information we want to crawl
             for pg in range(2, last_page + 2):
@@ -347,8 +347,8 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
                         # Sometimes, a captcha is shown after navigating to the next page under of a car brand. We need to invoke the captcha service here if that happens
                         check_for_captcha_and_solve_it_func(
                             driver=driver,
-                            try_txt=f"No Captcha was found after navigating to page {pg} under {marke} {modell}. Proceeding normally...",
-                            except_txt=f"Captcha found while navigating to page {pg} under {marke} {modell}. Solving it with the 2captcha service..."
+                            try_txt=f"No Captcha was found after navigating to page {pg} under {marke} {modell.strip()}. Proceeding normally...",
+                            except_txt=f"Captcha found while navigating to page {pg} under {marke} {modell.strip()}. Solving it with the 2captcha service..."
                         )
                     except TimeoutException:
                         logging.info("TimeoutException: Timed out receiving message from renderer while trying to navigate to the next page. Continuing to the next page...")
@@ -357,7 +357,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
                         logging.info("JavascriptException: Javascript error. Cannot set properties of null (setting 'innerHTML'). Continuing to the next page...")
                         continue
                 else:
-                    logging.info(f"Crawled all the car links of {marke} {modell}...")
+                    logging.info(f"Crawled all the car links of {marke} {modell.strip()}...")
 
         # Stop the driver
         driver.quit()
