@@ -287,6 +287,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
             mileage_filters = [("", "")]
         
         # Crawl the listing page
+        car_page_url_list = []
         for km in mileage_filters:
             # Set the mileage filters
             if km != ("", ""):
@@ -319,7 +320,6 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
             logging.info(f"We have a total of {last_page} pages under {marke} {modell} to loop through...")
 
             # Step 14.2: Loop through all the pages of the "marke" and "modell" combination and crawl the individual car links that contain the information we want to crawl
-            car_page_url_list = []
             for pg in range(2, last_page + 2):
                 # Step 14.2.1: Get all the car URLs on the page. Don't crawl the "sponsored" or the "top in category" listings 
                 logging.info(f"Crawling the car links on page {pg - 1}...")
