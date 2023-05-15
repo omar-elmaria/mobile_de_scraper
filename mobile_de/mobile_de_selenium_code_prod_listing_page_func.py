@@ -324,7 +324,9 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
                 # Step 14.2.1: Get all the car URLs on the page. Don't crawl the "sponsored" or the "top in category" listings 
                 logging.info(f"Crawling the car links on page {pg - 1}...")
                 try:
-                    car_web_elements = driver.find_elements(by=By.XPATH, value="//div[contains(@class, 'cBox-body cBox-body') and @class!='cBox-body cBox-body--topInCategory' and @class!='cBox-body cBox-body--topResultitem']")
+                    car_web_elements_selector = "//div[contains(@class, 'cBox-body cBox-body') and @class!='cBox-body cBox-body--topInCategory' and @class!='cBox-body cBox-body--topResultitem']"
+                    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, car_web_elements_selector)))
+                    car_web_elements = driver.find_elements(by=By.XPATH, value=car_web_elements_selector)
                     for web in car_web_elements:
                         output_dict_listing_page = {
                             "marke": marke,
@@ -335,7 +337,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
                         }
                         
                         car_page_url_list.append(output_dict_listing_page)
-                except InvalidArgumentException as err: # Sometimes, the find_elements method produces this error --> Message: invalid argument: uniqueContextId not found
+                except (InvalidArgumentException, TimeoutException) as err: # Sometimes, the find_elements method produces this error --> Message: invalid argument: uniqueContextId not found
                     logging.info(err)
                 
                 # Step 14.2.2: Navigate to the next page to collect the next batch of URLs
