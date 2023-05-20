@@ -11,7 +11,8 @@ from selenium.common.exceptions import (
     InvalidArgumentException,
     JavascriptException,
     NoSuchElementException,
-    TimeoutException
+    TimeoutException,
+    WebDriverException
 )
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -226,7 +227,9 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
                     try:
                         invoke_callback_func(driver=driver, captcha_key=captcha_key)
                         is_pass = True
-                    except JavascriptException: # This error could occur because of a problem with setting injecting the g-recaptcha-response in the innerHTML
+                    # This error could occur because of a problem with setting injecting the g-recaptcha-response in the innerHTML
+                    # WebDriverException could happen because the page might crash while trying to switch to the "sec-cpt-if" frame
+                    except (JavascriptException, WebDriverException):
                         logging.info("Was not able to inject the g-recaptcha-response in the innerHTML. Setting is_pass to False, incrementing inject_captcha_try_counter, and retrying the whole process again starting from the base URL")
                         is_pass = False
                         inject_captcha_try_counter += 1
@@ -358,6 +361,9 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
                     except JavascriptException:
                         logging.info("JavascriptException: Javascript error. Cannot set properties of null (setting 'innerHTML'). Continuing to the next page...")
                         continue
+                    except WebDriverException:
+                        logging.info("WebDriverException: Session deleted because of page crash. Closing the session and returning the car_page_url_list that was crawled thus far...")
+                        break
                 else:
                     logging.info(f"Crawled all the car links of {marke} {modell.strip()}...")
 
