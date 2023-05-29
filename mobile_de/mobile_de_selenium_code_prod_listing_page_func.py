@@ -12,7 +12,8 @@ from selenium.common.exceptions import (
     JavascriptException,
     NoSuchElementException,
     TimeoutException,
-    WebDriverException
+    WebDriverException,
+    InvalidSessionIdException
 )
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -296,8 +297,8 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
             if km != ("", ""):
                 try:
                     mileage_filter_func(driver=driver, km_min=km[0], km_max=km[1])
-                except TimeoutException:
-                    logging.info("Timeout Exception. Did not find the mileage XPATH selector. Continuing to the next mileage range...")
+                except (TimeoutException, InvalidSessionIdException) as err:
+                    logging.info(f"{err}. Continuing to the next mileage range...")
                     continue
 
             # Sometimes, a captcha is shown after applying the mileage filters. We need to invoke the captcha service here if that happens
