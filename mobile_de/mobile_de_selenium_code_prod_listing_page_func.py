@@ -178,8 +178,8 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
                     # Stop the driver
                     driver.quit()
                     return []
-                except ElementClickInterceptedException:
-                    logging.info(f"ElementClickInterceptedException error for {marke} {modell.strip()}. Stopping the driver, returning an empty list and continuing to the next combination...")
+                except (ElementClickInterceptedException, WebDriverException) as err:
+                    logging.info(f"{err} for {marke} {modell.strip()}. Stopping the driver, returning an empty list and continuing to the next combination...")
                     # Stop the driver
                     driver.quit()
                     return []
