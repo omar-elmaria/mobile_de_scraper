@@ -96,7 +96,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
             select2.select_by_visible_text(modell)
         
         # Click on the search button to get re-directed to the search page
-        driver.find_element(by=By.XPATH, value="//button[@id='dsp-upper-search-btn']").click()
+        driver.execute_script("document.getElementById('dsp-upper-search-btn').click()")
 
     # Step 8: Define a function to invoke the callback function
     def invoke_callback_func(driver, captcha_key):
