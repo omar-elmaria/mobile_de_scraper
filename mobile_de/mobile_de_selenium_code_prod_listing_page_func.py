@@ -126,7 +126,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
         # Wait for 3 seconds until the the search button retrieves the new number of cars
         time.sleep(3)
         # Click on the search button
-        driver.find_element(by=By.XPATH, value="//button[@id='minisearch-search-btn']").click()
+        driver.execute_script("document.getElementById('minisearch-search-btn').click()")
         # Wait for 3 seconds until the page re-loads
         time.sleep(3)
     
@@ -297,7 +297,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
             if km != ("", ""):
                 try:
                     mileage_filter_func(driver=driver, km_min=km[0], km_max=km[1])
-                except (TimeoutException, InvalidSessionIdException) as err:
+                except (TimeoutException, InvalidSessionIdException, ElementClickInterceptedException) as err:
                     logging.info(f"{err}. Continuing to the next mileage range...")
                     continue
 
