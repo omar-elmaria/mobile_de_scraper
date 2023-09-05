@@ -265,7 +265,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
         # Step 13: If the captcha token was returned, invoke the callback function and navigate to the results page
         # logging.info the top title of the page
         try:
-            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//h1[@data-testid='result-list-headline']")))
+            WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, "//h1[@data-testid='result-list-headline']")))
             tot_search_results = re.findall(pattern="\d+", string=driver.find_element(by=By.XPATH, value="//h1[@data-testid='result-list-headline']").text)[0]
             logging.info(f"The results page of {marke} {modell.strip()} has been retrieved. In total, we have {tot_search_results} listings to loop through...")
         except TimeoutException:
