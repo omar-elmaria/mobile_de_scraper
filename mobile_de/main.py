@@ -333,7 +333,8 @@ def main():
             "Panamera",
             "Taycan",
             "Andere",
-        ]
+        ],
+        captcha_solver_default="capmonster"
     )
 
     # Run the spider
