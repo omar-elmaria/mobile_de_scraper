@@ -67,7 +67,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
     chrome_options.add_argument("--window-size=1920x1080")
     chrome_options.page_load_strategy = 'eager'
 
-    # Step 6: Define a function to solve the captcha using the 2captcha service
+    # Step 6: Define a function to solve the captcha using the 2captcha/capmonster service
     def solve_captcha(sitekey, url, captcha_solver):
         if captcha_solver == "2captcha":
             try:
@@ -75,7 +75,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
                 captcha_key = result.get('code')
                 logging.info(f"Captcha solved. The key is: {captcha_key}\n")
             except Exception as err:
-                logging.info(err)
+                logging.exception(err)
                 logging.info(f"Captcha not solved...")
                 captcha_key = None
         elif captcha_solver == "capmonster":
@@ -94,9 +94,14 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
             )
 
             # Async test
-            async_responses = asyncio.run(solve_captcha_async(num_requests=3))
-            captcha_response = async_responses[0]["gRecaptchaResponse"]
-            return captcha_response
+            try:
+                async_responses = asyncio.run(solve_captcha_async(num_requests=3))
+                captcha_key = async_responses[0]["gRecaptchaResponse"]
+                logging.info(f"Captcha solved. The key is: {captcha_key}\n")
+            except Exception as err:
+                logging.exception(err)
+                logging.info(f"Captcha not solved...")
+                captcha_key = None
 
         return captcha_key
 
@@ -184,8 +189,8 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
                 # Step 11.2.3: Wait for "Einverstanden" and click on it
                 logging.info("Waiting for the Einverstanden window to pop up so we can click on it...")
                 try:
-                    WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.XPATH, "//button[@class='sc-bczRLJ iBneUr mde-consent-accept-btn']")))
-                    driver.find_element(by=By.XPATH, value="//button[@class='sc-bczRLJ iBneUr mde-consent-accept-btn']").click()
+                    WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, "//button[contains(@class,'mde-consent-accept-btn')]")))
+                    driver.find_element(by=By.XPATH, value="//button[contains(@class,'mde-consent-accept-btn')]").click()
                 except TimeoutException:
                     logging.info("The Einverstanden/Accept Cookies window did not show up on the apply search criteria page. No need to click on anything...")
 
@@ -199,7 +204,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
                     driver.quit()
                     return []
                 except (ElementClickInterceptedException, WebDriverException) as err:
-                    logging.info(f"{err} for {marke} {modell.strip()}. Stopping the driver, returning an empty list and continuing to the next combination...")
+                    logging.exception(f"{err} for {marke} {modell.strip()}. Stopping the driver, returning an empty list and continuing to the next combination...")
                     # Stop the driver
                     driver.quit()
                     return []
@@ -281,11 +286,20 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
                 # Stop the driver
                 driver.quit()
                 return []
+        else:
+            logging.info(f"There was no need to solve the captcha for {marke} {modell.strip()}. The results page has been loaded automatically...")
 
         # Step 13: If the captcha token was returned, invoke the callback function and navigate to the results page
-        # logging.info the top title of the page
+        # Sometimes, the results header does not show up directly but rather the Einverstanden window shows up first. So, we need to click on it
         try:
-            WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, "//h1[@data-testid='result-list-headline']")))
+            WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, "//button[contains(@class,'mde-consent-accept-btn')]")))
+            driver.find_element(by=By.XPATH, value="//button[contains(@class,'mde-consent-accept-btn')]").click()
+        except TimeoutException:
+            logging.info("The Einverstanden/Accept Cookies window did not show up on the results page that comes after the captcha page. No need to click on anything...")
+        
+        # Once we click on the Einverstanden Window or bypass it, we need to wait for the results header to load
+        try:
+            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//h1[@data-testid='result-list-headline']")))
             tot_search_results = re.findall(pattern="\d+", string=driver.find_element(by=By.XPATH, value="//h1[@data-testid='result-list-headline']").text)[0]
             logging.info(f"The results page of {marke} {modell.strip()} has been retrieved. In total, we have {tot_search_results} listings to loop through...")
         except TimeoutException:
@@ -318,7 +332,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
                 try:
                     mileage_filter_func(driver=driver, km_min=km[0], km_max=km[1])
                 except (TimeoutException, InvalidSessionIdException, ElementClickInterceptedException) as err:
-                    logging.info(f"{err}. Continuing to the next mileage range...")
+                    logging.exception(f"{err}. Continuing to the next mileage range...")
                     continue
 
             # Sometimes, a captcha is shown after applying the mileage filters. We need to invoke the captcha service here if that happens
@@ -326,7 +340,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
                 check_for_captcha_and_solve_it_func(
                     driver=driver,
                     try_txt=f"No Captcha was found after applying the mileage filters {km[0]} to {km[1]} for {marke} {modell.strip()}. Proceeding normally...",
-                    except_txt=f"Captcha found after applying the mileage filters {km[0]} to {km[1]} for {marke} {modell.strip()}. Solving it with the 2captcha service..."
+                    except_txt=f"Captcha found after applying the mileage filters {km[0]} to {km[1]} for {marke} {modell.strip()}. Solving it with the {captcha_solver_default} service..."
                 )
             except JavascriptException:
                 logging.info("Javascript Exception: Javascript error. Cannot set properties of null (setting 'innerHTML'). Continuing to the next mileage range...")
@@ -362,7 +376,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
                         
                         car_page_url_list.append(output_dict_listing_page)
                 except (InvalidArgumentException, TimeoutException) as err: # Sometimes, the find_elements method produces this error --> Message: invalid argument: uniqueContextId not found
-                    logging.info(err)
+                    logging.exception(err)
                 
                 # Step 14.2.2: Navigate to the next page to collect the next batch of URLs
                 if pg <= last_page:
@@ -374,7 +388,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
                         check_for_captcha_and_solve_it_func(
                             driver=driver,
                             try_txt=f"No Captcha was found after navigating to page {pg} under {marke} {modell.strip()}. Proceeding normally...",
-                            except_txt=f"Captcha found while navigating to page {pg} under {marke} {modell.strip()}. Solving it with the 2captcha service..."
+                            except_txt=f"Captcha found while navigating to page {pg} under {marke} {modell.strip()}. Solving it with the {captcha_solver_default} service..."
                         )
                     except TimeoutException:
                         logging.info("TimeoutException: Timed out receiving message from renderer while trying to navigate to the next page. Continuing to the next page...")
