@@ -1,33 +1,36 @@
+import asyncio
 import json
 import os
 import re
 import time
 from datetime import datetime
 
+import chromedriver_binary
+from capmonstercloudclient import CapMonsterClient, ClientOptions
+from capmonstercloudclient.requests import RecaptchaV2ProxylessRequest
 from dotenv import load_dotenv
 from selenium import webdriver
 from selenium.common.exceptions import (
     ElementClickInterceptedException,
     InvalidArgumentException,
+    InvalidSessionIdException,
     JavascriptException,
     NoSuchElementException,
     TimeoutException,
-    WebDriverException,
-    InvalidSessionIdException
+    WebDriverException
 )
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select, WebDriverWait
 from twocaptcha import TwoCaptcha
 
 
-def mobile_de_local_single_func(category: str, car_list: list, modell_list: list):
+def mobile_de_local_single_func(category: str, car_list: list, modell_list: list, captcha_solver_default: str):
     import logging
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s  - %(levelname)s - %(message)s',
+        format='%(asctime)s - %(levelname)s - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S',
         filename=f"mobile_logs_{category}.log"
     )
@@ -62,21 +65,38 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
     chrome_options.add_argument("--headless=new") # Operate Selenium in headless mode
     chrome_options.add_experimental_option('extensionLoadTimeout', 45000) #  Fixes the problem of renderer timeout for a slow PC
     chrome_options.add_argument("--window-size=1920x1080")
-
-    # Step 5: Instantiate a browser object and navigate to the URL
-    capabibilties = DesiredCapabilities().CHROME
-    capabibilties['pageLoadStrategy'] = 'eager' # Eafer pageLoadStrategy is used to speed up browsing
+    chrome_options.page_load_strategy = 'eager'
 
     # Step 6: Define a function to solve the captcha using the 2captcha service
-    def solve_captcha(sitekey, url):
-        try:
-            result = solver.recaptcha(sitekey=sitekey, url=url)
-            captcha_key = result.get('code')
-            logging.info(f"Captcha solved. The key is: {captcha_key}\n")
-        except Exception as err:
-            logging.info(err)
-            logging.info(f"Captcha not solved...")
-            captcha_key = None
+    def solve_captcha(sitekey, url, captcha_solver):
+        if captcha_solver == "2captcha":
+            try:
+                result = solver.recaptcha(sitekey=sitekey, url=url)
+                captcha_key = result.get('code')
+                logging.info(f"Captcha solved. The key is: {captcha_key}\n")
+            except Exception as err:
+                logging.info(err)
+                logging.info(f"Captcha not solved...")
+                captcha_key = None
+        elif captcha_solver == "capmonster":
+            async def solve_captcha_async(num_requests):
+                tasks = [asyncio.create_task(cap_monster_client.solve_captcha(recaptcha2request)) 
+                        for _ in range(num_requests)]
+                return await asyncio.gather(*tasks, return_exceptions=True)
+
+            key = os.getenv('CAPMONSTER_KEY')
+            client_options = ClientOptions(api_key=key)
+            cap_monster_client = CapMonsterClient(options=client_options)
+
+            recaptcha2request = RecaptchaV2ProxylessRequest(
+                websiteUrl=url,
+                websiteKey=sitekey
+            )
+
+            # Async test
+            async_responses = asyncio.run(solve_captcha_async(num_requests=3))
+            captcha_response = async_responses[0]["gRecaptchaResponse"]
+            return captcha_response
 
         return captcha_key
 
@@ -141,7 +161,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
         except NoSuchElementException:
             logging.info(except_txt)
             # If there was a raised exception, this means that the header does not exist, so invoke the solve_captcha function
-            captcha_token = solve_captcha(sitekey=sitekey, url=driver.current_url)
+            captcha_token = solve_captcha(sitekey=sitekey, url=driver.current_url, captcha_solver=captcha_solver_default)
             # Invoke the callback function
             invoke_callback_func(driver=driver, captcha_key=captcha_token)
 
@@ -199,7 +219,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
     # Step 12: Define a function to navigate to the base URL, apply the search filters, bypass the captcha, crawl the data and return it to a JSON file
     def crawl_func(dict_idx):
         # Instantiate the chrome driver
-        driver = webdriver.Chrome(desired_capabilities=capabibilties, options=chrome_options)
+        driver = webdriver.Chrome(options=chrome_options)
 
         # Set page_load_timeout to 45 seconds to avoid renderer timeout
         driver.set_page_load_timeout(45)
@@ -216,7 +236,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
         # Step 12.5: Solve the captcha
         logging.info(f"Applied the search filters for {marke} {modell.strip()}. Now, solving the captcha...")
         if driver.title == "Challenge Validation":
-            captcha_key = solve_captcha(sitekey=sitekey, url=driver.current_url)
+            captcha_key = solve_captcha(sitekey=sitekey, url=driver.current_url, captcha_solver=captcha_solver_default)
             if captcha_key is not None:
                 # Declare initial variables before the while loop
                 inject_captcha_try_counter = 1
@@ -239,7 +259,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
                         driver.quit()
                         
                         # Re-instantiate a new driver
-                        driver = webdriver.Chrome(desired_capabilities=capabibilties, options=chrome_options)
+                        driver = webdriver.Chrome(options=chrome_options)
 
                         # Set page_load_timeout to 45 seconds to avoid renderer timeout
                         driver.set_page_load_timeout(45)
