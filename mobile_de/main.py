@@ -341,10 +341,16 @@ def main():
         captcha_solver_default="capmonster"
     )
 
+    # Print a status message
+    logging.info("The Selenium script finished running. Now, running the Scrapy spider...")
+
     # Run the spider
     process = CrawlerProcess()
     process.crawl(CarPageSpider)
     process.start()
+
+    # Print a status message
+    logging.info("The Scrapy spider finished running. Now, cleaning the data...")
 
     # Retrieve the output data from the JSON file
     with open("df_all_brands_data_cat_all.json", mode="r", encoding='utf-8') as f:
@@ -364,6 +370,9 @@ def main():
     df_data_all_car_brands_cleaned["fahrzeughalter"] = df_data_all_car_brands_cleaned["fahrzeughalter"].apply(lambda x: int(x) if x is not None else x)
     df_data_all_car_brands_cleaned["standort"] = df_data_all_car_brands_cleaned["standort"].apply(lambda x: re.findall(pattern="[A-za-z]+(?=-)", string=x)[0] if x is not None else x)
     df_data_all_car_brands_cleaned["crawled_timestamp"] = datetime.now()
+
+    # Print a status message
+    logging.info("Cleaning the data is done. Now, uploading the data to BigQuery...")
 
     # Upload to bigquery
     # First, set the credentials
@@ -406,8 +415,14 @@ def main():
         job_config=job_config
     ).result()
 
+    # Print a status message
+    logging.info("Uploading the data to BigQuery is done. Now, uploading the logs to G-drive...")
+
     # Upload the logs to G-drive
     upload_file_to_gdrive(filename=f"mobile_logs_cat_all_{datetime.strftime(datetime.now().date(), '%Y%m%d')}.log", folder_id=gdrive_folder_id)
+
+    # Print a status message
+    logging.info("Uploading the logs to G-drive is done. Now, sending an success E-mail...")
     
     # Send success E-mail
     yag = yagmail.SMTP("omarmoataz6@gmail.com", oauth2_file=os.path.expanduser("~")+"/email_authentication.json")
