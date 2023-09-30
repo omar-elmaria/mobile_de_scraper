@@ -16,10 +16,11 @@ def upload_file_to_gdrive(filename, folder_id):
     """
     SCOPES = ['https://www.googleapis.com/auth/drive']
     creds = None
+    path_to_token = os.path.expanduser("~") + '/gdrive_token.json'
 
-    # The file token.json stores the user's access and refresh tokens, and is created automatically when the authorization flow completes for the first time.
-    if os.path.exists('token.json'):
-        creds = Credentials.from_authorized_user_file('token.json', SCOPES) # If you modify the scope, delete the token.json file
+    # The file gdrive_token.json stores the user's access and refresh tokens, and is created automatically when the authorization flow completes for the first time.
+    if os.path.exists(path_to_token):
+        creds = Credentials.from_authorized_user_file(path_to_token, SCOPES) # If you modify the scope, delete the gdrive_token.json file
     
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
@@ -30,7 +31,7 @@ def upload_file_to_gdrive(filename, folder_id):
             creds = flow.run_local_server(port=0)
 
         # Save the credentials for the next run
-        with open('token.json', 'w') as token:
+        with open(path_to_token, 'w') as token:
             token.write(creds.to_json())
 
     try:
