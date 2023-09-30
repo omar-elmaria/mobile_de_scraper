@@ -1,9 +1,10 @@
-from dotenv import load_dotenv
 import json
 import logging
 import os
+from datetime import datetime
 
 import scrapy
+from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
@@ -18,7 +19,7 @@ custom_settings_dict = {
     "DOWNLOAD_TIMEOUT": 60, # Setting the timeout parameter to 60 seconds as per the ScraperAPI documentation
     "ROBOTSTXT_OBEY": False, # Don't obey the Robots.txt rules
     "FEEDS": {"df_all_brands_data_cat_all.json":{"format": "json", "overwrite": True, "encoding": "utf-8"}}, # Set the name of the output JSON file
-    "LOG_FILE": "mobile_logs_cat_all.log", # Set the name of the log file
+    "LOG_FILE": f"mobile_logs_cat_all_{datetime.strftime(datetime.now().date(), '%Y%m%d')}.log", # Set the name of the log file
     "LOG_LEVEL": "DEBUG", # Set the level of logging to DEBUG
     # Zyte settings
     "DOWNLOAD_HANDLERS": {
