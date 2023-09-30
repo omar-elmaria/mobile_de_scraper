@@ -12,11 +12,15 @@ from scrapy.crawler import CrawlerProcess
 
 from mobile_de.spiders.mobile_de_zyte_api_car_page_spider import CarPageSpider
 from mobile_de_selenium_code_prod_listing_page_func import mobile_de_local_single_func
+from gdrive_upload_script import upload_file_to_gdrive
 
 
 def main():
     # Mark the start of the script
     t1 = datetime.now()
+
+    # Set the G-drive folder ID. The Folder ID is the ID of the folder called "vm_logs"
+    gdrive_folder_id="16e4f41zhwV67Pm01I0jHwL2l59kpn8WY"
 
     # Run the Selenium script that crawls the listing page
     mobile_de_local_single_func(
@@ -351,7 +355,7 @@ def main():
     # Drop the duplicates because the mileage filters applied above could have produced duplicates
     df_data_all_car_brands = df_data_all_car_brands.drop_duplicates(["url_to_crawl"])
 
-    # Step 17: Clean the data
+    # Clean the data
     df_data_all_car_brands_cleaned = df_data_all_car_brands.copy()
     df_data_all_car_brands_cleaned.replace(to_replace="", value=None, inplace=True)
     df_data_all_car_brands_cleaned["leistung"] = df_data_all_car_brands_cleaned["leistung"].apply(lambda x: int(re.findall(pattern="(?<=\().*(?=\sPS)", string=x)[0].replace(".", "")) if x is not None else x)
@@ -361,7 +365,7 @@ def main():
     df_data_all_car_brands_cleaned["standort"] = df_data_all_car_brands_cleaned["standort"].apply(lambda x: re.findall(pattern="[A-za-z]+(?=-)", string=x)[0] if x is not None else x)
     df_data_all_car_brands_cleaned["crawled_timestamp"] = datetime.now()
 
-    # Step 18: Upload to bigquery
+    # Upload to bigquery
     # First, set the credentials
     key_path_home_dir = os.path.expanduser("~") + "/bq_credentials.json"
     credentials = service_account.Credentials.from_service_account_file(
@@ -402,7 +406,10 @@ def main():
         job_config=job_config
     ).result()
 
-    # Step 19: Send success E-mail
+    # Upload the logs to G-drive
+    upload_file_to_gdrive(filename=f"mobile_logs_cat_all_{datetime.strftime(datetime.now().date(), '%Y%m%d')}.log", folder_id=gdrive_folder_id)
+    
+    # Send success E-mail
     yag = yagmail.SMTP("omarmoataz6@gmail.com", oauth2_file=os.path.expanduser("~")+"/email_authentication.json")
     contents = [
         f"This is an automated notification to inform you that the mobile.de scraper ran successfully.\nThe crawled brands are {df_data_all_car_brands_cleaned['marke'].unique()}"
