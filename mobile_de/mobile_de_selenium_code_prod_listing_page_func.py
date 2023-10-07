@@ -25,14 +25,14 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select, WebDriverWait
 from twocaptcha import TwoCaptcha
 
-
+date_start_for_log_file_name = datetime.strftime(datetime.now().date(), '%Y%m%d')
 def mobile_de_local_single_func(category: str, car_list: list, modell_list: list, captcha_solver_default: str):
     import logging
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(levelname)s - %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S',
-        filename=f"mobile_logs_{category}.log"
+        filename=f"mobile_logs_{category}_{date_start_for_log_file_name}.log"
     )
 
     # Step 1: Load environment variables and define an initial time instance to mark the start of the script

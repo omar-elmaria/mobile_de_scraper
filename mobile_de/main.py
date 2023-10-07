@@ -13,6 +13,7 @@ from scrapy.crawler import CrawlerProcess
 from mobile_de.spiders.mobile_de_zyte_api_car_page_spider import CarPageSpider
 from mobile_de_selenium_code_prod_listing_page_func import mobile_de_local_single_func
 from gdrive_upload_script import upload_file_to_gdrive
+from mobile_de_selenium_code_prod_listing_page_func import date_start_for_log_file_name
 
 
 def main():
@@ -419,7 +420,7 @@ def main():
     logging.info("Uploading the data to BigQuery is done. Now, uploading the logs to G-drive...")
 
     # Upload the logs to G-drive
-    upload_file_to_gdrive(filename=f"mobile_logs_cat_all_{datetime.strftime(datetime.now().date(), '%Y%m%d')}.log", folder_id=gdrive_folder_id)
+    upload_file_to_gdrive(filename=f"mobile_logs_cat_all_{date_start_for_log_file_name}.log", folder_id=gdrive_folder_id)
 
     # Print a status message
     logging.info("Uploading the logs to G-drive is done. Now, sending an success E-mail...")
