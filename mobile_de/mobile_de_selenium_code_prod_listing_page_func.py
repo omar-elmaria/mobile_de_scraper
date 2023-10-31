@@ -160,7 +160,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
         # Sometimes, a captcha is shown after navigating to the next page under of a car brand. We need to invoke the captcha service here if that happens
         try:
             # Check for the existence of the "Angebote entsprechen Deinen Suchkriterien" header
-            driver.find_element(by=By.XPATH, value="//h1[@data-testid='result-list-headline']").text
+            driver.find_element(by=By.XPATH, value="//h1[@data-testid='srp-title']").text
             # If the header doesn't exist, proceed normally to the next page
             logging.info(try_txt)
         except NoSuchElementException:
@@ -299,8 +299,8 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
         
         # Once we click on the Einverstanden Window or bypass it, we need to wait for the results header to load
         try:
-            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//h1[@data-testid='result-list-headline']")))
-            tot_search_results = re.findall(pattern="\d+", string=driver.find_element(by=By.XPATH, value="//h1[@data-testid='result-list-headline']").text)[0]
+            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//h1[@data-testid='srp-title']")))
+            tot_search_results = re.findall(pattern="\d+", string=driver.find_element(by=By.XPATH, value="//h1[@data-testid='srp-title']").text)[0]
             logging.info(f"The results page of {marke} {modell.strip()} has been retrieved. In total, we have {tot_search_results} listings to loop through...")
         except TimeoutException:
             logging.info("The header of the results page does not exist even after waiting for 10 seconds. Stopping the driver, returning an empty list, and continuing to the next combination...")
