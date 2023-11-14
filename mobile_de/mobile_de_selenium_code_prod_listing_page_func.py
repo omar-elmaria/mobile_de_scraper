@@ -5,6 +5,7 @@ import re
 import time
 from datetime import datetime
 
+from bs4 import BeautifulSoup
 import chromedriver_binary
 from capmonstercloudclient import CapMonsterClient, ClientOptions
 from capmonstercloudclient.requests import RecaptchaV2ProxylessRequest
@@ -221,7 +222,18 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
                 driver.quit()
                 return []
 
-    # Step 12: Define a function to navigate to the base URL, apply the search filters, bypass the captcha, crawl the data and return it to a JSON file
+    # Step 12: Define a function that waits for an element to be loaded using BeautifulSoup
+    def wait_for_element_to_load(driver, element_selector, timeout=10):
+        for _ in range(timeout):
+            soup = BeautifulSoup(driver.page_source, "html.parser")
+            if soup.select_one(selector=element_selector):
+                return True
+            else:
+                time.sleep(1)
+        
+        return False
+    
+    # Step 13: Define a function to navigate to the base URL, apply the search filters, bypass the captcha, crawl the data and return it to a JSON file
     def crawl_func(dict_idx):
         # Instantiate the chrome driver
         driver = webdriver.Chrome(options=chrome_options)
@@ -298,22 +310,24 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
             logging.info("The Einverstanden/Accept Cookies window did not show up on the results page that comes after the captcha page. No need to click on anything...")
         
         # Once we click on the Einverstanden Window or bypass it, we need to wait for the results header to load
-        try:
-            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//h1[@data-testid='srp-title']")))
-            tot_search_results = re.findall(pattern="\d+", string=driver.find_element(by=By.XPATH, value="//h1[@data-testid='srp-title']").text)[0]
-            logging.info(f"The results page of {marke} {modell.strip()} has been retrieved. In total, we have {tot_search_results} listings to loop through...")
-        except TimeoutException:
+        results_pg_header_wait_bool = wait_for_element_to_load(driver=driver, element_selector="h1[data-testid='srp-title']", timeout=10)
+        if results_pg_header_wait_bool == True:
+            soup = BeautifulSoup(driver.page_source, "html.parser")
+            try:
+                tot_search_results = re.findall(pattern="\d+", string=soup.select_one(selector="h1[data-testid='srp-title']").text)[0]
+                logging.info(f"The results page of {marke} {modell.strip()} has been retrieved. In total, we have {tot_search_results} listings to loop through...")
+            except NoSuchElementException: # Another version of the timeout exception where the result-list-headline was not found
+                logging.info("The header of the results page was not found due to a 'NoSuchElementException found' error. Stopping the driver, returning an empty list, and continuing to the next combination...")
+                # Stop the driver
+                driver.quit()
+                return []
+            except InvalidArgumentException:
+                logging.info("The header of the results page was not found due to an 'InvalidArgumentException found' error. Stopping the driver, returning an empty list, and continuing to the next combination...")
+                # Stop the driver
+                driver.quit()
+                return []
+        else:
             logging.info("The header of the results page does not exist even after waiting for 10 seconds. Stopping the driver, returning an empty list, and continuing to the next combination...")
-            # Stop the driver
-            driver.quit()
-            return []
-        except NoSuchElementException: # Another version of the timeout exception where the result-list-headline was not found
-            logging.info("The header of the results page was not found due to a 'NoSuchElementException found' error. Stopping the driver, returning an empty list, and continuing to the next combination...")
-            # Stop the driver
-            driver.quit()
-            return []
-        except InvalidArgumentException:
-            logging.info("The header of the results page was not found due to an 'InvalidArgumentException found' error. Stopping the driver, returning an empty list, and continuing to the next combination...")
             # Stop the driver
             driver.quit()
             return []
@@ -361,22 +375,25 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
             for pg in range(2, last_page + 2):
                 # Step 14.2.1: Get all the car URLs on the page. Don't crawl the "sponsored" or the "top in category" listings 
                 logging.info(f"Crawling the car links on page {pg - 1}...")
-                try:
-                    car_web_elements_selector = "//div[contains(@class, 'cBox-body cBox-body') and @class!='cBox-body cBox-body--topInCategory' and @class!='cBox-body cBox-body--topResultitem']"
-                    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, car_web_elements_selector)))
-                    car_web_elements = driver.find_elements(by=By.XPATH, value=car_web_elements_selector)
-                    for web in car_web_elements:
-                        output_dict_listing_page = {
-                            "marke": marke,
-                            "modell": modell,
-                            "last_page": last_page,
-                            "page_rank": pg,
-                            "car_page_url": web.find_element(by=By.XPATH, value="./a").get_attribute("href")
-                        }
-                        
-                        car_page_url_list.append(output_dict_listing_page)
-                except (InvalidArgumentException, TimeoutException) as err: # Sometimes, the find_elements method produces this error --> Message: invalid argument: uniqueContextId not found
-                    logging.exception(err)
+                soup = BeautifulSoup(driver.page_source, "html.parser")
+                car_web_elements_wait_bool = wait_for_element_to_load(driver=driver, element_selector="div.leHcX div.mN_WC.ctcQH.qEvrY a", timeout=10)
+                if car_web_elements_wait_bool == True:
+                    try:
+                        car_web_elements = soup.select("div.leHcX div.mN_WC.ctcQH.qEvrY a")
+                        for web in car_web_elements:
+                            output_dict_listing_page = {
+                                "marke": marke,
+                                "modell": modell,
+                                "last_page": last_page,
+                                "page_rank": pg,
+                                "car_page_url": "https://suchen.mobile.de" + web.get_attribute_list("href")[0]
+                            }
+                            
+                            car_page_url_list.append(output_dict_listing_page)
+                    except InvalidArgumentException as err: # Sometimes, the find_elements method produces this error --> Message: invalid argument: uniqueContextId not found
+                        logging.exception(err)
+                else:
+                    logging.exception("The car_web_elements_wait_bool variable returned False. Continuing to the next page...")
                 
                 # Step 14.2.2: Navigate to the next page to collect the next batch of URLs
                 if pg <= last_page:
