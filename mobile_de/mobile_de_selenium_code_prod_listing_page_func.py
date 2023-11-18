@@ -364,7 +364,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
             # Step 14: We are at the results page now. We need to crawl the links to the individual car pages
             # Step 14.1: Get the landing page URL and last page of the brand-model combination
             landing_page_url = driver.current_url
-            last_page_web_element_list = driver.find_elements(by=By.XPATH, value="//span[@class='btn btn--secondary btn--l']")
+            last_page_web_element_list = driver.find_elements(by=By.XPATH, value="//ul[@class='yJX0Y']//li[@class='Da2y2 HaBLt z3G3x hSL0L'][position()=last()]//span")
             try:
                 last_page = int(last_page_web_element_list[-1].text)
             except IndexError: # The index error can occur if the brand has only one page. In that case, set last_page to 1
@@ -375,10 +375,10 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
             for pg in range(2, last_page + 2):
                 # Step 14.2.1: Get all the car URLs on the page. Don't crawl the "sponsored" or the "top in category" listings 
                 logging.info(f"Crawling the car links on page {pg - 1}...")
-                soup = BeautifulSoup(driver.page_source, "html.parser")
                 car_web_elements_wait_bool = wait_for_element_to_load(driver=driver, element_selector="div.leHcX div.mN_WC.ctcQH.qEvrY a", timeout=10)
                 if car_web_elements_wait_bool == True:
                     try:
+                        soup = BeautifulSoup(driver.page_source, "html.parser")
                         car_web_elements = soup.select("div.leHcX div.mN_WC.ctcQH.qEvrY a")
                         for web in car_web_elements:
                             output_dict_listing_page = {
