@@ -6,7 +6,7 @@ import time
 from datetime import datetime
 
 from bs4 import BeautifulSoup
-import chromedriver_binary
+# import chromedriver_binary
 from capmonstercloudclient import CapMonsterClient, ClientOptions
 from capmonstercloudclient.requests import RecaptchaV2ProxylessRequest
 from dotenv import load_dotenv
@@ -63,7 +63,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
     chrome_options.add_argument("--no-sandbox") # Combats the renderer timeout problem
     chrome_options.add_argument("enable-features=NetworkServiceInProcess") # Combats the renderer timeout problem
     chrome_options.add_argument("disable-features=NetworkService") # Combats the renderer timeout problem
-    chrome_options.add_argument("--headless=new") # Operate Selenium in headless mode
+    # chrome_options.add_argument("--headless=new") # Operate Selenium in headless mode
     chrome_options.add_experimental_option('extensionLoadTimeout', 45000) #  Fixes the problem of renderer timeout for a slow PC
     chrome_options.add_argument("--window-size=1920x1080")
     chrome_options.page_load_strategy = 'eager'
@@ -141,6 +141,9 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
 
     # Step 9: Set the mileage filters
     def mileage_filter_func(driver, km_min, km_max):
+        # Click on "DetailSuche"
+        driver.find_element(by=By.XPATH, value="//span[text()='Detailsuche']").click()
+
         # Wait for the mileage filter to appear
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//select[@id='minMileage-s']")))
         
@@ -149,22 +152,21 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
         time.sleep(1)
         # Set the maximum mileage filter
         driver.find_element(by=By.XPATH, value="//select[@id='maxMileage-s']").send_keys(km_max)
-        # Wait for 3 seconds until the the search button retrieves the new number of cars
-        time.sleep(3)
+        # Wait for until the search button is clickable
+        WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//button[@id='dsp-upper-search-btn']")))
         # Click on the search button
-        driver.execute_script("document.getElementById('minisearch-search-btn').click()")
-        # Wait for 3 seconds until the page re-loads
-        time.sleep(3)
+        driver.execute_script("document.getElementById('dsp-upper-search-btn').click()")
+        # Wait for 5 seconds until the page re-loads
+        time.sleep(5)
     
     # Step 10: Create a function that checks for Captcha and solves it
     def check_for_captcha_and_solve_it_func(driver, try_txt, except_txt):
         # Sometimes, a captcha is shown after navigating to the next page under of a car brand. We need to invoke the captcha service here if that happens
-        try:
-            # Check for the existence of the "Angebote entsprechen Deinen Suchkriterien" header
-            driver.find_element(by=By.XPATH, value="//h1[@data-testid='srp-title']").text
+        check_for_captcha_wait_bool = wait_for_element_to_load(driver=driver, element_selector="h1[data-testid='srp-title']", timeout=10)
+        if check_for_captcha_wait_bool == True:
             # If the header doesn't exist, proceed normally to the next page
             logging.info(try_txt)
-        except NoSuchElementException:
+        else:
             logging.info(except_txt)
             # If there was a raised exception, this means that the header does not exist, so invoke the solve_captcha function
             captcha_token = solve_captcha(sitekey=sitekey, url=driver.current_url, captcha_solver=captcha_solver_default)
@@ -253,23 +255,35 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
         # Step 12.5: Solve the captcha
         logging.info(f"Applied the search filters for {marke} {modell.strip()}. Now, solving the captcha...")
         if driver.title == "Challenge Validation":
-            captcha_key = solve_captcha(sitekey=sitekey, url=driver.current_url, captcha_solver=captcha_solver_default)
+            # Declare initial variables before the while loop
+            solve_captcha_try_counter = 1
+            solve_captcha_is_pass = False
+            # Keep trying to solve the captcha until it succeeds or 3 tries are exhausted
+            while solve_captcha_try_counter <= 3 and solve_captcha_is_pass == False:
+                captcha_key = solve_captcha(sitekey=sitekey, url=driver.current_url, captcha_solver=captcha_solver_default)
+                if captcha_key is None:
+                    solve_captcha_try_counter += 1
+                    solve_captcha_is_pass = False
+                    logging.info("Was not able to solve the captcha. Setting solve_captcha_is_pass to False, incrementing solve_captcha_try_counter, and retrying again")
+                else:
+                    solve_captcha_is_pass = True
+            
             if captcha_key is not None:
                 # Declare initial variables before the while loop
                 inject_captcha_try_counter = 1
-                is_pass = False
+                inject_captcha_is_pass = False
 
                 # Keep trying to inject the captcha until it succeeds or 3 tries are exhausted
-                while inject_captcha_try_counter <= 3 and is_pass == False:
+                while inject_captcha_try_counter <= 3 and inject_captcha_is_pass == False:
                     # Invoke the callback function
                     try:
                         invoke_callback_func(driver=driver, captcha_key=captcha_key)
-                        is_pass = True
+                        inject_captcha_is_pass = True
                     # This error could occur because of a problem with setting injecting the g-recaptcha-response in the innerHTML
                     # WebDriverException could happen because the page might crash while trying to switch to the "sec-cpt-if" frame
                     except (JavascriptException, WebDriverException):
-                        logging.info("Was not able to inject the g-recaptcha-response in the innerHTML. Setting is_pass to False, incrementing inject_captcha_try_counter, and retrying the whole process again starting from the base URL")
-                        is_pass = False
+                        logging.info("Was not able to inject the g-recaptcha-response in the innerHTML. Setting inject_captcha_is_pass to False, incrementing inject_captcha_try_counter, and retrying the whole process again starting from the base URL")
+                        inject_captcha_is_pass = False
                         inject_captcha_try_counter += 1
                         
                         # Quit the driver
@@ -287,7 +301,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
                             return []
                     
                     # If we exhausted the 3 tries and the captcha box still did not appear, return an empty list and continue to the next combination
-                    if inject_captcha_try_counter > 3 and is_pass == False:
+                    if inject_captcha_try_counter > 3 and inject_captcha_is_pass == False:
                         logging.info("There is a problem with injecting the g-recaptcha-response in the innerHTML. Stopping the driver, returning an empty list, and continuing to the next combination...")
                         # Stop the driver
                         driver.quit()
