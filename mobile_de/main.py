@@ -426,7 +426,7 @@ def main():
     logging.info("Uploading the logs to G-drive is done. Now, sending an success E-mail...")
     
     # Send success E-mail
-    yag = yagmail.SMTP("omarmoataz6@gmail.com", oauth2_file=os.path.expanduser("~")+"/email_authentication.json")
+    yag = yagmail.SMTP("omarmoataz6@gmail.com", oauth2_file=os.path.expanduser("~")+"/email_authentication.json", smtp_ssl=False)
     contents = [
         f"This is an automated notification to inform you that the mobile.de scraper ran successfully.\nThe crawled brands are {df_data_all_car_brands_cleaned['marke'].unique()}"
     ]

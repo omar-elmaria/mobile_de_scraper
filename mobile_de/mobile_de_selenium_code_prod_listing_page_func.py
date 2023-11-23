@@ -5,7 +5,8 @@ import re
 import time
 from datetime import datetime
 
-import chromedriver_binary
+from bs4 import BeautifulSoup
+# import chromedriver_binary
 from capmonstercloudclient import CapMonsterClient, ClientOptions
 from capmonstercloudclient.requests import RecaptchaV2ProxylessRequest
 from dotenv import load_dotenv
@@ -62,7 +63,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
     chrome_options.add_argument("--no-sandbox") # Combats the renderer timeout problem
     chrome_options.add_argument("enable-features=NetworkServiceInProcess") # Combats the renderer timeout problem
     chrome_options.add_argument("disable-features=NetworkService") # Combats the renderer timeout problem
-    chrome_options.add_argument("--headless=new") # Operate Selenium in headless mode
+    # chrome_options.add_argument("--headless=new") # Operate Selenium in headless mode
     chrome_options.add_experimental_option('extensionLoadTimeout', 45000) #  Fixes the problem of renderer timeout for a slow PC
     chrome_options.add_argument("--window-size=1920x1080")
     chrome_options.page_load_strategy = 'eager'
@@ -140,6 +141,9 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
 
     # Step 9: Set the mileage filters
     def mileage_filter_func(driver, km_min, km_max):
+        # Click on "DetailSuche"
+        driver.find_element(by=By.XPATH, value="//span[text()='Detailsuche']").click()
+
         # Wait for the mileage filter to appear
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//select[@id='minMileage-s']")))
         
@@ -148,22 +152,21 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
         time.sleep(1)
         # Set the maximum mileage filter
         driver.find_element(by=By.XPATH, value="//select[@id='maxMileage-s']").send_keys(km_max)
-        # Wait for 3 seconds until the the search button retrieves the new number of cars
-        time.sleep(3)
+        # Wait for until the search button is clickable
+        WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.XPATH, "//button[@id='dsp-upper-search-btn']")))
         # Click on the search button
-        driver.execute_script("document.getElementById('minisearch-search-btn').click()")
-        # Wait for 3 seconds until the page re-loads
-        time.sleep(3)
+        driver.execute_script("document.getElementById('dsp-upper-search-btn').click()")
+        # Wait for 5 seconds until the page re-loads
+        time.sleep(5)
     
     # Step 10: Create a function that checks for Captcha and solves it
     def check_for_captcha_and_solve_it_func(driver, try_txt, except_txt):
         # Sometimes, a captcha is shown after navigating to the next page under of a car brand. We need to invoke the captcha service here if that happens
-        try:
-            # Check for the existence of the "Angebote entsprechen Deinen Suchkriterien" header
-            driver.find_element(by=By.XPATH, value="//h1[@data-testid='srp-title']").text
+        check_for_captcha_wait_bool = wait_for_element_to_load(driver=driver, element_selector="h1[data-testid='srp-title']", timeout=10)
+        if check_for_captcha_wait_bool == True:
             # If the header doesn't exist, proceed normally to the next page
             logging.info(try_txt)
-        except NoSuchElementException:
+        else:
             logging.info(except_txt)
             # If there was a raised exception, this means that the header does not exist, so invoke the solve_captcha function
             captcha_token = solve_captcha(sitekey=sitekey, url=driver.current_url, captcha_solver=captcha_solver_default)
@@ -221,7 +224,18 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
                 driver.quit()
                 return []
 
-    # Step 12: Define a function to navigate to the base URL, apply the search filters, bypass the captcha, crawl the data and return it to a JSON file
+    # Step 12: Define a function that waits for an element to be loaded using BeautifulSoup
+    def wait_for_element_to_load(driver, element_selector, timeout=10):
+        for _ in range(timeout):
+            soup = BeautifulSoup(driver.page_source, "html.parser")
+            if soup.select_one(selector=element_selector):
+                return True
+            else:
+                time.sleep(1)
+        
+        return False
+    
+    # Step 13: Define a function to navigate to the base URL, apply the search filters, bypass the captcha, crawl the data and return it to a JSON file
     def crawl_func(dict_idx):
         # Instantiate the chrome driver
         driver = webdriver.Chrome(options=chrome_options)
@@ -241,23 +255,35 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
         # Step 12.5: Solve the captcha
         logging.info(f"Applied the search filters for {marke} {modell.strip()}. Now, solving the captcha...")
         if driver.title == "Challenge Validation":
-            captcha_key = solve_captcha(sitekey=sitekey, url=driver.current_url, captcha_solver=captcha_solver_default)
+            # Declare initial variables before the while loop
+            solve_captcha_try_counter = 1
+            solve_captcha_is_pass = False
+            # Keep trying to solve the captcha until it succeeds or 3 tries are exhausted
+            while solve_captcha_try_counter <= 3 and solve_captcha_is_pass == False:
+                captcha_key = solve_captcha(sitekey=sitekey, url=driver.current_url, captcha_solver=captcha_solver_default)
+                if captcha_key is None:
+                    solve_captcha_try_counter += 1
+                    solve_captcha_is_pass = False
+                    logging.info("Was not able to solve the captcha. Setting solve_captcha_is_pass to False, incrementing solve_captcha_try_counter, and retrying again")
+                else:
+                    solve_captcha_is_pass = True
+            
             if captcha_key is not None:
                 # Declare initial variables before the while loop
                 inject_captcha_try_counter = 1
-                is_pass = False
+                inject_captcha_is_pass = False
 
                 # Keep trying to inject the captcha until it succeeds or 3 tries are exhausted
-                while inject_captcha_try_counter <= 3 and is_pass == False:
+                while inject_captcha_try_counter <= 3 and inject_captcha_is_pass == False:
                     # Invoke the callback function
                     try:
                         invoke_callback_func(driver=driver, captcha_key=captcha_key)
-                        is_pass = True
+                        inject_captcha_is_pass = True
                     # This error could occur because of a problem with setting injecting the g-recaptcha-response in the innerHTML
                     # WebDriverException could happen because the page might crash while trying to switch to the "sec-cpt-if" frame
                     except (JavascriptException, WebDriverException):
-                        logging.info("Was not able to inject the g-recaptcha-response in the innerHTML. Setting is_pass to False, incrementing inject_captcha_try_counter, and retrying the whole process again starting from the base URL")
-                        is_pass = False
+                        logging.info("Was not able to inject the g-recaptcha-response in the innerHTML. Setting inject_captcha_is_pass to False, incrementing inject_captcha_try_counter, and retrying the whole process again starting from the base URL")
+                        inject_captcha_is_pass = False
                         inject_captcha_try_counter += 1
                         
                         # Quit the driver
@@ -275,7 +301,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
                             return []
                     
                     # If we exhausted the 3 tries and the captcha box still did not appear, return an empty list and continue to the next combination
-                    if inject_captcha_try_counter > 3 and is_pass == False:
+                    if inject_captcha_try_counter > 3 and inject_captcha_is_pass == False:
                         logging.info("There is a problem with injecting the g-recaptcha-response in the innerHTML. Stopping the driver, returning an empty list, and continuing to the next combination...")
                         # Stop the driver
                         driver.quit()
@@ -298,22 +324,24 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
             logging.info("The Einverstanden/Accept Cookies window did not show up on the results page that comes after the captcha page. No need to click on anything...")
         
         # Once we click on the Einverstanden Window or bypass it, we need to wait for the results header to load
-        try:
-            WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//h1[@data-testid='srp-title']")))
-            tot_search_results = re.findall(pattern="\d+", string=driver.find_element(by=By.XPATH, value="//h1[@data-testid='srp-title']").text)[0]
-            logging.info(f"The results page of {marke} {modell.strip()} has been retrieved. In total, we have {tot_search_results} listings to loop through...")
-        except TimeoutException:
+        results_pg_header_wait_bool = wait_for_element_to_load(driver=driver, element_selector="h1[data-testid='srp-title']", timeout=10)
+        if results_pg_header_wait_bool == True:
+            soup = BeautifulSoup(driver.page_source, "html.parser")
+            try:
+                tot_search_results = re.findall(pattern="\d+", string=soup.select_one(selector="h1[data-testid='srp-title']").text)[0]
+                logging.info(f"The results page of {marke} {modell.strip()} has been retrieved. In total, we have {tot_search_results} listings to loop through...")
+            except NoSuchElementException: # Another version of the timeout exception where the result-list-headline was not found
+                logging.info("The header of the results page was not found due to a 'NoSuchElementException found' error. Stopping the driver, returning an empty list, and continuing to the next combination...")
+                # Stop the driver
+                driver.quit()
+                return []
+            except InvalidArgumentException:
+                logging.info("The header of the results page was not found due to an 'InvalidArgumentException found' error. Stopping the driver, returning an empty list, and continuing to the next combination...")
+                # Stop the driver
+                driver.quit()
+                return []
+        else:
             logging.info("The header of the results page does not exist even after waiting for 10 seconds. Stopping the driver, returning an empty list, and continuing to the next combination...")
-            # Stop the driver
-            driver.quit()
-            return []
-        except NoSuchElementException: # Another version of the timeout exception where the result-list-headline was not found
-            logging.info("The header of the results page was not found due to a 'NoSuchElementException found' error. Stopping the driver, returning an empty list, and continuing to the next combination...")
-            # Stop the driver
-            driver.quit()
-            return []
-        except InvalidArgumentException:
-            logging.info("The header of the results page was not found due to an 'InvalidArgumentException found' error. Stopping the driver, returning an empty list, and continuing to the next combination...")
             # Stop the driver
             driver.quit()
             return []
@@ -350,7 +378,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
             # Step 14: We are at the results page now. We need to crawl the links to the individual car pages
             # Step 14.1: Get the landing page URL and last page of the brand-model combination
             landing_page_url = driver.current_url
-            last_page_web_element_list = driver.find_elements(by=By.XPATH, value="//span[@class='btn btn--secondary btn--l']")
+            last_page_web_element_list = driver.find_elements(by=By.XPATH, value="//ul[@class='yJX0Y']//li[@class='Da2y2 HaBLt z3G3x hSL0L'][position()=last()]//span")
             try:
                 last_page = int(last_page_web_element_list[-1].text)
             except IndexError: # The index error can occur if the brand has only one page. In that case, set last_page to 1
@@ -361,22 +389,25 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
             for pg in range(2, last_page + 2):
                 # Step 14.2.1: Get all the car URLs on the page. Don't crawl the "sponsored" or the "top in category" listings 
                 logging.info(f"Crawling the car links on page {pg - 1}...")
-                try:
-                    car_web_elements_selector = "//div[contains(@class, 'cBox-body cBox-body') and @class!='cBox-body cBox-body--topInCategory' and @class!='cBox-body cBox-body--topResultitem']"
-                    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, car_web_elements_selector)))
-                    car_web_elements = driver.find_elements(by=By.XPATH, value=car_web_elements_selector)
-                    for web in car_web_elements:
-                        output_dict_listing_page = {
-                            "marke": marke,
-                            "modell": modell,
-                            "last_page": last_page,
-                            "page_rank": pg,
-                            "car_page_url": web.find_element(by=By.XPATH, value="./a").get_attribute("href")
-                        }
-                        
-                        car_page_url_list.append(output_dict_listing_page)
-                except (InvalidArgumentException, TimeoutException) as err: # Sometimes, the find_elements method produces this error --> Message: invalid argument: uniqueContextId not found
-                    logging.exception(err)
+                car_web_elements_wait_bool = wait_for_element_to_load(driver=driver, element_selector="div.leHcX div.mN_WC.ctcQH.qEvrY a", timeout=10)
+                if car_web_elements_wait_bool == True:
+                    try:
+                        soup = BeautifulSoup(driver.page_source, "html.parser")
+                        car_web_elements = soup.select("div.leHcX div.mN_WC.ctcQH.qEvrY a")
+                        for web in car_web_elements:
+                            output_dict_listing_page = {
+                                "marke": marke,
+                                "modell": modell,
+                                "last_page": last_page,
+                                "page_rank": pg,
+                                "car_page_url": "https://suchen.mobile.de" + web.get_attribute_list("href")[0]
+                            }
+                            
+                            car_page_url_list.append(output_dict_listing_page)
+                    except InvalidArgumentException as err: # Sometimes, the find_elements method produces this error --> Message: invalid argument: uniqueContextId not found
+                        logging.exception(err)
+                else:
+                    logging.exception("The car_web_elements_wait_bool variable returned False. Continuing to the next page...")
                 
                 # Step 14.2.2: Navigate to the next page to collect the next batch of URLs
                 if pg <= last_page:
