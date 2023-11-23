@@ -2,19 +2,38 @@ import json
 import logging
 import os
 import re
-from datetime import datetime
+import time
+from datetime import datetime, timedelta
 
 import pandas as pd
+import pytz
 import yagmail
+from gdrive_upload_script import upload_file_to_gdrive
 from google.cloud import bigquery
 from google.oauth2 import service_account
+from mobile_de_selenium_code_prod_listing_page_func import (
+    date_start_for_log_file_name,
+    mobile_de_local_single_func
+)
 from scrapy.crawler import CrawlerProcess
 
 from mobile_de.spiders.mobile_de_zyte_api_car_page_spider import CarPageSpider
-from mobile_de_selenium_code_prod_listing_page_func import mobile_de_local_single_func
-from gdrive_upload_script import upload_file_to_gdrive
-from mobile_de_selenium_code_prod_listing_page_func import date_start_for_log_file_name
 
+
+def is_between_time_range():
+    # Set the timezone to CET
+    cet_timezone = pytz.timezone('CET')
+
+    # Get the current time in CET
+    current_time_cet = datetime.now(cet_timezone)
+
+    # Check if it's Friday and the time is between 11:00 pm and 11:05 pm
+    if current_time_cet.weekday() == 4:  # 4 corresponds to Friday
+        start_time = current_time_cet.replace(hour=23, minute=0, second=0, microsecond=0)
+        end_time = start_time + timedelta(minutes=5)
+        return start_time <= current_time_cet <= end_time
+    else:
+        return False
 
 def main():
     # Mark the start of the script
@@ -437,4 +456,15 @@ def main():
     logging.info(f"The script finished at {t2}. It took {t2-t1} to crawl all listings...")    
 
 if __name__ == '__main__':
-    main()
+    while True:
+        # Check if the time is between 11:00 pm and 11:05 pm on a Friday
+        if is_between_time_range():
+            # Delete any log file that starts with "mobile_logs_cat_all_" and ends with ".log"
+            for file in os.listdir():
+                if file.startswith("mobile_logs_cat_all_") and file.endswith(".log"):
+                    os.remove(file)
+            # Run the script
+            main()
+        else:
+            # If it's not, wait for 1 minute and check again
+            time.sleep(60)
