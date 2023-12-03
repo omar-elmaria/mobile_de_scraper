@@ -462,6 +462,8 @@ if __name__ == '__main__':
             # Delete any log file that starts with "mobile_logs_cat_all_" and ends with ".log"
             for file in os.listdir():
                 if file.startswith("mobile_logs_cat_all_") and file.endswith(".log"):
+                    with open(file, 'w') as f:
+                        f.close() # Close the file ti release the lock
                     os.remove(file)
             # Run the script
             main()
