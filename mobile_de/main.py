@@ -19,7 +19,7 @@ from scrapy.crawler import CrawlerProcess
 
 from mobile_de.spiders.mobile_de_zyte_api_car_page_spider import CarPageSpider
 
-crawl_now = True
+crawl_now = False
 def is_between_time_range():
     # Set the timezone to CET
     cet_timezone = pytz.timezone('CET')
