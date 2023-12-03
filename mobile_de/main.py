@@ -19,7 +19,7 @@ from scrapy.crawler import CrawlerProcess
 
 from mobile_de.spiders.mobile_de_zyte_api_car_page_spider import CarPageSpider
 
-
+crawl_now = True
 def is_between_time_range():
     # Set the timezone to CET
     cet_timezone = pytz.timezone('CET')
@@ -457,13 +457,16 @@ def main():
 
 if __name__ == '__main__':
     while True:
+        if "mobile_de_scraper\mobile_de" not in os.getcwd():
+            os.chdir(os.getcwd() + "/mobile_de")
+
         # Check if the time is between 11:00 pm and 11:05 pm on a Friday
-        if is_between_time_range():
+        if is_between_time_range() or crawl_now == True:
             # Delete any log file that starts with "mobile_logs_cat_all_" and ends with ".log"
             for file in os.listdir():
                 if file.startswith("mobile_logs_cat_all_") and file.endswith(".log"):
                     with open(file, 'w') as f:
-                        f.close() # Close the file ti release the lock
+                        f.close() # Close the file to release the lock
                     os.remove(file)
             # Run the script
             main()
