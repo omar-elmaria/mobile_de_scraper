@@ -468,6 +468,10 @@ if __name__ == '__main__':
             if files_to_remove:
                 for file_name in files_to_remove:
                     file_path = os.path.join(os.getcwd(), file_name)
+                    # Ensure the file is closed before attempting to remove it
+                    with open(file_path) as f:
+                        pass
+                    # Close the file explicitly
                     os.remove(file_path)
 
             # Run the script
