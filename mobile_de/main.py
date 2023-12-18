@@ -457,7 +457,9 @@ def main():
 
 if __name__ == '__main__':
     while True:
-        if "mobile_de_scraper\mobile_de" not in os.getcwd():
+        if any([True if i in os.getcwd() else False for i in ["mobile_de_scraper\mobile_de", "lukas_mobile_de_crawling\mobile_de"]]):
+            pass
+        else:
             os.chdir(os.getcwd() + "/mobile_de")
 
         # Check if the time is between 11:00 pm and 11:05 pm on a Friday
