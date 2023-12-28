@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 from capmonstercloudclient import CapMonsterClient, ClientOptions
 from capmonstercloudclient.requests import RecaptchaV2ProxylessRequest
 from dotenv import load_dotenv
-from selenium import webdriver
+import undetected_chromedriver as uc
 from selenium.common.exceptions import (
     ElementClickInterceptedException,
     InvalidArgumentException,
@@ -66,6 +66,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
     # chrome_options.add_argument("--headless=new") # Operate Selenium in headless mode
     chrome_options.add_experimental_option('extensionLoadTimeout', 45000) #  Fixes the problem of renderer timeout for a slow PC
     chrome_options.add_argument("--window-size=1920x1080")
+    chrome_options.add_experimental_option('useAutomationExtention', False)
     chrome_options.page_load_strategy = 'eager'
 
     # Step 6: Define a function to solve the captcha using the 2captcha/capmonster service
@@ -238,7 +239,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
     # Step 13: Define a function to navigate to the base URL, apply the search filters, bypass the captcha, crawl the data and return it to a JSON file
     def crawl_func(dict_idx):
         # Instantiate the chrome driver
-        driver = webdriver.Chrome(options=chrome_options)
+        driver = uc.Chrome(chrome_options=chrome_options)
 
         # Set page_load_timeout to 45 seconds to avoid renderer timeout
         driver.set_page_load_timeout(45)
@@ -290,7 +291,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
                         driver.quit()
                         
                         # Re-instantiate a new driver
-                        driver = webdriver.Chrome(options=chrome_options)
+                        driver = uc.Chrome(chrome_options=chrome_options)
 
                         # Set page_load_timeout to 45 seconds to avoid renderer timeout
                         driver.set_page_load_timeout(45)
