@@ -464,18 +464,6 @@ if __name__ == '__main__':
 
         # Check if the time is between 11:00 pm and 11:05 pm on a Friday
         if is_between_time_range() or crawl_now == True:
-            # Delete any log file that starts with "mobile_logs_cat_all_" and ends with ".log"
-            files_to_remove = [f for f in os.listdir() if f.startswith("mobile_logs_cat_all_") and f.endswith(".log")]
-
-            if files_to_remove:
-                for file_name in files_to_remove:
-                    file_path = os.path.join(os.getcwd(), file_name)
-                    # Ensure the file is closed before attempting to remove it
-                    with open(file_path) as f:
-                        pass
-                    # Close the file explicitly
-                    os.remove(file_path)
-
             # Run the script
             main()
         else:
