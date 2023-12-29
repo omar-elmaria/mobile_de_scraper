@@ -11,6 +11,7 @@ from capmonstercloudclient import CapMonsterClient, ClientOptions
 from capmonstercloudclient.requests import RecaptchaV2ProxylessRequest
 from dotenv import load_dotenv
 import undetected_chromedriver as uc
+from selenium import webdriver
 from selenium.common.exceptions import (
     ElementClickInterceptedException,
     InvalidArgumentException,
@@ -27,6 +28,7 @@ from selenium.webdriver.support.ui import Select, WebDriverWait
 from twocaptcha import TwoCaptcha
 
 date_start_for_log_file_name = datetime.strftime(datetime.now().date(), '%Y%m%d')
+is_use_undetected_chrome_browser = False
 def mobile_de_local_single_func(category: str, car_list: list, modell_list: list, captcha_solver_default: str):
     import logging
     logging.basicConfig(
@@ -66,7 +68,8 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
     # chrome_options.add_argument("--headless=new") # Operate Selenium in headless mode
     chrome_options.add_experimental_option('extensionLoadTimeout', 45000) #  Fixes the problem of renderer timeout for a slow PC
     chrome_options.add_argument("--window-size=1920x1080")
-    chrome_options.add_experimental_option('useAutomationExtention', False)
+    if is_use_undetected_chrome_browser == True:
+        chrome_options.add_experimental_option('useAutomationExtention', False)
     chrome_options.page_load_strategy = 'eager'
 
     # Step 6: Define a function to solve the captcha using the 2captcha/capmonster service
@@ -239,7 +242,10 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
     # Step 13: Define a function to navigate to the base URL, apply the search filters, bypass the captcha, crawl the data and return it to a JSON file
     def crawl_func(dict_idx):
         # Instantiate the chrome driver
-        driver = uc.Chrome(chrome_options=chrome_options)
+        if is_use_undetected_chrome_browser == True:
+            driver = uc.Chrome(chrome_options=chrome_options)
+        else:
+            driver = webdriver.Chrome(options=chrome_options)
 
         # Set page_load_timeout to 45 seconds to avoid renderer timeout
         driver.set_page_load_timeout(45)
@@ -291,7 +297,10 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
                         driver.quit()
                         
                         # Re-instantiate a new driver
-                        driver = uc.Chrome(chrome_options=chrome_options)
+                        if is_use_undetected_chrome_browser == True:
+                            driver = uc.Chrome(chrome_options=chrome_options)
+                        else:
+                            driver = webdriver.Chrome(options=chrome_options)
 
                         # Set page_load_timeout to 45 seconds to avoid renderer timeout
                         driver.set_page_load_timeout(45)
