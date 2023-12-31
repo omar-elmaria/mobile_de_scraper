@@ -904,7 +904,11 @@
         "Cayenne",
         "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&ms=20100%3B18%3B%3B%3B&ref=dsp&s=Car&vc=Car"
     ],
-    null,
+    [
+        "Porsche",
+        "Cayman",
+        "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&ms=20100%3B19%3B%3B%3B&ref=dsp&s=Car&vc=Car"
+    ],
     [
         "Porsche",
         "Macan",
@@ -995,7 +999,11 @@
         "Andere",
         "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&ms=21600%3B1%3B%3B%3B&ref=dsp&s=Car&vc=Car"
     ],
-    null,
+    [
+        "Wiesmann",
+        "MF 3",
+        "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&ms=25650%3B3%3B%3B%3B&ref=dsp&s=Car&vc=Car"
+    ],
     [
         "Wiesmann",
         "MF 35",
