@@ -141,7 +141,7 @@ def execute_parallel_crawling(car_list: list, modell_list: list):
     results = parallel_execution_listing_page_url_extractor(marke_and_modell_lot)
 
     # Save the results to a JSON file
-    with open(f"listing_page_url_list_cat_all.json", mode="w", encoding="utf-8") as f:
+    with open("target_url_list_cat_all.json", mode="w", encoding="utf-8") as f:
         json.dump(obj=results, fp=f, ensure_ascii=False, indent=4)
 
 execute_parallel_crawling(
