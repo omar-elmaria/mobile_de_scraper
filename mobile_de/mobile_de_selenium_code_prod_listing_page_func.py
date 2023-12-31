@@ -12,6 +12,7 @@ from capmonstercloudclient.requests import RecaptchaV2ProxylessRequest
 from dotenv import load_dotenv
 import undetected_chromedriver as uc
 from selenium import webdriver
+from seleniumwire import webdriver as webdriver_wire
 from selenium.common.exceptions import (
     ElementClickInterceptedException,
     InvalidArgumentException,
@@ -27,8 +28,30 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import Select, WebDriverWait
 from twocaptcha import TwoCaptcha
 
+# Load environment variables
+load_dotenv()
+
+# Inputs
+chrome_driver_type = "uc_wire" # [uc, uc_wire, wire, vanilla]
 date_start_for_log_file_name = datetime.strftime(datetime.now().date(), '%Y%m%d')
-is_use_undetected_chrome_browser = False
+
+# Proxy credentials
+PROXY_SERVICE_USERNAME = os.getenv("PROXY_SERVICE_USERNAME_WEBSHARE")
+PROXY_SERVICE_PASSWORD = os.getenv("PROXY_SERVICE_PASSWORD_WEBSHARE")
+PROXY_SERVICE_ENDPOINT = os.getenv("PROXY_SERVICE_ENDPOINT_WEBSHARE")
+
+# Define a function to specify the proxy configuration
+def chrome_proxy(user: str, password: str, endpoint: str):
+    wire_options = {
+        "proxy": {
+            "http": f"http://{user}:{password}@{endpoint}",
+            "https": f"http://{user}:{password}@{endpoint}",
+        },
+        # "auto_config": False # Uncomment if you do NOT want to use proxies
+    }
+
+    return wire_options
+
 def mobile_de_local_single_func(category: str, car_list: list, modell_list: list, captcha_solver_default: str):
     import logging
     logging.basicConfig(
@@ -38,8 +61,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
         filename=f"mobile_logs_{category}_{date_start_for_log_file_name}.log"
     )
 
-    # Step 1: Load environment variables and define an initial time instance to mark the start of the script
-    load_dotenv()
+    # Step 1: Define an initial time instance to mark the start of the script
     t1 = datetime.now()
     logging.info(f"The script started at {t1}")
 
@@ -68,7 +90,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
     # chrome_options.add_argument("--headless=new") # Operate Selenium in headless mode
     chrome_options.add_experimental_option('extensionLoadTimeout', 45000) #  Fixes the problem of renderer timeout for a slow PC
     chrome_options.add_argument("--window-size=1920x1080")
-    if is_use_undetected_chrome_browser == True:
+    if chrome_driver_type == "uc" or chrome_driver_type == "uc_wire":
         chrome_options.add_experimental_option('useAutomationExtention', False)
     chrome_options.page_load_strategy = 'eager'
 
@@ -242,10 +264,15 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
     # Step 13: Define a function to navigate to the base URL, apply the search filters, bypass the captcha, crawl the data and return it to a JSON file
     def crawl_func(dict_idx):
         # Instantiate the chrome driver
-        if is_use_undetected_chrome_browser == True:
+        proxies = chrome_proxy(PROXY_SERVICE_USERNAME, PROXY_SERVICE_PASSWORD, PROXY_SERVICE_ENDPOINT)
+        if chrome_driver_type == "uc":
             driver = uc.Chrome(chrome_options=chrome_options)
-        else:
+        elif chrome_driver_type == "uc_wire":
+            driver = uc.Chrome(chrome_options=chrome_options, seleniumwire_options=proxies)
+        elif chrome_driver_type == "vanilla":
             driver = webdriver.Chrome(options=chrome_options)
+        elif chrome_driver_type == "wire":
+            driver = webdriver_wire.Chrome(options=chrome_options, seleniumwire_options=proxies)
 
         # Set page_load_timeout to 45 seconds to avoid renderer timeout
         driver.set_page_load_timeout(45)
@@ -297,10 +324,14 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
                         driver.quit()
                         
                         # Re-instantiate a new driver
-                        if is_use_undetected_chrome_browser == True:
+                        if chrome_driver_type == "uc":
                             driver = uc.Chrome(chrome_options=chrome_options)
-                        else:
+                        elif chrome_driver_type == "uc_wire":
+                            driver = uc.Chrome(chrome_options=chrome_options, seleniumwire_options=proxies)
+                        elif chrome_driver_type == "vanilla":
                             driver = webdriver.Chrome(options=chrome_options)
+                        elif chrome_driver_type == "wire":
+                            driver = webdriver_wire.Chrome(options=chrome_options, seleniumwire_options=proxies)
 
                         # Set page_load_timeout to 45 seconds to avoid renderer timeout
                         driver.set_page_load_timeout(45)
