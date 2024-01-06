@@ -13,7 +13,6 @@ custom_scrapy_settings = {
     "CONCURRENT_REQUESTS": 10, # The maximum number of concurrent (i.e. simultaneous) requests that will be performed by the Scrapy downloader
     "DOWNLOAD_TIMEOUT": 60, # Setting the timeout parameter to 60 seconds as per the ScraperAPI documentation
     "ROBOTSTXT_OBEY": False, # Don't obey the Robots.txt rules
-    "FEEDS": {"df_all_brands_data_cat_all.json":{"format": "json", "overwrite": True, "encoding": "utf-8"}}, # Set the name of the output JSON file
     "LOG_LEVEL": "DEBUG", # Set the level of logging to DEBUG
     # Zyte settings
     "DOWNLOAD_HANDLERS": {
