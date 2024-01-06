@@ -99,6 +99,7 @@ modell_list = [
     "    Continental GTC",
     "    Continental Supersports",
     "Flying Spur",
+    "Mulsanne",
     "Andere",
 
     # Bugatti
@@ -174,6 +175,7 @@ modell_list = [
     "675LT",
     "675LT Spider",
     "720S",
+    "750S",
     "765LT",
     "Artura",
     "Elva",

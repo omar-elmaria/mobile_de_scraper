@@ -171,6 +171,11 @@
     ],
     [
         "Bentley",
+        "Mulsanne",
+        "https://suchen.mobile.de/fahrzeuge/search.html?dam=0&isSearchRequest=true&ms=3100%3B7%3B%3B&ref=quickSearch&sb=rel&vc=Car"
+    ],
+    [
+        "Bentley",
         "Andere",
         "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&ms=3100%3B1%3B%3B%3B&ref=dsp&s=Car&vc=Car"
     ],
@@ -643,6 +648,11 @@
         "McLaren",
         "Speedtail",
         "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&ms=137%3B16%3B%3B%3B&ref=dsp&s=Car&vc=Car"
+    ],
+    [
+        "McLaren",
+        "750S",
+        "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&ms=137%3B18%3B%3B%3B&ref=dsp&s=Car&vc=Car"
     ],
     [
         "McLaren",
