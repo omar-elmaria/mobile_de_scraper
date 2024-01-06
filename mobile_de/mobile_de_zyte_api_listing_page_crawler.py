@@ -68,9 +68,10 @@ with open("target_url_list_cat_all.json", "r") as f:
     f.close()
 
 # Extract the car page list from the target URLs. First, we extract the number of "Angebote" and then send requests to all the pages of the marke-modell combo
-df_target_url["num_listings"] = df_target_url["listing_page_url"].apply(lambda x: num_listings_extractor(listing_page_crawler_requests(x)))
-print(df_target_url)
+# df_target_url["num_listings"] = df_target_url["listing_page_url"].apply(lambda x: num_listings_extractor(listing_page_crawler_requests(x)))
+# print(df_target_url)
 
-# car_page_list = asyncio.run(listing_page_crawler_client(
-#     url="https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&ms=3500%3B328%3B%3B%3B&ref=dsp&s=Car&vc=Car")
-# )
+car_page_list = asyncio.run(listing_page_crawler_client(
+    url="https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&ms=3500%3B328%3B%3B%3B&ref=dsp&s=Car&vc=Car")
+)
+print(car_page_list)
