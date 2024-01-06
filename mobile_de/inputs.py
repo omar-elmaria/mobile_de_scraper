@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# Custom scrapy settings
 custom_scrapy_settings = {
     "FEED_EXPORT_ENCODING": "utf-8", # UTF-8 deals with all types of characters
     "RETRY_TIMES": 3, # Retry failed requests up to 3 times
@@ -30,3 +31,6 @@ custom_scrapy_settings = {
     "ZYTE_API_SKIP_HEADERS": ["Cookie", "User-Agent"],
     "ZYTE_API_RETRY_POLICY": "retry_policies.CUSTOM_RETRY_POLICY"
 }
+
+# General global inputs
+listing_page_crawling_framework = "zyte" # Set the listing page crawling framework to be used (options: "selenium" or "zyte")
