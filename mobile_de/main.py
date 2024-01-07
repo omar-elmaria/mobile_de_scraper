@@ -8,23 +8,25 @@ from datetime import datetime, timedelta
 import pandas as pd
 import pytz
 import yagmail
-from gdrive_upload_script import upload_file_to_gdrive
 from google.cloud import bigquery
 from google.oauth2 import service_account
+
+from gdrive_upload_script import upload_file_to_gdrive
 from inputs import (
     change_cwd,
     listing_page_crawling_framework,
     marke_list,
     modell_list
 )
+from mobile_de.spiders.mobile_de_zyte_api_car_page_spider import run_car_page_spider
 from mobile_de_selenium_code_prod_listing_page_func import (
-    date_start_for_log_file_name, mobile_de_local_single_func)
-from scrapy.crawler import CrawlerProcess
+    date_start_for_log_file_name,
+    mobile_de_local_single_func
+)
+from scrapy.crawler import CrawlerRunner
+from scrapy.utils.log import configure_logging
+from twisted.internet import defer, reactor
 
-from mobile_de.spiders.mobile_de_zyte_api_car_page_spider import CarPageSpider
-from mobile_de.spiders.mobile_de_zyte_api_listing_page_spider import ListingPageSpider
-
-crawl_now = False
 def is_between_time_range():
     # Set the timezone to CET
     cet_timezone = pytz.timezone('CET')
@@ -61,22 +63,44 @@ def main():
         )
 
         # Print a status message indicating the end of the selenium script
-        logging.info("The Selenium script finished running. Now, running the Scrapy spider...")
+        logging.info("The Selenium script finished running. Now, running the car page Scrapy spider...")
+
+        # Run the car page spider
+        run_car_page_spider()
     elif listing_page_crawling_framework == "zyte":
-        # Print a status message indicating the start of the zyte spider
-        logging.info("Running the Zyte crawler to get the listing page URLs...")
+        # Configure logging
+        configure_logging()
 
-        # Run the zyte listing page spider
-        process = CrawlerProcess()
-        process.crawl(ListingPageSpider)
+        # Define two Crawler runners, one for each spider
+        runner_listing_page = CrawlerRunner(settings={
+            "FEEDS": {"car_page_url_list_cat_all.json":{"format": "json", "overwrite": True, "encoding": "utf-8"}}, # Set the name of the output JSON file
+            "LOG_FILE": f"mobile_logs_cat_all_{date_start_for_log_file_name}.log" # Set the name of the log file
+        })
+        runner_car_page = CrawlerRunner(settings={
+            "FEEDS": {"df_all_brands_data_cat_all.json":{"format": "json", "overwrite": True, "encoding": "utf-8"}}, # Set the name of the output JSON file
+            "LOG_FILE": f"mobile_logs_cat_all_{date_start_for_log_file_name}.log" # Set the name of the log file
+        })
 
-        # Print a status message indicating the end of the zyte spider
-        logging.info("The Selenium script finished running. Now, running the Scrapy spider...")
+        @defer.inlineCallbacks
+        def crawl():
+            # Print a status message indicating the start of the zyte spider to crawl the listing page URLs
+            logging.info("Running the Scrapy spider to get the listing page URLs...")
+            # Run the first crawler that crawls the listing page URLs
+            from mobile_de.spiders.mobile_de_zyte_api_listing_page_spider import ListingPageSpider
+            yield runner_listing_page.crawl(ListingPageSpider)
 
+            # Print a status message indicating the start of the zyte spider to crawl the car page URLs
+            logging.info("The listing page Scrapy spider finished running. Now, running the car page Scrapy spider...")
+            # Run the second crawler that crawls the car pages themselves
+            from mobile_de.spiders.mobile_de_zyte_api_car_page_spider import CarPageSpider
+            yield runner_car_page.crawl(CarPageSpider)
 
-    # Run the car page spider
-    process.crawl(CarPageSpider)
-    process.start()
+            # Stop the reactor
+            reactor.stop()
+
+        # Run the crawl() function
+        crawl()
+        reactor.run() # the script will block here until the last crawl call is finished
 
     # Print a status message
     logging.info("The Scrapy spider that crawls the car pages finished running. Now, cleaning the data...")
@@ -165,14 +189,8 @@ def main():
     logging.info(f"The script finished at {t2}. It took {t2-t1} to crawl all listings...")    
 
 if __name__ == '__main__':
-    while True:
-        # Change the current working directory if needed
-        change_cwd()
+    # Change the current working directory if needed
+    change_cwd()
 
-        # Check if the time is between 11:00 pm and 11:05 pm on a Friday
-        if is_between_time_range() or crawl_now == True:
-            # Run the script
-            main()
-        else:
-            # If it's not, wait for 1 minute and check again
-            time.sleep(60)
+    # Run the script
+    main()
