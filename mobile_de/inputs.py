@@ -5,6 +5,18 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# Helper functions
+def change_cwd():
+    if any([True if i in os.getcwd() else False for i in [
+        # Windows
+        "mobile_de_scraper\mobile_de", "lukas_mobile_de_crawling\mobile_de",
+        # Mac and Linux
+        "mobile_de_scraper/mobile_de", "lukas_mobile_de_crawling/mobile_de"
+    ]]):
+        pass
+    else:
+        os.chdir(os.getcwd() + "/mobile_de")
+
 # Custom scrapy settings
 custom_scrapy_settings = {
     "FEED_EXPORT_ENCODING": "utf-8", # UTF-8 deals with all types of characters
