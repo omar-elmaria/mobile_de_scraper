@@ -17,7 +17,7 @@ load_dotenv()
 # Define custom settings for the spider
 custom_settings_dict = custom_scrapy_settings.copy()
 custom_settings_dict["LOG_FILE"] = f"mobile_logs_cat_all_{date_start_for_log_file_name}.log" # Set the name of the log file
-custom_settings_dict["FEEDS"] = {"df_all_brands_data_cat_all.json":{"format": "json", "overwrite": True, "encoding": "utf-8"}} # Set the name of the output JSON file    
+custom_settings_dict["FEEDS"] = {"df_all_brands_data_cat_all.json":{"format": "json", "overwrite": True, "encoding": "utf-8"}} # Set the name of the output JSON file
 
 class CarPageSpider(scrapy.Spider):
     name = "car_page_spider" # Define the name of the spider
@@ -52,7 +52,7 @@ class CarPageSpider(scrapy.Spider):
             page_rank = url["page_rank"]
             total_num_pages = url["last_page"]
             url_to_crawl = url["car_page_url"]
-            logging.info(f"Sending a request to crawl a page under {marke} {modell} with URL {url}")
+            logging.info(f"Sending a request to crawl a page under {marke} {modell} with URL {url_to_crawl}")
             
             yield scrapy.Request(
                 url=url_to_crawl,
