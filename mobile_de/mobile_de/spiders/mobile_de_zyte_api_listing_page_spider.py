@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 import sys
 sys.path.append("../..")
 from mobile_de_selenium_code_prod_listing_page_func import date_start_for_log_file_name
-from inputs import custom_scrapy_settings
+from inputs import custom_scrapy_settings, change_cwd
 import pandas as pd
 import re
 
@@ -24,7 +24,7 @@ custom_settings_dict["FEEDS"] = {"car_page_url_list_cat_all.json":{"format": "js
 def num_listings_extractor(json_data):
     # Extract the number of listings in raw format (181 ANgebote)
     num_listings_raw = [i["name"] for i in json_data["breadcrumbs"] if "Angebote" in i["name"]][0]
-    num_listings = re.findall(pattern="\d+", string=num_listings_raw)[0]
+    num_listings = re.findall(pattern=r"\d+", string=num_listings_raw)[0]
 
     return num_listings
 
@@ -32,6 +32,9 @@ def num_listings_extractor(json_data):
 class ListingPageSpider(scrapy.Spider):
     name = "listing_page_spider" # Define the name of the spider
     custom_settings=custom_settings_dict # Define the custom settings of the spider
+
+    # Change the current working directory if needed
+    change_cwd()
 
     # Open the JSON file that contains the target URLs
     with open("target_url_list_cat_all.json", "r") as f:
