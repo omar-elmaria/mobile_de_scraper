@@ -369,7 +369,7 @@ def mobile_de_local_single_func(category: str, car_list: list, modell_list: list
         if results_pg_header_wait_bool == True:
             soup = BeautifulSoup(driver.page_source, "html.parser")
             try:
-                tot_search_results = re.findall(pattern="\d+", string=soup.select_one(selector="h1[data-testid='srp-title']").text)[0]
+                tot_search_results = re.findall(pattern=r"\d+", string=soup.select_one(selector="h1[data-testid='srp-title']").text)[0]
                 logging.info(f"The results page of {marke} {modell.strip()} has been retrieved. In total, we have {tot_search_results} listings to loop through...")
             except NoSuchElementException: # Another version of the timeout exception where the result-list-headline was not found
                 logging.info("The header of the results page was not found due to a 'NoSuchElementException found' error. Stopping the driver, returning an empty list, and continuing to the next combination...")
