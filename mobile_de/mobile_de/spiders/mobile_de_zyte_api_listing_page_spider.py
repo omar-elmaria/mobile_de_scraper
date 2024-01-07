@@ -1,8 +1,8 @@
 import json
 import logging
-from datetime import datetime
 
 import scrapy
+from scrapy.crawler import CrawlerProcess
 from dotenv import load_dotenv
 import sys
 sys.path.append("../..")
@@ -10,14 +10,10 @@ from mobile_de_selenium_code_prod_listing_page_func import date_start_for_log_fi
 from inputs import custom_scrapy_settings, change_cwd
 import pandas as pd
 import re
+from scrapy.utils.reactor import install_reactor
 
 # Load environment variables
 load_dotenv()
-
-# Define custom settings for the spider
-custom_settings_dict = custom_scrapy_settings.copy()
-custom_settings_dict["LOG_FILE"] = f"mobile_logs_cat_all_{date_start_for_log_file_name}.log" # Set the name of the log file
-custom_settings_dict["FEEDS"] = {"car_page_url_list_cat_all.json":{"format": "json", "overwrite": True, "encoding": "utf-8"}} # Set the name of the output JSON file
 
 ### Helper functions
 # Define a function that extracts the number of listings from the car page list JSON
@@ -31,7 +27,8 @@ def num_listings_extractor(json_data):
 # Define the listing page spider
 class ListingPageSpider(scrapy.Spider):
     name = "listing_page_spider" # Define the name of the spider
-    custom_settings=custom_settings_dict # Define the custom settings of the spider
+    custom_settings=custom_scrapy_settings # Define the custom settings of the spider
+    install_reactor("twisted.internet.asyncioreactor.AsyncioSelectorReactor")
 
     # Change the current working directory if needed
     change_cwd()
@@ -121,3 +118,14 @@ class ListingPageSpider(scrapy.Spider):
                     "page_rank": response.meta["page_rank"],
                     "car_page_url": i["url"]
                 }
+
+# Define a function to run the listing spider
+def run_listing_page_spider():
+    full_settings_dict = custom_scrapy_settings.copy()
+    full_settings_dict.update({
+        "FEEDS": {"car_page_url_list_cat_all.json":{"format": "json", "overwrite": True, "encoding": "utf-8"}}, # Set the name of the output JSON file,
+        "LOG_FILE": f"mobile_logs_cat_all_{date_start_for_log_file_name}.log" # Set the name of the log file
+    })
+    process = CrawlerProcess(settings=full_settings_dict)
+    process.crawl(ListingPageSpider)
+    process.start()
