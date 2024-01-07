@@ -3,6 +3,7 @@ import logging
 import sys
 
 import scrapy
+from scrapy.crawler import CrawlerProcess
 from dotenv import load_dotenv
 
 sys.path.append("../..")
@@ -10,18 +11,15 @@ import pandas as pd
 
 from inputs import custom_scrapy_settings, listing_page_crawling_framework
 from mobile_de_selenium_code_prod_listing_page_func import date_start_for_log_file_name
+from scrapy.utils.reactor import install_reactor
 
 # Load environment variables
 load_dotenv()
 
-# Define custom settings for the spider
-custom_settings_dict = custom_scrapy_settings.copy()
-custom_settings_dict["LOG_FILE"] = f"mobile_logs_cat_all_{date_start_for_log_file_name}.log" # Set the name of the log file
-custom_settings_dict["FEEDS"] = {"df_all_brands_data_cat_all.json":{"format": "json", "overwrite": True, "encoding": "utf-8"}} # Set the name of the output JSON file
-
 class CarPageSpider(scrapy.Spider):
     name = "car_page_spider" # Define the name of the spider
-    custom_settings=custom_settings_dict # Define the custom settings of the spider
+    custom_settings=custom_scrapy_settings # Define the custom settings of the spider
+    install_reactor("twisted.internet.asyncioreactor.AsyncioSelectorReactor")
 
     # Send an initial request to the URL to be crawled
     def start_requests(self):
@@ -137,3 +135,14 @@ class CarPageSpider(scrapy.Spider):
             "page_rank": response.meta["page_rank"],
             "total_num_pages": response.meta["total_num_pages"]
         }
+
+# Define a function to run the car page spider
+def run_car_page_spider():
+    full_settings_dict = custom_scrapy_settings.copy()
+    full_settings_dict.update({
+        "FEEDS": {"df_all_brands_data_cat_all.json":{"format": "json", "overwrite": True, "encoding": "utf-8"}}, # Set the name of the output JSON file
+        "LOG_FILE": f"mobile_logs_cat_all_{date_start_for_log_file_name}.log" # Set the name of the log file
+    })
+    process = CrawlerProcess(settings=full_settings_dict)
+    process.crawl(CarPageSpider)
+    process.start()
