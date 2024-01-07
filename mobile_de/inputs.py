@@ -9,7 +9,7 @@ load_dotenv()
 def change_cwd():
     if any([True if i in os.getcwd() else False for i in [
         # Windows
-        "mobile_de_scraper\mobile_de", "lukas_mobile_de_crawling\mobile_de",
+        "mobile_de_scraper\\mobile_de", "lukas_mobile_de_crawling\\mobile_de",
         # Mac and Linux
         "mobile_de_scraper/mobile_de", "lukas_mobile_de_crawling/mobile_de"
     ]]):
