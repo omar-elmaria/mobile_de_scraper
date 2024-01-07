@@ -30,3 +30,4 @@ test.py
 *.mov
 gdrive_token.json
 vm_logs/
+.DS_Store

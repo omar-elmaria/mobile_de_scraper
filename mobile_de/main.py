@@ -2,24 +2,30 @@ import json
 import logging
 import os
 import re
-import time
 from datetime import datetime, timedelta
 
 import pandas as pd
 import pytz
 import yagmail
-from gdrive_upload_script import upload_file_to_gdrive
 from google.cloud import bigquery
 from google.oauth2 import service_account
+
+from gdrive_upload_script import upload_file_to_gdrive
+from inputs import (
+    change_cwd,
+    listing_page_crawling_framework,
+    marke_list,
+    modell_list
+)
+from mobile_de.spiders.mobile_de_zyte_api_car_page_spider import run_car_page_spider
 from mobile_de_selenium_code_prod_listing_page_func import (
     date_start_for_log_file_name,
     mobile_de_local_single_func
 )
-from scrapy.crawler import CrawlerProcess
+from scrapy.crawler import CrawlerRunner
+from scrapy.utils.log import configure_logging
+from twisted.internet import defer, reactor
 
-from mobile_de.spiders.mobile_de_zyte_api_car_page_spider import CarPageSpider
-
-crawl_now = False
 def is_between_time_range():
     # Set the timezone to CET
     cet_timezone = pytz.timezone('CET')
@@ -43,334 +49,60 @@ def main():
     gdrive_folder_id="16e4f41zhwV67Pm01I0jHwL2l59kpn8WY"
 
     # Run the Selenium script that crawls the listing page
-    mobile_de_local_single_func(
-        category="cat_all",
-        car_list=[
-            # Cat 1
-            "ALPINA",
-            "Aston Martin",
-            "Bentley",
-            "Bugatti",
-            "Ferrari",
-            "Koenigsegg",
-            "KTM",
-            "Lamborghini",
-            "McLaren",
-            "Pagani",
-            "Rolls-Royce",
-            "Wiesmann",
+    if listing_page_crawling_framework == "selenium":
+        # Print a status message indicating the start of the selenium script
+        logging.info("Running the selenium crawler to get the listing page URLs...")
+        
+        # Run the selenium script
+        mobile_de_local_single_func(
+            category="cat_all",
+            car_list=marke_list,
+            modell_list=modell_list,
+            captcha_solver_default="capmonster"
+        )
 
-            # Cat 2
-            "Audi",
+        # Print a status message indicating the end of the selenium script
+        logging.info("The Selenium script finished running. Now, running the car page Scrapy spider...")
 
-            # Cat 3
-            "Mercedes-Benz",
+        # Run the car page spider
+        run_car_page_spider()
+    elif listing_page_crawling_framework == "zyte":
+        # Configure logging
+        configure_logging()
 
-            # Cat 4
-            "BMW",
+        # Define two Crawler runners, one for each spider
+        runner_listing_page = CrawlerRunner(settings={
+            "FEEDS": {"car_page_url_list_cat_all.json":{"format": "json", "overwrite": True, "encoding": "utf-8"}}, # Set the name of the output JSON file
+            "LOG_FILE": f"mobile_logs_cat_all_{date_start_for_log_file_name}.log" # Set the name of the log file
+        })
+        runner_car_page = CrawlerRunner(settings={
+            "FEEDS": {"df_all_brands_data_cat_all.json":{"format": "json", "overwrite": True, "encoding": "utf-8"}}, # Set the name of the output JSON file
+            "LOG_FILE": f"mobile_logs_cat_all_{date_start_for_log_file_name}.log" # Set the name of the log file
+        })
 
-            # Cat 5
-            "Corvette",
-            "Dodge",
-            "Nissan",
-            "Ford",
-            "Alfa Romeo",
-            "Jaguar",
-            "Lexus",
-            "Lotus",
-            "Maserati",
-            "Honda",
+        @defer.inlineCallbacks
+        def crawl():
+            # Print a status message indicating the start of the zyte spider to crawl the listing page URLs
+            logging.info("Running the Scrapy spider to get the listing page URLs...")
+            # Run the first crawler that crawls the listing page URLs
+            from mobile_de.spiders.mobile_de_zyte_api_listing_page_spider import ListingPageSpider
+            yield runner_listing_page.crawl(ListingPageSpider)
 
-            # Cat 6
-            "Porsche"
-        ],
-        modell_list=[
-            # Cat 1
-            # ALPINA
-            "Andere",
+            # Print a status message indicating the start of the zyte spider to crawl the car page URLs
+            logging.info("The listing page Scrapy spider finished running. Now, running the car page Scrapy spider...")
+            # Run the second crawler that crawls the car pages themselves
+            from mobile_de.spiders.mobile_de_zyte_api_car_page_spider import CarPageSpider
+            yield runner_car_page.crawl(CarPageSpider)
 
-            # Aston Martin
-            "DB",
-            "DB11",
-            "DB9",
-            "DBS",
-            "DBX",
-            "Rapide",
-            "V12 Vantage",
-            "V8 Vantage",
-            "Vanquish",
-            "Virage",
-            "Andere",
+            # Stop the reactor
+            reactor.stop()
 
-            # Bentley
-            "Bentayga",
-            "    Continental",
-            "    Continental Flying Spur",
-            "    Continental GT",
-            "    Continental GTC",
-            "    Continental Supersports",
-            "Flying Spur",
-            "Andere",
-
-            # Bugatti
-            "Chiron",
-            "EB 110",
-            "Veyron",
-            "Andere",
-
-            # Ferrari
-            "296 GTB",
-            "360",
-            "365",
-            "458",
-            "488 GTB",
-            "488 Pista",
-            "488 Spider",
-            "550",
-            "575",
-            "599 GTB",
-            "599 GTO",
-            "599 SA Aperta",
-            "612",
-            "812",
-            "California",
-            "Enzo Ferrari",
-            "F12",
-            "F355",
-            "F40",
-            "F430",
-            "F50",
-            "F8",
-            "FF",
-            "LaFerrari",
-            "GTC4Lusso",
-            "Portofino",
-            "Purosangue",
-            "Roma",
-            "SF90",
-            "Superamerica",
-            "Testarossa",
-            "Andere",
-
-            # Koenigsegg
-            "Agera",
-            "CCR",
-            "CCXR",
-            "Andere",
-
-            # KTM
-            "X-BOW",
-            "Andere",
-
-            # Lamborghini
-            "Aventador",
-            "Countach",
-            "Diablo",
-            "Gallardo",
-            "Huracán",
-            "Jalpa",
-            "Murciélago",
-            "Urus",
-            "Andere",
-
-            # McLaren
-            "540C",
-            "570GT",
-            "570S",
-            "600LT",
-            "620R",
-            "650S",
-            "650S Coupé",
-            "650S Spider",
-            "675LT",
-            "675LT Spider",
-            "720S",
-            "765LT",
-            "Artura",
-            "Elva",
-            "GT",
-            "MP4-12C",
-            "P1",
-            "Senna GTR",
-            "Speedtail",
-            "Andere",
-
-            # Pagani
-            "Huayra",
-            "Zonda",
-            "Andere",
-
-            # Rolls-Royce
-            "Flying Spur",
-            "Corniche",
-            "Cullinan",
-            "Dawn",
-            "Phantom",
-            "Silver Cloud",
-            "Silver Dawn",
-            "Silver Seraph",
-            "Ghost",
-            "Silver Shadow",
-            "Silver Spirit",
-            "Silver Spur",
-            "Wraith",
-            "Andere",
-
-            # Wiesmann
-            "MF 3",
-            "MF 35",
-            "MF 4",
-            "MF 5",
-
-            ###---------------###
-
-            # Cat 2
-            # Audi
-            "e-tron",
-            "quattro",
-            "R8",
-            "RS2",
-            "RS3",
-            "RS4",
-            "RS5",
-            "RS6",
-            "RS7",
-            "RSQ3",
-            "RSQ8",
-            "S8",
-            "    TT RS",
-
-            ###---------------###
-
-            # Cat 3
-            # Mercedes-Benz
-            "    A 45 AMG",
-            "    AMG GT",
-            "    AMG GT C",
-            "    AMG GT R",
-            "    AMG GT S",
-            "    C 63 AMG",
-            "    CL 65 AMG",
-            "    CLA 45 AMG",
-            "    CLA 45 AMG Shooting Brake",
-            "    CLK 63 AMG",
-            "    CLS 63 AMG",
-            "    CLS 63 AMG Shooting Brake",
-            "    E 63 AMG",
-            "    G 63 AMG",
-            "    G 65 AMG",
-            "    GL 63 AMG",
-            "    GLA 45 AMG",
-            "    GLC 63 AMG",
-            "    GLE 63 AMG",
-            "    GLS 63",
-            "    ML 63 AMG",
-            "    S 63 AMG",
-            "    S 65 AMG",
-            "    SL 63 AMG",
-            "    SL 65 AMG",
-            "SLS AMG",
-            "SLR",
-
-            ###---------------###
-
-            # Cat 4
-            # BMW
-            "    1er M Coupé",
-            "    M2",
-            "    M3",
-            "    M4",
-            "    M5",
-            "    M6",
-            "    M8",
-            "    X3 M",
-            "    X4 M",
-            "    X5 M",
-            "    X6 M",
-            "    Z3 M",
-            "    Z4 M",
-            "    Z8",
-
-            ###---------------###
-
-            # Cat 5
-            # Corvette
-            "C8",
-            
-            # Dodge
-            "Viper",
-
-            # Nissan
-            "GT-R",
-            
-            # Ford
-            "GT",
-
-            # Alfa Romeo
-            "4C",
-            "8C",
-
-            # Jaguar
-            "F-Type",
-            "Andere",
-
-            # Lexus
-            "LFA",
-
-            # Lotus
-            "Exige",
-            "Emira",
-            "Andere",
-
-            # Maserati
-            "MC20",
-
-            # Honda
-            "NSX",
-
-            ###---------------###
-
-            # Cat 6
-            # Porsche
-            "356",
-            "912",
-            "914",
-            "918",
-            "924",
-            "928",
-            "    930",
-            "944",
-            "959",
-            "962",
-            "    964",
-            "968",
-            "    991",
-            "    992",
-            "    993",
-            "    996",
-            "    997",
-            "Boxster",
-            "Carrera GT",
-            "Cayenne",
-            "Cayman",
-            "Macan",
-            "Panamera",
-            "Taycan",
-            "Andere",
-        ],
-        captcha_solver_default="capmonster"
-    )
+        # Run the crawl() function
+        crawl()
+        reactor.run() # the script will block here until the last crawl call is finished
 
     # Print a status message
-    logging.info("The Selenium script finished running. Now, running the Scrapy spider...")
-
-    # Run the spider
-    process = CrawlerProcess()
-    process.crawl(CarPageSpider)
-    process.start()
-
-    # Print a status message
-    logging.info("The Scrapy spider finished running. Now, cleaning the data...")
+    logging.info("The Scrapy spider that crawls the car pages finished running. Now, cleaning the data...")
 
     # Retrieve the output data from the JSON file
     with open("df_all_brands_data_cat_all.json", mode="r", encoding='utf-8') as f:
@@ -384,11 +116,11 @@ def main():
     # Clean the data
     df_data_all_car_brands_cleaned = df_data_all_car_brands.copy()
     df_data_all_car_brands_cleaned.replace(to_replace="", value=None, inplace=True)
-    df_data_all_car_brands_cleaned["leistung"] = df_data_all_car_brands_cleaned["leistung"].apply(lambda x: int(re.findall(pattern="(?<=\().*(?=\sPS)", string=x)[0].replace(".", "")) if x is not None else x)
-    df_data_all_car_brands_cleaned["preis"] = df_data_all_car_brands_cleaned["preis"].apply(lambda x: int(''.join(re.findall(pattern="\d+", string=x))) if x is not None else x)
-    df_data_all_car_brands_cleaned["kilometer"] = df_data_all_car_brands_cleaned["kilometer"].apply(lambda x: int(''.join(re.findall(pattern="\d+", string=x))) if x is not None else x)
+    df_data_all_car_brands_cleaned["leistung"] = df_data_all_car_brands_cleaned["leistung"].apply(lambda x: int(re.findall(pattern=r"(?<=\().*(?=\sPS)", string=x)[0].replace(".", "")) if x is not None else x)
+    df_data_all_car_brands_cleaned["preis"] = df_data_all_car_brands_cleaned["preis"].apply(lambda x: int(''.join(re.findall(pattern=r"\d+", string=x))) if x is not None else x)
+    df_data_all_car_brands_cleaned["kilometer"] = df_data_all_car_brands_cleaned["kilometer"].apply(lambda x: int(''.join(re.findall(pattern=r"\d+", string=x))) if x is not None else x)
     df_data_all_car_brands_cleaned["fahrzeughalter"] = df_data_all_car_brands_cleaned["fahrzeughalter"].apply(lambda x: int(x) if x is not None else x)
-    df_data_all_car_brands_cleaned["standort"] = df_data_all_car_brands_cleaned["standort"].apply(lambda x: re.findall(pattern="[A-za-z]+(?=-)", string=x)[0] if x is not None else x)
+    df_data_all_car_brands_cleaned["standort"] = df_data_all_car_brands_cleaned["standort"].apply(lambda x: re.findall(pattern=r"[A-za-z]+(?=-)", string=x)[0] if x is not None else x)
     df_data_all_car_brands_cleaned["crawled_timestamp"] = datetime.now()
 
     # Print a status message
@@ -456,16 +188,8 @@ def main():
     logging.info(f"The script finished at {t2}. It took {t2-t1} to crawl all listings...")    
 
 if __name__ == '__main__':
-    while True:
-        if any([True if i in os.getcwd() else False for i in ["mobile_de_scraper\mobile_de", "lukas_mobile_de_crawling\mobile_de"]]):
-            pass
-        else:
-            os.chdir(os.getcwd() + "/mobile_de")
+    # Change the current working directory if needed
+    change_cwd()
 
-        # Check if the time is between 11:00 pm and 11:05 pm on a Friday
-        if is_between_time_range() or crawl_now == True:
-            # Run the script
-            main()
-        else:
-            # If it's not, wait for 1 minute and check again
-            time.sleep(60)
+    # Run the script
+    main()

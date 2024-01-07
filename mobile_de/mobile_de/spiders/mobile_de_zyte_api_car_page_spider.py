@@ -1,49 +1,25 @@
 import json
 import logging
-import os
-from datetime import datetime
+import sys
 
 import scrapy
+from scrapy.crawler import CrawlerProcess
 from dotenv import load_dotenv
-import sys
+
 sys.path.append("../..")
+import pandas as pd
+
+from inputs import custom_scrapy_settings, listing_page_crawling_framework
 from mobile_de_selenium_code_prod_listing_page_func import date_start_for_log_file_name
+from scrapy.utils.reactor import install_reactor
 
 # Load environment variables
 load_dotenv()
 
-# Define custom settings for the spider
-custom_settings_dict = {
-    "FEED_EXPORT_ENCODING": "utf-8", # UTF-8 deals with all types of characters
-    "RETRY_TIMES": 3, # Retry failed requests up to 3 times
-    "AUTOTHROTTLE_ENABLED": False, # Disables the AutoThrottle extension (recommended to be used if you are not using proxy services)
-    "RANDOMIZE_DOWNLOAD_DELAY": False, # Should not be used with proxy services. If enabled, Scrapy will wait a random amount of time (between 0.5 * DOWNLOAD_DELAY and 1.5 * DOWNLOAD_DELAY) while fetching requests from the same website
-    "CONCURRENT_REQUESTS": 10, # The maximum number of concurrent (i.e. simultaneous) requests that will be performed by the Scrapy downloader
-    "DOWNLOAD_TIMEOUT": 60, # Setting the timeout parameter to 60 seconds as per the ScraperAPI documentation
-    "ROBOTSTXT_OBEY": False, # Don't obey the Robots.txt rules
-    "FEEDS": {"df_all_brands_data_cat_all.json":{"format": "json", "overwrite": True, "encoding": "utf-8"}}, # Set the name of the output JSON file
-    "LOG_FILE": f"mobile_logs_cat_all_{date_start_for_log_file_name}.log", # Set the name of the log file
-    "LOG_LEVEL": "DEBUG", # Set the level of logging to DEBUG
-    # Zyte settings
-    "DOWNLOAD_HANDLERS": {
-        "http": "scrapy_zyte_api.ScrapyZyteAPIDownloadHandler",
-        "https": "scrapy_zyte_api.ScrapyZyteAPIDownloadHandler",
-    },
-    "DOWNLOADER_MIDDLEWARES": {
-        "scrapy_zyte_api.ScrapyZyteAPIDownloaderMiddleware": 1000,
-    },
-    "REQUEST_FINGERPRINTER_CLASS": "scrapy_zyte_api.ScrapyZyteAPIRequestFingerprinter",
-    "TWISTED_REACTOR": "twisted.internet.asyncioreactor.AsyncioSelectorReactor",
-    "ZYTE_API_KEY": os.getenv("ZYTE_API_KEY"),
-    "ZYTE_API_LOG_REQUESTS": True,
-    "ZYTE_API_TRANSPARENT_MODE": True,
-    "ZYTE_API_SKIP_HEADERS": ["Cookie", "User-Agent"],
-    "ZYTE_API_RETRY_POLICY": "retry_policies.CUSTOM_RETRY_POLICY"
-}
-
 class CarPageSpider(scrapy.Spider):
     name = "car_page_spider" # Define the name of the spider
-    custom_settings=custom_settings_dict # Define the custom settings of the spider
+    custom_settings=custom_scrapy_settings # Define the custom settings of the spider
+    install_reactor("twisted.internet.asyncioreactor.AsyncioSelectorReactor")
 
     # Send an initial request to the URL to be crawled
     def start_requests(self):
@@ -54,10 +30,14 @@ class CarPageSpider(scrapy.Spider):
             f.close()
 
         # Get the list of dictionaries containing the listing page data
-        df_all_car_page_urls = []
-        for i in data: # Loop through every page
-            for j in i: # Loop through each car listing on a specific page
-                df_all_car_page_urls.append(j)
+        if listing_page_crawling_framework == "selenium":
+            df_all_car_page_urls = []
+            for i in data: # Loop through every page
+                for j in i: # Loop through each car listing on a specific page
+                    df_all_car_page_urls.append(j)
+        elif listing_page_crawling_framework == "zyte":
+            df_all_car_page_urls = pd.DataFrame(data)
+            df_all_car_page_urls = df_all_car_page_urls.drop_duplicates(subset="car_page_url").to_dict(orient="records")
 
         # Print a status message indicating the number of URLs to crawl
         logging.info(f"The total number of URLs to crawl is {len(df_all_car_page_urls)}")
@@ -70,7 +50,7 @@ class CarPageSpider(scrapy.Spider):
             page_rank = url["page_rank"]
             total_num_pages = url["last_page"]
             url_to_crawl = url["car_page_url"]
-            logging.info(f"Sending a request to crawl a page under {marke} {modell} with URL {url}")
+            logging.info(f"Sending a request to crawl a page under {marke} {modell} with URL {url_to_crawl}")
             
             yield scrapy.Request(
                 url=url_to_crawl,
@@ -155,3 +135,14 @@ class CarPageSpider(scrapy.Spider):
             "page_rank": response.meta["page_rank"],
             "total_num_pages": response.meta["total_num_pages"]
         }
+
+# Define a function to run the car page spider
+def run_car_page_spider():
+    full_settings_dict = custom_scrapy_settings.copy()
+    full_settings_dict.update({
+        "FEEDS": {"df_all_brands_data_cat_all.json":{"format": "json", "overwrite": True, "encoding": "utf-8"}}, # Set the name of the output JSON file
+        "LOG_FILE": f"mobile_logs_cat_all_{date_start_for_log_file_name}.log" # Set the name of the log file
+    })
+    process = CrawlerProcess(settings=full_settings_dict)
+    process.crawl(CarPageSpider)
+    process.start()
