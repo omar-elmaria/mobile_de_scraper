@@ -11,15 +11,18 @@ import yagmail
 from gdrive_upload_script import upload_file_to_gdrive
 from google.cloud import bigquery
 from google.oauth2 import service_account
-from mobile_de_selenium_code_prod_listing_page_func import (
-    date_start_for_log_file_name,
-    mobile_de_local_single_func
+from inputs import (
+    change_cwd,
+    listing_page_crawling_framework,
+    marke_list,
+    modell_list
 )
+from mobile_de_selenium_code_prod_listing_page_func import (
+    date_start_for_log_file_name, mobile_de_local_single_func)
 from scrapy.crawler import CrawlerProcess
 
 from mobile_de.spiders.mobile_de_zyte_api_car_page_spider import CarPageSpider
 from mobile_de.spiders.mobile_de_zyte_api_listing_page_spider import ListingPageSpider
-from inputs import listing_page_crawling_framework, marke_list, modell_list
 
 crawl_now = False
 def is_between_time_range():
@@ -64,18 +67,16 @@ def main():
         logging.info("Running the Zyte crawler to get the listing page URLs...")
 
         # Run the zyte listing page spider
-        process1 = CrawlerProcess()
-        process1.crawl(ListingPageSpider)
-        process1.start()
+        process = CrawlerProcess()
+        process.crawl(ListingPageSpider)
 
         # Print a status message indicating the end of the zyte spider
         logging.info("The Selenium script finished running. Now, running the Scrapy spider...")
 
 
     # Run the car page spider
-    process2 = CrawlerProcess()
-    process2.crawl(CarPageSpider)
-    process2.start()
+    process.crawl(CarPageSpider)
+    process.start()
 
     # Print a status message
     logging.info("The Scrapy spider that crawls the car pages finished running. Now, cleaning the data...")
@@ -92,11 +93,11 @@ def main():
     # Clean the data
     df_data_all_car_brands_cleaned = df_data_all_car_brands.copy()
     df_data_all_car_brands_cleaned.replace(to_replace="", value=None, inplace=True)
-    df_data_all_car_brands_cleaned["leistung"] = df_data_all_car_brands_cleaned["leistung"].apply(lambda x: int(re.findall(pattern="(?<=\().*(?=\sPS)", string=x)[0].replace(".", "")) if x is not None else x)
-    df_data_all_car_brands_cleaned["preis"] = df_data_all_car_brands_cleaned["preis"].apply(lambda x: int(''.join(re.findall(pattern="\d+", string=x))) if x is not None else x)
-    df_data_all_car_brands_cleaned["kilometer"] = df_data_all_car_brands_cleaned["kilometer"].apply(lambda x: int(''.join(re.findall(pattern="\d+", string=x))) if x is not None else x)
+    df_data_all_car_brands_cleaned["leistung"] = df_data_all_car_brands_cleaned["leistung"].apply(lambda x: int(re.findall(pattern=r"(?<=\().*(?=\sPS)", string=x)[0].replace(".", "")) if x is not None else x)
+    df_data_all_car_brands_cleaned["preis"] = df_data_all_car_brands_cleaned["preis"].apply(lambda x: int(''.join(re.findall(pattern=r"\d+", string=x))) if x is not None else x)
+    df_data_all_car_brands_cleaned["kilometer"] = df_data_all_car_brands_cleaned["kilometer"].apply(lambda x: int(''.join(re.findall(pattern=r"\d+", string=x))) if x is not None else x)
     df_data_all_car_brands_cleaned["fahrzeughalter"] = df_data_all_car_brands_cleaned["fahrzeughalter"].apply(lambda x: int(x) if x is not None else x)
-    df_data_all_car_brands_cleaned["standort"] = df_data_all_car_brands_cleaned["standort"].apply(lambda x: re.findall(pattern="[A-za-z]+(?=-)", string=x)[0] if x is not None else x)
+    df_data_all_car_brands_cleaned["standort"] = df_data_all_car_brands_cleaned["standort"].apply(lambda x: re.findall(pattern=r"[A-za-z]+(?=-)", string=x)[0] if x is not None else x)
     df_data_all_car_brands_cleaned["crawled_timestamp"] = datetime.now()
 
     # Print a status message
@@ -165,10 +166,8 @@ def main():
 
 if __name__ == '__main__':
     while True:
-        if any([True if i in os.getcwd() else False for i in ["mobile_de_scraper\mobile_de", "lukas_mobile_de_crawling\mobile_de"]]):
-            pass
-        else:
-            os.chdir(os.getcwd() + "/mobile_de")
+        # Change the current working directory if needed
+        change_cwd()
 
         # Check if the time is between 11:00 pm and 11:05 pm on a Friday
         if is_between_time_range() or crawl_now == True:
