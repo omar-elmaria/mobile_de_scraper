@@ -20,7 +20,7 @@ load_dotenv()
 def num_listings_extractor(json_data):
     # Extract the number of listings in raw format (181 ANgebote)
     num_listings_raw = [i["name"] for i in json_data["breadcrumbs"] if "Angebote" in i["name"]][0]
-    num_listings = re.findall(pattern=r"\d+", string=num_listings_raw)[0]
+    num_listings = "".join(re.findall(pattern=r"\d+", string=num_listings_raw))
 
     return num_listings
 
