@@ -46,6 +46,7 @@ custom_scrapy_settings = {
 
 # General global inputs
 listing_page_crawling_framework = "zyte" # Set the listing page crawling framework to be used (options: "selenium" or "zyte")
+max_num_pages = 50 # Set the maximum number of pages to be crawled per URL
 marke_list = [
     # Cat 1
     "ALPINA",

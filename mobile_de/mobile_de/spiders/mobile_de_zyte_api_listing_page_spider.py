@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 import sys
 sys.path.append("../..")
 from mobile_de_selenium_code_prod_listing_page_func import date_start_for_log_file_name
-from inputs import custom_scrapy_settings, change_cwd
+from inputs import custom_scrapy_settings, change_cwd, max_num_pages
 import pandas as pd
 import re
 from scrapy.utils.reactor import install_reactor
@@ -70,7 +70,7 @@ class ListingPageSpider(scrapy.Spider):
     def parse(self, response):
         # Parse the API response and calculate the number of pages belonging to the marke and modell
         productList = response.raw_api_response["productList"]
-        num_pages = int(num_listings_extractor(productList)) // 21 + 1
+        num_pages = min(int(num_listings_extractor(productList)) // 21 + 1, max_num_pages)
 
         # Log a message indicating the number of pages for the marke and modell
         logging.info(f"Number of pages for {response.meta['marke']} {response.meta['modell']}: {num_pages}")
