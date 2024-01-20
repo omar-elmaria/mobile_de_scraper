@@ -1,0 +1,1 @@
+"C:\Users\Administrator\Desktop\python_projects\venv_scraping\Scripts\python.exe" "C:\Users\Administrator\Desktop\python_projects\mobile_de_scraper\mobile_de\main.py"
