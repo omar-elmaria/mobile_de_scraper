@@ -151,7 +151,7 @@ def main():
             bigquery.SchemaField("erstzulassung", "STRING"),
             bigquery.SchemaField("fahrzeughalter", "FLOAT64"),
             bigquery.SchemaField("standort", "STRING"),
-            bigquery.SchemaField("fahrzeugbescheibung", "STRING"),
+            bigquery.SchemaField("fahrzeugbeschreibung", "STRING"),
             bigquery.SchemaField("url_to_crawl", "STRING"),
             bigquery.SchemaField("page_rank", "INT64"),
             bigquery.SchemaField("total_num_pages", "INT64"),
