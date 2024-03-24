@@ -31,3 +31,4 @@ test.py
 gdrive_token.json
 vm_logs/
 .DS_Store
+*.csv

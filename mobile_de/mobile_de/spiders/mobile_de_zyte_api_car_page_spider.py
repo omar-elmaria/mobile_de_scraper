@@ -130,7 +130,7 @@ class CarPageSpider(scrapy.Spider):
             'erstzulassung': erstzulassung,
             'fahrzeughalter': fahrzeughalter,
             "standort": standort,
-            "fahrzeugbescheibung": fahrzeug_beschreibung,
+            "fahrzeugbeschreibung": fahrzeug_beschreibung,
             "url_to_crawl": response.meta["url_to_crawl"],
             "page_rank": response.meta["page_rank"],
             "total_num_pages": response.meta["total_num_pages"]
