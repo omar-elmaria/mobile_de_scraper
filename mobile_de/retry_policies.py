@@ -3,7 +3,7 @@ from zyte_api.aio.errors import RequestError
 from zyte_api.aio.retry import RetryFactory
 
 def is_http_521(exc: BaseException) -> bool:
-    return isinstance(exc, RequestError) and exc.status == 521
+    return isinstance(exc, RequestError) and (exc.status == 521 or exc.status == 500)
 
 class CustomRetryFactory(RetryFactory):
 
