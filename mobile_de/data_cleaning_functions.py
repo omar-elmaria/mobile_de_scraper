@@ -89,6 +89,17 @@ class HelperFunctions:
         else:
             return x
     
+    def amend_form_col_mercedes_benz_sls_amg(self, x):
+        """
+        A function to amend the `form` column for Mercedes-Benz SLS AMG
+        """
+        if x.lower().find("cabrio") != -1 or x.lower().find("roadster") != -1:
+            return "Roadster"
+        elif x.lower().find("sportwagen") != -1 or x.lower().find("coupe") != -1:
+            return "Coupe"
+        else:
+            return x    
+    
     def amend_form_col_mclaren(self, x):
         """
         A function to amend the `form` column for McLaren 765LT
@@ -205,6 +216,16 @@ class HelperFunctions:
         if x == "" or x is None or pd.isnull(x) or x.lower().find("automatik") != -1 or x.lower().find("schaltgetriebe") != -1\
         or x.lower().find("halbautomatik") != -1:
             return "9-Gang-AMG-Speedshift"
+        else:
+            return x
+    
+    def amend_getriebe_col_mercedes_benz_sls_amg(self, x):
+        """
+        A function to amend the `getriebe` column for Mercedes-Benz SLS AMG
+        """
+        if x == "" or x is None or pd.isnull(x) or x.lower().find("automatik") != -1 or x.lower().find("schaltgetriebe") != -1\
+        or x.lower().find("halbautomatik") != -1:
+            return "7-Gang-Doppelkupplungs-Getriebe"
         else:
             return x
     
@@ -385,6 +406,55 @@ class HelperFunctions:
             return "G 63"
         else:
             return x["variante"]
+        
+    def amend_variante_col_mercedes_benz_sls_amg_stg_1(self, x):
+        """
+        A function to amend the `variante` column for Mercedes-Benz SLS AMG (stg 1)
+        """
+        if x["marke"] == "Mercedes-Benz" and x["modell"] == "SLS AMG" and (x["leistung"] >= 625 and x["leistung"] <= 640)\
+        and x["form"] == "Coupe" and x["titel"].lower().find("black series") != -1:
+            return "SLS AMG Black Series"
+        else:
+            return x["variante"]
+    
+    def amend_variante_col_mercedes_benz_sls_amg_stg_2(self, x):
+        """
+        A function to amend the `variante` column for Mercedes-Benz SLS AMG (stg 2)
+        """
+        if x["marke"] == "Mercedes-Benz" and x["modell"] == "SLS AMG" and x["form"] == "Coupe"\
+        and x["titel"].lower().find("final edition") != -1:
+            return "SLS AMG GT Final Edition"
+        elif x["marke"] == "Mercedes-Benz" and x["modell"] == "SLS AMG" and x["form"] == "Roadster"\
+        and x["titel"].lower().find("final edition") != -1:
+            return "SLS AMG GT Final Edition Roadster"
+        else:
+            return x["variante"]
+    
+    def amend_variante_col_mercedes_benz_sls_amg_stg_3(self, x):
+        """
+        A function to amend the `variante` column for Mercedes-Benz SLS AMG (stg 3)
+        """
+        if x["marke"] == "Mercedes-Benz" and x["modell"] == "SLS AMG" and x["form"] == "Coupe"\
+        and x["titel"].find("GT") != -1 and x["leistung"] == 591:
+            return "SLS AMG GT"
+        elif x["marke"] == "Mercedes-Benz" and x["modell"] == "SLS AMG" and x["form"] == "Roadster"\
+        and x["titel"].find("GT") != -1 and x["leistung"] == 591:
+            return "SLS AMG GT Roadster"
+        else:
+            return x["variante"]
+    
+    def amend_variante_col_mercedes_benz_sls_amg_stg_4(self, x):
+        """
+        A function to amend the `variante` column for Mercedes-Benz SLS AMG (stg 4)
+        """
+        if x["marke"] == "Mercedes-Benz" and x["modell"] == "SLS AMG" and x["form"] == "Coupe"\
+        and x["leistung"] == 571:
+            return "SLS AMG"
+        elif x["marke"] == "Mercedes-Benz" and x["modell"] == "SLS AMG" and x["form"] == "Roadster"\
+        and x["leistung"] == 571:
+            return "SLS AMG Roadster"
+        else:
+            return x["variante"]
     
     def amend_variante_col_mclaren_765lt(self, x):
         """
@@ -465,6 +535,33 @@ class HelperFunctions:
         """
         if x["variante"] == "DBX V8":
             return 550
+        else:
+            return x["leistung"]
+    
+    def amend_leistung_col_mercedes_benz_sls_amg_stg_1(self, x):
+        """
+        A function to amend the `leistung` column for Mercedes-Benz SLS AMG (stg 1)
+        """
+        if x["variante"] == "SLS AMG Black Series":
+            return 631
+        else:
+            return x["leistung"]
+    
+    def amend_leistung_col_mercedes_benz_sls_amg_stg_2(self, x):
+        """
+        A function to amend the `leistung` column for Mercedes-Benz SLS AMG (stg 2)
+        """
+        if x["variante"] == "SLS AMG GT Final Edition" or x["variante"] == "SLS AMG GT Final Edition Roadster":
+            return 591
+        else:
+            return x["leistung"]
+    
+    def amend_leistung_col_mercedes_benz_sls_amg_stg_3(self, x):
+        """
+        A function to amend the `leistung` column for Mercedes-Benz SLS AMG (stg 3)
+        """
+        if x["variante"] == "SLS AMG GT" or x["variante"] == "SLS AMG GT Roadster":
+            return 591
         else:
             return x["leistung"]
     
@@ -981,6 +1078,105 @@ class CleaningFunctions(HelperFunctions):
 
         return df_clean_9
     
+    ### Mercedes-Benz
+    ## SLS AMG
+    def clean_mercedes_benz_sls_amg(self, df_specific_brand):
+        """
+        A function to clean the data of Aston Martin DBX
+        """
+        # Make a copy of df_specific_brand
+        df_clean_1 = pd.DataFrame(df_specific_brand.copy())
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `form` column
+        # Spalte E = form = Wenn Spotwagen/Coupe, oder Sporwagen/Coupe, Tageszulassung, oder Sporwagen/Coupe, Jaheswagen, oder Sporwagen/Coupe, Neufahrzeug, oder Sporwagen/Coupe, Vorführfahrzeug, dann ändere auf "Coupé".
+        # Spalte E = form = Wenn Cabrio/Roadster, oder Cabrio/Roadster, Tageszulassung, oder Cabrio/Roadster, Jaheswagen, oder Cabrio/Roadster, Neufahrzeug, oder Cabrio/Roadster, Vorführfahrzeug, dann ändere auf "Roadster".
+        # Spalte E = form = Wenn im titel Roadster steht, dann ändere form auf "Roadster".
+        df_clean_2 = df_clean_1.copy()
+
+        df_clean_2["form"] = df_clean_2["form"].apply(self.amend_form_col_mercedes_benz_sls_amg)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `fahrzeugzustand` column
+        # Spalte F = fahrzeugzustand = Wenn (Leere), oder unfallfrei, nicht fahrtauglich, dann ändere auf "Unfallfrei"
+        df_clean_3 = df_clean_2.copy()
+
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        
+        ###------------------------------###------------------------------###
+        
+        ## Amend the `kilometer` column
+        # Spalte K = kilometer = Wenn (Leere), dann ändere auf "1"
+        df_clean_4 = df_clean_3.copy()
+
+        df_clean_4["kilometer"] = df_clean_4["kilometer"].apply(self.amend_kilometer_col)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `getriebe` column
+        # Spalte H = getriebe = Wenn (Leere), oder Automatik, oder Schaltgetriebe, oder Halbautomatik, dann ändere auf "9-Gang-AMG-Speedshift"
+        df_clean_5 = df_clean_4.copy()
+
+        df_clean_5["getriebe"] = df_clean_5["getriebe"].apply(self.amend_getriebe_col_mercedes_benz_sls_amg)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `Marke` col based on the `titel` col
+        # Spalte A = marke = Wenn Spalte D Titel Barbus enthält, dann ändere auf "Mercedes Benz| Brabus"
+        # Spalte A = marke = Wenn Spalte D Titel Umbau enthält, dann ändere auf "Mercedes Benz| Umbau"
+        # Spalte A = marke = Wenn Spalte D Titel GT3 enthält, dann ändere auf "Mercedes Benz| Rennwagen"
+        df_clean_6 = df_clean_5.copy()
+
+        mercedes_benz_sls_amg_marke_dict = {
+            "brabus": "Brabus",
+            "umbau": "Umbau",
+            "gt3": "Rennwagen"
+        }
+
+        for key, value in mercedes_benz_sls_amg_marke_dict.items():
+            df_clean_6["marke"] = df_clean_6.apply(lambda x: self.amend_marke_col_various_brands(x, key, value, "Mercedes-Benz"), axis=1)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `variante` and `leistung` columns
+        # Spalte C = Variante = Wenn Marke Mercedes Benz, und modell SLS AMG, und Leistung zwischen 625 bis 640, und form Coupe, und im titel Black Series steht, dann ändere auf "SLS AMG Black Series".
+        # Spalte G = Leistung = Wenn variante SLS AMG Black Series, dann ändere Leistung auf "631".
+                
+        # Spalte C = Variante = Wenn Marke Mercedes Benz, und modell SLS AMG, und form Coupe, und im titel Final Edition steht, dann ändere auf "SLS AMG GT Final Edition".
+        # Spalte C = Variante = Wenn Marke Mercedes Benz, und modell SLS AMG, und form Roadster, und im titel Final Edition steht, dann ändere auf "SLS AMG GT Final Edition Roadster".
+        # Spalte G = Leistung = Wenn entweder variante SLS AMG GT Final Edition oder SLS AMG GT Final Edition Roadster , dann ändere Leistung auf "591".
+
+        # Spalte C = Variante = Wenn Marke Mercedes Benz, und modell SLS AMG, und form Coupe, und im titel GT steht, und leistung 591, dann ändere auf "SLS AMG GT".
+        # Spalte C = Variante = Wenn Marke Mercedes Benz, und modell SLS AMG, und form Roadster, und im titel GT steht, und leistung 591, dann ändere auf "SLS AMG GT Roadster".
+        # Spalte G = Leistung = Wenn entweder variante SLS AMG GT oder SLS AMG GT Roadster , dann ändere Leistung auf "591".
+                
+        # Spalte C = Variante = Wenn Marke Mercedes Benz, und modell SLS AMG, und form Coupe, und leistung 571, dann ändere auf "SLS AMG".
+        # Spalte C = Variante = Wenn Marke Mercedes Benz, und modell SLS AMG, und form Roadster, und leistung 571, dann ändere auf "SLS AMG Roadster".
+        df_clean_7 = df_clean_6.copy()
+
+        df_clean_7["variante"] = df_clean_7.apply(lambda x: self.amend_variante_col_mercedes_benz_sls_amg_stg_1(x), axis=1)
+        df_clean_7["leistung"] = df_clean_7.apply(lambda x: self.amend_leistung_col_mercedes_benz_sls_amg_stg_1(x), axis=1)
+        df_clean_7["variante"] = df_clean_7.apply(lambda x: self.amend_variante_col_mercedes_benz_sls_amg_stg_2(x), axis=1)
+        df_clean_7["leistung"] = df_clean_7.apply(lambda x: self.amend_leistung_col_mercedes_benz_sls_amg_stg_2(x), axis=1)
+        df_clean_7["variante"] = df_clean_7.apply(lambda x: self.amend_variante_col_mercedes_benz_sls_amg_stg_3(x), axis=1)
+        df_clean_7["leistung"] = df_clean_7.apply(lambda x: self.amend_leistung_col_mercedes_benz_sls_amg_stg_3(x), axis=1)
+        df_clean_7["variante"] = df_clean_7.apply(lambda x: self.amend_variante_col_mercedes_benz_sls_amg_stg_4(x), axis=1)
+
+        ###------------------------------###------------------------------###
+
+        ## Create a new column `Ausstattung`
+        
+        df_clean_8 = df_clean_7.copy()
+        df_clean_8["ausstattung"] = None
+
+        # Move the Austattung column to be between "variante" and "titel"
+        austattung_col = df_clean_8.pop("ausstattung")
+        df_clean_8.insert(3, "ausstattung", austattung_col)
+
+        return df_clean_8
+
     ### McLaren
     ## 765LT
     def clean_mclaren_765lt(self, df_specific_brand):
@@ -1256,8 +1452,8 @@ def execute_cleaning():
     df_combined = []
     for mod in [
         "Porsche_992", "Lamborghini_Urus", "Aston Martin_DBX",
-        "Mercedes-Benz_G 63 AMG", "McLaren_765LT", "McLaren_720S",
-        "Masarati_MC20",
+        "Mercedes-Benz_G 63 AMG", "Mercedes-Benz_SLS AMG", "McLaren_765LT",
+        "McLaren_720S", "Masarati_MC20",
     ]:
         marke_to_clean = mod.split("_")[0]
         modell_to_clean = mod.split("_")[1]
@@ -1278,6 +1474,9 @@ def execute_cleaning():
         elif marke_to_clean == "Mercedes-Benz" and modell_to_clean == "G 63 AMG":
             logging.info("Cleaning Mercedes-Benz G 63 AMG...")
             df_cleaned = cf.clean_mercedes_benz_g_63_amg(df_specific_brand=df_specific_brand)
+        elif marke_to_clean == "Mercedes-Benz" and modell_to_clean == "SLS AMG":
+            logging.info("Cleaning Mercedes-Benz SLS AMG...")
+            df_cleaned = cf.clean_mercedes_benz_sls_amg(df_specific_brand=df_specific_brand)
         elif marke_to_clean == "McLaren" and modell_to_clean == "765LT":
             logging.info("Cleaning McLaren 765LT...")
             df_cleaned = cf.clean_mclaren_765lt(df_specific_brand=df_specific_brand)
