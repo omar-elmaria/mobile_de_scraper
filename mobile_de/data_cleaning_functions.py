@@ -54,6 +54,9 @@ class HelperFunctions:
             return x
     
     def amend_form_col_lamborghini_urus(self, x):
+        """
+        A function to amend the `form` column for Lamborghini Urus
+        """
         if x.lower().find("suv") != -1 or x.lower().find("geländewagen") != -1\
         or x.lower().find("pickup") != -1 or x.lower().find("andere") != -1\
         or x.lower().find("sportwagen") != -1 or x.lower().find("coup") != -1:
@@ -62,9 +65,26 @@ class HelperFunctions:
             return x
     
     def amend_form_col_aston_martin_dbx(self, x):
+        """
+        A function to amend the `form` column for Aston Martin DBX
+        """
         if x.lower().find("suv") != -1 or x.lower().find("geländewagen") != -1\
         or x.lower().find("pickup") != -1 or x.lower().find("andere") != -1\
         or x.lower().find("sportwagen") != -1 or x.lower().find("coup") != -1:
+            return "SUV"
+        else:
+            return x
+    
+    def amend_form_col_mercedes_benz_g_63_amg(self, x):
+        """
+        A function to amend the `form` column for Mercedes-Benz G 63 AMG
+        """
+        if x.lower().find("suv") != -1 or x.lower().find("geländewagen") != -1\
+        or x.lower().find("pickup") != -1 or x.lower().find("tageszulassung") != -1\
+        or x.lower().find("jahreswagen") != -1 or x.lower().find("neufahrzeug") != -1\
+        or x.lower().find("vorführfahrzeug") != -1 or x.lower().find("van") != -1\
+        or x.lower().find("minibus") != -1 or x.lower().find("sportwagen") != -1\
+        or x.lower().find("coup") != -1 or x.lower().find("limousine") != -1 or x.lower().find("andere/neufahrzeug") != -1:
             return "SUV"
         else:
             return x
@@ -72,31 +92,9 @@ class HelperFunctions:
     ###------------------------------###------------------------------###
     
     ## Fahrzeugzustand column helper functions 
-    def amend_fahrzeugzustand_col_porsche_992_gt3(self, x):
+    def amend_fahrzeugzustand_col(self, x):
         """
-        A function to amend the `fahrzeugzustand` column for Porsche 992 GT3
-        """
-        if x == "" or x is None or pd.isnull(x):
-            return "Unfallfrei"
-        elif x.lower().find("unfallfrei") != -1:
-            return "Unfallfrei"
-        else:
-            return x
-        
-    def amend_fahrzeugzustand_col_lamborghini_urus(self, x):
-        """
-        A function to amend the `fahrzeugzustand` column for Lamborghini Urus
-        """
-        if x == "" or x is None or pd.isnull(x):
-            return "Unfallfrei"
-        elif x.lower().find("unfallfrei") != -1:
-            return "Unfallfrei"
-        else:
-            return x
-    
-    def amend_fahrzeugzustand_col_aston_martin_dbx(self, x):
-        """
-        A function to amend the `fahrzeugzustand` column for Aston Martin DBX
+        A function to amend the `fahrzeugzustand` column
         """
         if x == "" or x is None or pd.isnull(x):
             return "Unfallfrei"
@@ -108,25 +106,10 @@ class HelperFunctions:
     ###------------------------------###------------------------------###
 
     ## Kilometer column helper functions
-    def amend_kilometer_col_porsche_992_gt3(self, x):
+    def amend_kilometer_col(self, x):
         """
-        A function to amend the `kilometer` column for Porsche 992 GT3
+        A function to amend the `kilometer` column
         """
-        if x == "" or x is None or pd.isnull(x):
-            return 1
-        else:
-            return x
-        
-    def amend_kilometer_col_lamborghini_urus(self, x):
-        """
-        A function to amend the `kilometer` column for Lamborghini Urus
-        """
-        if x == "" or x is None or pd.isnull(x):
-            return 1
-        else:
-            return x
-    
-    def amend_kilometer_col_aston_martin_dbx(self, x):
         if x == "" or x is None or pd.isnull(x):
             return 1
         else:
@@ -196,6 +179,16 @@ class HelperFunctions:
         else:
             return x
     
+    def amend_getriebe_col_mercedes_benz_g_63_amg(self, x):
+        """
+        A function to amend the `getriebe` column for Mercedes-Benz G 63 AMG
+        """
+        if x == "" or x is None or pd.isnull(x) or x.lower().find("automatik") != -1 or x.lower().find("schaltgetriebe") != -1\
+        or x.lower().find("halbautomatik") != -1:
+            return "9-Gang-AMG-Speedshift"
+        else:
+            return x
+    
     ###------------------------------###------------------------------###
 
     ## Marke column helper functions
@@ -230,6 +223,42 @@ class HelperFunctions:
         else:
             return x["marke"]
         
+    def amend_marke_col_mercedes_benz_g_63_amg(self, x, y, replacement_word):
+        """
+        A function to amend the `marke` column for Mercedes-Benz G 63 AMG
+        """
+        if x["titel"].lower().find(y.lower()) != -1:
+            return "Mercedes-Benz | " + replacement_word
+        else:
+            return x["marke"]
+        
+    ###------------------------------###------------------------------###
+    
+    def amend_modell_and_variante_cols_stg_1_mercedes_benz_g_63_amg(self, x, col_to_amend):
+        """
+        A function to amend the `modell` or `variante` columns for Mercedes-Benz G 63 AMG (stg 1)
+        """
+        if x["marke"] == "Mercedes-Benz" and (
+            x["titel"].lower().find("4x4") != "-1" or
+            x["titel"].lower().find("4 x 4") != "-1" or
+            x["titel"].lower().find("4x4²") != "-1" or
+            x["titel"].lower().find("4²") != "-1" or
+            x["titel"].lower().find("4 x4") != "-1" or
+            x["titel"].lower().find("4x 4") != "-1"
+        ):
+            return "G 63 4x4"
+        else:
+            return x[col_to_amend]
+    
+    def amend_modell_col_stg_2_mercedes_benz_g_63_amg(self, x):
+        """
+        A function to amend the `modell` column for Mercedes-Benz G 63 AMG (stg 2)
+        """
+        if x["marke"] == "Mercedes-Benz" and x["modell"] == "G 63 AMG" and x["leistung"] == 585:
+            return "G 63 (W464)"
+        else:
+            return x["modell"]
+    
     ###------------------------------###------------------------------###
 
     ## Variante column helper functions
@@ -306,6 +335,15 @@ class HelperFunctions:
         """
         if x["marke"] == "Aston Martin" and x["modell"] == "DBX" and x["variante"] != "DBX707":
             return "DBX V8"
+        else:
+            return x["variante"]
+    
+    def amend_variante_col_mercedes_benz_g_63_amg(self, x):
+        """
+        A function to amend the `modell` column for Mercedes-Benz G 63 AMG (stg 2)
+        """
+        if x["modell"] == "G 63 (W464)" and x["leistung"] == 585:
+            return "G 63"
         else:
             return x["variante"]
     
@@ -401,6 +439,22 @@ class HelperFunctions:
             return "1913 Edition"
         else:
             return None
+    
+    def add_ausstattung_col_mercedes_benz_g_63_amg(self, x):
+        if x["marke"] == "Mercedes-Benz" and x["modell"] == "G 63 (W464)"\
+        and x["leistung"] == 585:
+            if x["titel"].lower().find("grand") != -1:
+                return "Grand Edition"
+            elif x["titel"].lower().find("55") != -1:
+                return "Edition 55"
+            elif (x["titel"].lower().find("edition 1") != -1 or x["titel"].lower().find("edition one") != -1):
+                return "Edition 1"
+            elif x["titel"].lower().find("stronger than time") != -1:
+                return "Stronger Than Time Edition"
+            else:
+                return None
+        else:
+            return None
 
 class CleaningFunctions(HelperFunctions):  
     ### Porsche
@@ -447,15 +501,14 @@ class CleaningFunctions(HelperFunctions):
         # Make a copy of df_clean_3
         df_clean_4 = df_clean_3.copy()
 
-        # Apply the function amend_fahrzeugzustand_col_porsche_992_gt3 on fahrzeugzustand using the apply method
-        df_clean_4["fahrzeugzustand"] = df_clean_4["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_porsche_992_gt3)
+        df_clean_4["fahrzeugzustand"] = df_clean_4["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
 
         ###------------------------------###------------------------------###
 
         ## Amend the `kilometer` column
         # Spalte K = kilometer = Wenn (Leere) abgebildet wird, dann auf „1“ ändern. (Info: Sind oftmals Neuwagen und haben Werkskilometer)
         df_clean_5 = df_clean_4.copy()
-        df_clean_5["kilometer"] = df_clean_5["kilometer"].apply(self.amend_kilometer_col_porsche_992_gt3)
+        df_clean_5["kilometer"] = df_clean_5["kilometer"].apply(self.amend_kilometer_col)
         
         ###------------------------------###------------------------------###
 
@@ -541,7 +594,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn Unfallfrei, Nicht fahrtauglich, oder (Leere) abgebildet wird, dann auf “Unfallfrei“ ändern
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_lamborghini_urus)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
 
         ###------------------------------###------------------------------###
 
@@ -549,7 +602,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte K = kilometer = Wenn (Leere) abgebildet wird, dann auf „1“ ändern. (Info: Sind oftmals Neuwagen und haben Werkskilometer)
         df_clean_4 = df_clean_3.copy()
 
-        df_clean_4["kilometer"] = df_clean_4["kilometer"].apply(self.amend_kilometer_col_lamborghini_urus)
+        df_clean_4["kilometer"] = df_clean_4["kilometer"].apply(self.amend_kilometer_col)
 
         ###------------------------------###------------------------------###
 
@@ -645,7 +698,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn Unfallfrei, Nicht fahrtauglich, oder (Leere) abgebildet wird, dann auf “Unfallfrei“ ändern
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_aston_martin_dbx)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
 
         ###------------------------------###------------------------------###
 
@@ -653,7 +706,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte K = kilometer = Wenn (Leere) abgebildet wird, dann auf „1“ ändern. (Info: Sind oftmals Neuwagen und haben Werkskilometer)
         df_clean_4 = df_clean_3.copy()
 
-        df_clean_4["kilometer"] = df_clean_4["kilometer"].apply(self.amend_kilometer_col_aston_martin_dbx)
+        df_clean_4["kilometer"] = df_clean_4["kilometer"].apply(self.amend_kilometer_col)
 
         ###------------------------------###------------------------------###
 
@@ -709,6 +762,120 @@ class CleaningFunctions(HelperFunctions):
         df_clean_8 = df_clean_8.drop("fahrzeugbeschreibung_mod", axis=1)
 
         return df_clean_8
+    
+    ### Mercedes-Benz
+    ## G 63 AMG
+    def clean_mercedes_benz_g_63_amg(self, df_specific_brand):
+        """
+        A function to clean the data of Aston Martin DBX
+        """
+        # Make a copy of df_specific_brand
+        df_clean_1 = pd.DataFrame(df_specific_brand.copy())
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `form` column
+        # Spalte E = form = Wenn SUV / Geländewagen / Pickup, oder SUV / Geländewagen / Pickup, Tageszulassung, oder SUV / Geländewagen / Pickup, Jaheswagen, oder SUV / Geländewagen / Pickup, Neufahrzeug, oder SUV / Geländewagen / Pickup, Vorführfahrzeug, dann ändere auf "SUV"
+        # Spalte E = form = Wenn Van/Minibus, oder Sportwagen/Coupe, oder Limousine, oder Andere/Neufahrzeug , dann ändere auf "SUV"
+        df_clean_2 = df_clean_1.copy()
+
+        df_clean_2["form"] = df_clean_2["form"].apply(self.amend_form_col_mercedes_benz_g_63_amg)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `fahrzeugzustand` column
+        # Spalte F = fahrzeugzustand = Wenn (Leere), oder unfallfrei, nicht fahrtauglich, dann ändere auf "Unfallfrei"
+        df_clean_3 = df_clean_2.copy()
+
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        
+        ###------------------------------###------------------------------###
+        
+        ## Amend the `kilometer` column
+        # Spalte K = kilometer = Wenn (Leere), dann ändere auf "1"
+        df_clean_4 = df_clean_3.copy()
+
+        df_clean_4["kilometer"] = df_clean_4["kilometer"].apply(self.amend_kilometer_col)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `getriebe` column
+        # Spalte H = getriebe = Wenn (Leere), oder Automatik, oder Schaltgetriebe, oder Halbautomatik, dann ändere auf "9-Gang-AMG-Speedshift"
+        df_clean_5 = df_clean_4.copy()
+
+        df_clean_5["getriebe"] = df_clean_5["getriebe"].apply(self.amend_getriebe_col_mercedes_benz_g_63_amg)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `Marke` col based on the `titel` col
+        # Spalte A = marke = Wenn Spalte D Titel Brabus enthält, dann ändere auf "Merceds-Benz | Brabus"
+        # Spalte A = marke = Wenn Spalte D Titel entweder "gepanzert" oder "armored" oder "Panzer" enthält, dann ändere auf "Mercedes-Benz| Trasco | Hofele | etc."
+        # Spalte A = marke = Wenn Spalte D Titel Keyvany enthält, dann ändere auf "Ferrari | Keyvany"
+        # Spalte A = marke = Wenn Spalte D Titel Mansory enthält, dann ändere auf "Mercedes-Benz| Mansory"
+        # Spalte A = marke = Wenn Spalte D Titel entweder GCD oder German Classic Design enthält, dann ändere auf "Mercedes-Benz| GCD"
+        # Spalte A = marke = Wenn Spalte D Titel Lennson enthält, dann ändere auf "Mercedes-Benz| Lennson"
+        # Spalte A = marke = Wenn Spalte D Titel entweder hoefele oder hofele enthält, dann ändere auf "Mercedes-Benz| Hofele"
+        # Spalte A = marke = Wenn Spalte D Titel Lumma enthält, dann ändere auf "Mercedes-Benz| Lumma Design"
+        # Spalte A = marke = Wenn Spalte D Titel Schawe enthält, dann ändere auf "Mercedes-Benz| Schawe Manufactur"
+        df_clean_6 = df_clean_5.copy()
+
+        mercedes_benz_g_63_amg_marke_dict = {
+            "brabus": "Brabus",
+            "gepanzert": "Trasco | Hofele | etc.",
+            "armored": "Trasco | Hofele | etc.",
+            "panzer": "Trasco | Hofele | etc.",
+            "keyvany": "Keyvany",
+            "mansory": "Mansory",
+            "gcd": "GCD",
+            "german classic design": "GCD",
+            "lennson": "Lennson",
+            "hoefele": "Hofele",
+            "hofele": "Hofele",
+            "lumma": "Lumma Design",
+            "schawe": "Schawe Manufactur"
+        }
+
+        for key, value in mercedes_benz_g_63_amg_marke_dict.items():
+            df_clean_6["marke"] = df_clean_6.apply(lambda x: self.amend_marke_col_mercedes_benz_g_63_amg(x, key, value), axis=1)
+        
+        ###------------------------------###------------------------------###
+        
+        ## Amend the `Modell` column
+        # Spalte B & C = Modell = Wenn Marke Mercedes-Benz, und im Titel entweder 4x4 oder 4 x 4 oder 4×4² oder 4² oder 4 x4 steht, dann ändere modell und variante auf "G63 4x4".
+        # Spalte B & C = Modell = Wenn Marke Mercedes-Benz, und Modell G 63 AMG, und Leistung 585, dann ändere modell auf "G 63  (W464)".
+        df_clean_7 = df_clean_6.copy()
+
+        df_clean_7["modell"] = df_clean_7.apply(lambda x: self.amend_modell_and_variante_cols_stg_1_mercedes_benz_g_63_amg(x, "modell"), axis=1)
+        df_clean_7["variante"] = df_clean_7.apply(lambda x: self.amend_modell_and_variante_cols_stg_1_mercedes_benz_g_63_amg(x, "variante"), axis=1)
+        df_clean_7["modell"] = df_clean_7.apply(lambda x: self.amend_modell_col_stg_2_mercedes_benz_g_63_amg(x), axis=1)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `variante` column
+        # Spalte C = variante = Wenn modell G 63 (W464), und leistung 585 ist, dann ändere variante auf "G 63"
+        df_clean_8 = df_clean_7.copy()
+
+        df_clean_8["variante"] = df_clean_8.apply(lambda x: self.amend_variante_col_mercedes_benz_g_63_amg(x), axis=1)
+
+        ###------------------------------###------------------------------###
+
+        ## Create a new column `Ausstattung`
+        # Neue Spalte D	Ausstattung	Wenn Marke Mercedes-Benz, und modell G 63 (W464),  und Leistung 585, und  im Titel Grand, dann ändere auf "Grand Edition".
+        # Neue Spalte D	Ausstattung	Wenn Marke Mercedes-Benz, und modell G 63 (W464),  und Leistung 585, und  im Titel 55, dann ändere auf "Edition 55".
+        # Neue Spalte D	Ausstattung	Wenn Marke Mercedes-Benz, und modell G 63 (W464),  und Leistung 585, und entweder im Titel Edition 1 oder Edition One, dann ändere auf "Edition 1".
+        # Neue Spalte D	Ausstattung	Wenn Marke Mercedes-Benz, und modell G 63 (W464),  und Leistung 585, und im titel Stronger than time, dann ändere auf "Stronger Than Time Edition".
+        df_clean_9 = df_clean_8.copy()
+
+        df_clean_9["ausstattung"] = df_clean_9.apply(lambda x: self.add_ausstattung_col_mercedes_benz_g_63_amg(x), axis=1)
+
+        # Move the Austattung column to be between "variante" and "titel"
+        austattung_col = df_clean_9.pop("ausstattung")
+        df_clean_9.insert(3, "ausstattung", austattung_col)
+
+        # Drop the fahrzeugbeschreibung_mod column
+        df_clean_9 = df_clean_9.drop("fahrzeugbeschreibung_mod", axis=1)
+
+        return df_clean_9
 
 def execute_cleaning():
     # Instantiate the classes
@@ -728,7 +895,7 @@ def execute_cleaning():
 
     # Clean the data for specified models
     df_combined = []
-    for mod in ["Porsche_992", "Lamborghini_Urus", "Aston Martin_DBX"]:
+    for mod in ["Porsche_992", "Lamborghini_Urus", "Aston Martin_DBX", "Mercedes-Benz_G 63 AMG"]:
         marke_to_clean = mod.split("_")[0]
         modell_to_clean = mod.split("_")[1]
 
@@ -745,6 +912,9 @@ def execute_cleaning():
         elif marke_to_clean == "Aston Martin" and modell_to_clean == "DBX":
             logging.info("Cleaning Aston Martin DBX...")
             df_cleaned = cf.clean_aston_martin_dbx(df_specific_brand=df_specific_brand)
+        elif marke_to_clean == "Mercedes-Benz" and modell_to_clean == "G 63 AMG":
+            logging.info("Cleaning Mercedes-Benz G 63 AMG...")
+            df_cleaned = cf.clean_mercedes_benz_g_63_amg(df_specific_brand=df_specific_brand)
 
         # Append the cleaned data to the list
         df_combined.append(df_cleaned)
