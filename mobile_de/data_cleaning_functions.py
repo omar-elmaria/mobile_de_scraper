@@ -88,6 +88,19 @@ class HelperFunctions:
             return "SUV"
         else:
             return x
+    
+    def amend_form_col_mclaren_765lt(self, x):
+        """
+        A function to amend the `form` column for McLaren 765LT
+        """
+        if x.lower().find("cabrio") != -1 or x.lower().find("roadster") != -1:
+            return "Spider"
+        elif x.lower().find("sportwagen") != -1 or x.lower().find("coup") != -1\
+        or x.lower().find("tageszulassung") != -1 or x.lower().find("jahreswagen") != -1\
+        or x.lower().find("neufahrzeug") != -1 or x.lower().find("vorführfahrzeug") != -1:
+            return "Coupe"
+        else:
+            return x
         
     ###------------------------------###------------------------------###
     
@@ -189,6 +202,16 @@ class HelperFunctions:
         else:
             return x
     
+    def amend_getriebe_col_mclaren_765lt(self, x):
+        """
+        A function to amend the `getriebe` column for McLaren 765LT
+        """
+        if x == "" or x is None or pd.isnull(x) or x.lower().find("automatik") != -1 or x.lower().find("schaltgetriebe") != -1\
+        or x.lower().find("halbautomatik") != -1:
+            return "7-Gang-Doppelkupplungs-Getriebe"
+        else:
+            return x
+    
     ###------------------------------###------------------------------###
 
     ## Marke column helper functions
@@ -229,6 +252,15 @@ class HelperFunctions:
         """
         if x["titel"].lower().find(y.lower()) != -1:
             return "Mercedes-Benz | " + replacement_word
+        else:
+            return x["marke"]
+        
+    def amend_marke_col_mclaren_765lt(self, x, y, replacement_word):
+        """
+        A function to amend the `marke` column for McLarent 765LT
+        """
+        if x["titel"].lower().find(y.lower()) != -1:
+            return "McLaren | " + replacement_word
         else:
             return x["marke"]
         
@@ -347,6 +379,17 @@ class HelperFunctions:
         else:
             return x["variante"]
     
+    def amend_variante_col_mclaren_765lt(self, x):
+        """
+        A function to amend the `modell` column for McLaren 765LT
+        """
+        if x["marke"] == "McLaren" and x["modell"] == "765LT" and x["form"] == "Coupe":
+            return "765LT"
+        elif x["marke"] == "McLaren" and x["modell"] == "765LT" and x["form"] == "Spider":
+            return "765LT Spider"
+        else:
+            return x["variante"]
+    
     ###------------------------------###------------------------------###
     
     ## Leistung column helper functions
@@ -453,6 +496,13 @@ class HelperFunctions:
                 return "Stronger Than Time Edition"
             else:
                 return None
+        else:
+            return None
+    
+    def add_ausstattung_col_mclaren_765lt(self, x):
+        if x["marke"] == "McLaren" and x["modell"] == "765LT"\
+        and x["titel"].lower().find("mso") != -1:
+            return "MSO"
         else:
             return None
 
@@ -876,6 +926,87 @@ class CleaningFunctions(HelperFunctions):
         df_clean_9 = df_clean_9.drop("fahrzeugbeschreibung_mod", axis=1)
 
         return df_clean_9
+    
+    ### McLaren
+    ## 765LT
+    def clean_mclaren_765lt(self, df_specific_brand):
+        """
+        A function to clean the data of McLaren 765LT
+        """
+        # Make a copy of df_specific_brand
+        df_clean_1 = pd.DataFrame(df_specific_brand.copy())
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `form` column
+        # Spalte E = form = Wenn Spotwagen/Coupe, oder Sporwagen/Coupe, Tageszulassung, oder Sporwagen/Coupe, Jaheswagen, oder Sporwagen/Coupe, Neufahrzeug, oder Sporwagen/Coupe, Vorführfahrzeug, dann ändere auf "Coupé".
+        # Spalte E = form = Wenn Cabrio/Roadster, oder Cabrio/Roadster, Tageszulassung, oder Cabrio/Roadster, Jaheswagen, oder Cabrio/Roadster, Neufahrzeug, oder Cabrio/Roadster, Vorführfahrzeug, dann ändere auf "Spider".
+
+        df_clean_2 = df_clean_1.copy()
+
+        df_clean_2["form"] = df_clean_2["form"].apply(self.amend_form_col_mclaren_765lt)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `fahrzeugzustand` column
+        # Spalte F = fahrzeugzustand = Wenn (Leere), oder unfallfrei, nicht fahrtauglich, dann ändere auf "Unfallfrei"
+        df_clean_3 = df_clean_2.copy()
+
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        
+        ###------------------------------###------------------------------###
+        
+        ## Amend the `kilometer` column
+        # Spalte K = kilometer = Wenn (Leere), dann ändere auf "1"
+        df_clean_4 = df_clean_3.copy()
+
+        df_clean_4["kilometer"] = df_clean_4["kilometer"].apply(self.amend_kilometer_col)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `getriebe` column
+        # Spalte H = getriebe = Wenn (Leere), oder Automatik, oder Schaltgetriebe, oder Halbautomatik, dann ändere auf "7-Gang-Doppelkupplungs-Getriebe"
+        df_clean_5 = df_clean_4.copy()
+
+        df_clean_5["getriebe"] = df_clean_5["getriebe"].apply(self.amend_getriebe_col_mclaren_765lt)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `Marke` col based on the `titel` col
+        # Spalte A = marke = Wenn Spalte D Titel Novitec enthält, dann ändere auf " McLaren | Novitec"
+        # Spalte A = marke = Wenn Spalte D Titel Mansory enthält, dann ändere auf " McLaren | Mansory"
+        df_clean_6 = df_clean_5.copy()
+
+        mclaren_765lt_dict = {
+            "novitec": "Novitec",
+            "mansory": "Mansory",
+        }
+
+        for key, value in mclaren_765lt_dict.items():
+            df_clean_6["marke"] = df_clean_6.apply(lambda x: self.amend_marke_col_mclaren_765lt(x, key, value), axis=1)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `variante` column
+        # Spalte C = Variante = Wenn Marke McLaren, und modell 765LT, und form Coupe, dann ändere auf "765LT"
+        # Spalte C = Variante = Wenn Marke McLaren, und modell 720S, und form Spider, dann ändere auf "765LT Spider"
+        df_clean_7 = df_clean_6.copy()
+
+        df_clean_7["variante"] = df_clean_7.apply(lambda x: self.amend_variante_col_mclaren_765lt(x), axis=1)
+
+        ###------------------------------###------------------------------###
+
+        ## Create a new column `Ausstattung`
+        # Neue Spalte D = Ausstattung = Wenn Marke McLaren, und modell 765LT, und im titel MSO steht, dann ändere auf "MSO"
+        df_clean_8 = df_clean_7.copy()
+
+        df_clean_8["ausstattung"] = df_clean_8.apply(lambda x: self.add_ausstattung_col_mclaren_765lt(x), axis=1)
+
+        # Move the Austattung column to be between "variante" and "titel"
+        austattung_col = df_clean_8.pop("ausstattung")
+        df_clean_8.insert(3, "ausstattung", austattung_col)
+
+        return df_clean_8
 
 def execute_cleaning():
     # Instantiate the classes
