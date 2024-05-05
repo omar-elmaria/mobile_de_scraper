@@ -751,18 +751,18 @@ class HelperFunctions:
         """
         if x["marke"] == "Ferrari" and x["modell"] == "SF90"\
         and (
-            (x["titel"].lower().find("atelier") != -1 or x["fahrzeugbeschreibung"].lower().find("atelier") != -1)\
-            and (x["titel"].lower().find("assetto") != -1 or x["fahrzeugbeschreibung"].lower().find("assetto") != -1)
+            (x["titel"].lower().find("atelier") != -1 or x["fahrzeugbeschreibung_mod"].lower().find("atelier") != -1)\
+            and (x["titel"].lower().find("assetto") != -1 or x["fahrzeugbeschreibung_mod"].lower().find("assetto") != -1)
         ):
             return "Assetto Fiorano | Atelier Car"
         elif x["marke"] == "Ferrari" and x["modell"] == "SF90"\
-        and (x["titel"].lower().find("tailor") != -1 or x["fahrzeugbeschreibung"].lower().find("tailor") != -1):
+        and (x["titel"].lower().find("tailor") != -1 or x["fahrzeugbeschreibung_mod"].lower().find("tailor") != -1):
             return "Tailor Made"
         elif x["marke"] == "Ferrari" and x["modell"] == "SF90"\
-        and (x["titel"].lower().find("atelier") != -1 or x["fahrzeugbeschreibung"].lower().find("atelier") != -1):
+        and (x["titel"].lower().find("atelier") != -1 or x["fahrzeugbeschreibung_mod"].lower().find("atelier") != -1):
             return "Atelier Car"
         elif x["marke"] == "Ferrari" and x["modell"] == "SF90"\
-        and (x["titel"].lower().find("assetto") != -1 or x["fahrzeugbeschreibung"].lower().find("assetto") != -1):
+        and (x["titel"].lower().find("assetto") != -1 or x["fahrzeugbeschreibung_mod"].lower().find("assetto") != -1):
             return "Assetto Fiorano"
         else:
             return None
@@ -1548,6 +1548,9 @@ class CleaningFunctions(HelperFunctions):
         # Make a copy of df_specific_brand
         df_clean_1 = pd.DataFrame(df_specific_brand.copy())
 
+        # Add fahrzeugbeschreibung_mod column to replace None values in that column with an empty string
+        df_clean_1["fahrzeugbeschreibung_mod"] = df_clean_1["fahrzeugbeschreibung"].apply(lambda x: "" if x is None else x)
+
         ###------------------------------###------------------------------###
 
         ## Amend the `form` column
@@ -1633,6 +1636,9 @@ class CleaningFunctions(HelperFunctions):
         # Move the Austattung column to be between "variante" and "titel"
         austattung_col = df_clean_8.pop("ausstattung")
         df_clean_8.insert(3, "ausstattung", austattung_col)
+
+        # Drop the fahrzeugbeschreibung_mod column
+        df_clean_8 = df_clean_8.drop("fahrzeugbeschreibung_mod", axis=1)
 
         return df_clean_8
 
