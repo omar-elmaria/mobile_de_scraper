@@ -89,7 +89,7 @@ class HelperFunctions:
         else:
             return x
     
-    def amend_form_col_mclaren_765lt(self, x):
+    def amend_form_col_mclaren(self, x):
         """
         A function to amend the `form` column for McLaren 765LT
         """
@@ -202,9 +202,9 @@ class HelperFunctions:
         else:
             return x
     
-    def amend_getriebe_col_mclaren_765lt(self, x):
+    def amend_getriebe_col_mclaren(self, x):
         """
-        A function to amend the `getriebe` column for McLaren 765LT
+        A function to amend the `getriebe` column for McLaren
         """
         if x == "" or x is None or pd.isnull(x) or x.lower().find("automatik") != -1 or x.lower().find("schaltgetriebe") != -1\
         or x.lower().find("halbautomatik") != -1:
@@ -255,7 +255,7 @@ class HelperFunctions:
         else:
             return x["marke"]
         
-    def amend_marke_col_mclaren_765lt(self, x, y, replacement_word):
+    def amend_marke_col_mclaren(self, x, y, replacement_word):
         """
         A function to amend the `marke` column for McLarent 765LT
         """
@@ -390,6 +390,17 @@ class HelperFunctions:
         else:
             return x["variante"]
     
+    def amend_variante_col_mclaren_720s(self, x):
+        """
+        A function to amend the `modell` column for McLaren 765LT
+        """
+        if x["marke"] == "McLaren" and x["modell"] == "720S" and x["form"] == "Coupe" and x["leistung"] == 720:
+            return "720S"
+        elif x["marke"] == "McLaren" and x["modell"] == "720S" and x["form"] == "Spider" and x["leistung"] == 720:
+            return "720S Spider"
+        else:
+            return x["variante"]
+    
     ###------------------------------###------------------------------###
     
     ## Leistung column helper functions
@@ -438,7 +449,16 @@ class HelperFunctions:
             return 550
         else:
             return x["leistung"]
-
+    
+    def amend_leistung_col_mclaren_720s(self, x):
+        """
+        A function to amend the `leistung` column for McLaren 720S
+        """
+        if x["marke"] == "McLaren" and x["modell"] == "720S"\
+        and ((x["leistung"] >= 710 and x["leistung"] <= 730) or x["leistung"] == "" or x["leistung"] is None or pd.isnull(x["leistung"])):
+            return 720
+        else:
+            return x["leistung"]
 
     ###------------------------------###------------------------------###
 
@@ -503,6 +523,16 @@ class HelperFunctions:
         if x["marke"] == "McLaren" and x["modell"] == "765LT"\
         and x["titel"].lower().find("mso") != -1:
             return "MSO"
+        else:
+            return None
+    
+    def add_ausstattung_col_mclaren_720s(self, x):
+        if x["marke"] == "McLaren" and x["modell"] == "720S"\
+        and x["titel"].lower().find("apex") != -1:
+            return "MSO Apex Collection"
+        elif x["marke"] == "McLaren" and x["modell"] == "720S"\
+        and x["titel"].lower().find("performance") != -1:
+            return "Performance Pack"
         else:
             return None
 
@@ -941,7 +971,7 @@ class CleaningFunctions(HelperFunctions):
 
         df_clean_2 = df_clean_1.copy()
 
-        df_clean_2["form"] = df_clean_2["form"].apply(self.amend_form_col_mclaren_765lt)
+        df_clean_2["form"] = df_clean_2["form"].apply(self.amend_form_col_mclaren)
 
         ###------------------------------###------------------------------###
 
@@ -965,7 +995,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte H = getriebe = Wenn (Leere), oder Automatik, oder Schaltgetriebe, oder Halbautomatik, dann ändere auf "7-Gang-Doppelkupplungs-Getriebe"
         df_clean_5 = df_clean_4.copy()
 
-        df_clean_5["getriebe"] = df_clean_5["getriebe"].apply(self.amend_getriebe_col_mclaren_765lt)
+        df_clean_5["getriebe"] = df_clean_5["getriebe"].apply(self.amend_getriebe_col_mclaren)
 
         ###------------------------------###------------------------------###
 
@@ -980,7 +1010,7 @@ class CleaningFunctions(HelperFunctions):
         }
 
         for key, value in mclaren_765lt_dict.items():
-            df_clean_6["marke"] = df_clean_6.apply(lambda x: self.amend_marke_col_mclaren_765lt(x, key, value), axis=1)
+            df_clean_6["marke"] = df_clean_6.apply(lambda x: self.amend_marke_col_mclaren(x, key, value), axis=1)
 
         ###------------------------------###------------------------------###
 
@@ -1004,6 +1034,96 @@ class CleaningFunctions(HelperFunctions):
         df_clean_8.insert(3, "ausstattung", austattung_col)
 
         return df_clean_8
+    
+    ### McLaren
+    ## 720S
+    def clean_mclaren_720S(self, df_specific_brand):
+        """
+        A function to clean the data of McLaren 720S
+        """
+        # Make a copy of df_specific_brand
+        df_clean_1 = pd.DataFrame(df_specific_brand.copy())
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `form` column
+        # Spalte E = form = Wenn Spotwagen/Coupe, oder Sporwagen/Coupe, Tageszulassung, oder Sporwagen/Coupe, Jaheswagen, oder Sporwagen/Coupe, Neufahrzeug, oder Sporwagen/Coupe, Vorführfahrzeug, dann ändere auf "Coupé".
+        # Spalte E = form = Wenn Cabrio/Roadster, oder Cabrio/Roadster, Tageszulassung, oder Cabrio/Roadster, Jaheswagen, oder Cabrio/Roadster, Neufahrzeug, oder Cabrio/Roadster, Vorführfahrzeug, dann ändere auf "Spider".
+
+        df_clean_2 = df_clean_1.copy()
+
+        df_clean_2["form"] = df_clean_2["form"].apply(self.amend_form_col_mclaren)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `fahrzeugzustand` column
+        # Spalte F = fahrzeugzustand = Wenn (Leere), oder unfallfrei, nicht fahrtauglich, dann ändere auf "Unfallfrei"
+        df_clean_3 = df_clean_2.copy()
+
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        
+        ###------------------------------###------------------------------###
+        
+        ## Amend the `kilometer` column
+        # Spalte K = kilometer = Wenn (Leere), dann ändere auf "1"
+        df_clean_4 = df_clean_3.copy()
+
+        df_clean_4["kilometer"] = df_clean_4["kilometer"].apply(self.amend_kilometer_col)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `getriebe` column
+        # Spalte H = getriebe = Wenn (Leere), oder Automatik, oder Schaltgetriebe, oder Halbautomatik, dann ändere auf "7-Gang-Doppelkupplungs-Getriebe"
+        df_clean_5 = df_clean_4.copy()
+
+        df_clean_5["getriebe"] = df_clean_5["getriebe"].apply(self.amend_getriebe_col_mclaren)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `Marke` col based on the `titel` col
+        # Spalte A = marke = Wenn Spalte D Titel Novitec enthält, dann ändere auf " McLaren | Novitec"
+        # Spalte A = marke = Wenn Spalte D Titel Mansory enthält, dann ändere auf " McLaren | Mansory"
+        df_clean_6 = df_clean_5.copy()
+
+        mclaren_720s_dict = {
+            "novitec": "Novitec",
+            "mansory": "Mansory",
+        }
+
+        for key, value in mclaren_720s_dict.items():
+            df_clean_6["marke"] = df_clean_6.apply(lambda x: self.amend_marke_col_mclaren(x, key, value), axis=1)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `leistung` column
+        # Spalte G = Leistung = Wenn marke Mclaren, und modell 720S und Leistung zwischen 710 bis 730 oder leistung (Leere) ist, dann ändere leistung auf "720"
+        df_clean_7 = df_clean_6.copy()
+
+        df_clean_7["leistung"] = df_clean_7.apply(lambda x: self.amend_leistung_col_mclaren_720s(x), axis=1)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `variante` column
+        # Spalte C = Variante = Wenn Marke McLaren, und modell 720S, und form Coupe, und leistung 720, dann ändere auf "720S".
+        # Spalte C = Variante = Wenn Marke McLaren, und modell 720S, und form Spider, und leistung 720, dann ändere auf "720S Spider".
+        df_clean_8 = df_clean_7.copy()
+
+        df_clean_8["variante"] = df_clean_8.apply(lambda x: self.amend_variante_col_mclaren_720s(x), axis=1)
+
+        ###------------------------------###------------------------------###
+
+        ## Create a new column `Ausstattung`
+        # Neue Spalte D = Ausstattung = Wenn Marke McLaren, und modell 720S, und im titel Apex steht, dann ändere auf "MSO Apex Collection".
+        # Neue Spalte D	= Ausstattung = Wenn Marke McLaren, und modell 720S, und im titel Performance steht, dann ändere auf "Performance Pack".
+        df_clean_9 = df_clean_8.copy()
+
+        df_clean_9["ausstattung"] = df_clean_9.apply(lambda x: self.add_ausstattung_col_mclaren_720s(x), axis=1)
+
+        # Move the Austattung column to be between "variante" and "titel"
+        austattung_col = df_clean_9.pop("ausstattung")
+        df_clean_9.insert(3, "ausstattung", austattung_col)
+
+        return df_clean_9
 
 def execute_cleaning():
     # Instantiate the classes
@@ -1023,7 +1143,7 @@ def execute_cleaning():
 
     # Clean the data for specified models
     df_combined = []
-    for mod in ["Porsche_992", "Lamborghini_Urus", "Aston Martin_DBX", "Mercedes-Benz_G 63 AMG", "McLaren_765LT"]:
+    for mod in ["Porsche_992", "Lamborghini_Urus", "Aston Martin_DBX", "Mercedes-Benz_G 63 AMG", "McLaren_765LT", "McLaren_720S",]:
         marke_to_clean = mod.split("_")[0]
         modell_to_clean = mod.split("_")[1]
 
@@ -1046,6 +1166,9 @@ def execute_cleaning():
         elif marke_to_clean == "McLaren" and modell_to_clean == "765LT":
             logging.info("Cleaning McLaren 765LT...")
             df_cleaned = cf.clean_mclaren_765lt(df_specific_brand=df_specific_brand)
+        elif marke_to_clean == "McLaren" and modell_to_clean == "720S":
+            logging.info("Cleaning McLaren 720S...")
+            df_cleaned = cf.clean_mclaren_720S(df_specific_brand=df_specific_brand)
 
         # Append the cleaned data to the list
         df_combined.append(df_cleaned)
