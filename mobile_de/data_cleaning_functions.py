@@ -922,9 +922,6 @@ class CleaningFunctions(HelperFunctions):
         austattung_col = df_clean_9.pop("ausstattung")
         df_clean_9.insert(3, "ausstattung", austattung_col)
 
-        # Drop the fahrzeugbeschreibung_mod column
-        df_clean_9 = df_clean_9.drop("fahrzeugbeschreibung_mod", axis=1)
-
         return df_clean_9
     
     ### McLaren
@@ -1022,11 +1019,11 @@ def execute_cleaning():
         FROM `web-scraping-371310.crawled_datasets.lukas_mobile_de`
         WHERE crawled_timestamp = (SELECT MAX(crawled_timestamp) FROM `web-scraping-371310.crawled_datasets.lukas_mobile_de`)
     """
-    df = pd.DataFrame(bq_client.query(query).to_dataframe(bqstorage_client=bqstorage_client, progress_bar_type="tqdm_notebook"))
+    df = pd.DataFrame(bq_client.query(query).to_dataframe(bqstorage_client=bqstorage_client))
 
     # Clean the data for specified models
     df_combined = []
-    for mod in ["Porsche_992", "Lamborghini_Urus", "Aston Martin_DBX", "Mercedes-Benz_G 63 AMG"]:
+    for mod in ["Porsche_992", "Lamborghini_Urus", "Aston Martin_DBX", "Mercedes-Benz_G 63 AMG", "McLaren_765LT"]:
         marke_to_clean = mod.split("_")[0]
         modell_to_clean = mod.split("_")[1]
 
@@ -1046,6 +1043,9 @@ def execute_cleaning():
         elif marke_to_clean == "Mercedes-Benz" and modell_to_clean == "G 63 AMG":
             logging.info("Cleaning Mercedes-Benz G 63 AMG...")
             df_cleaned = cf.clean_mercedes_benz_g_63_amg(df_specific_brand=df_specific_brand)
+        elif marke_to_clean == "McLaren" and modell_to_clean == "765LT":
+            logging.info("Cleaning McLaren 765LT...")
+            df_cleaned = cf.clean_mclaren_765lt(df_specific_brand=df_specific_brand)
 
         # Append the cleaned data to the list
         df_combined.append(df_cleaned)
