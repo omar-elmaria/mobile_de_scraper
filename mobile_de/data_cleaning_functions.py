@@ -1,5 +1,11 @@
 # Import packages
+import logging
+import os
+
 import pandas as pd
+from google.cloud import bigquery, bigquery_storage
+from google.oauth2 import service_account
+
 
 class HelperFunctions:
     """
@@ -18,6 +24,22 @@ class HelperFunctions:
         ].reset_index(drop=True)
 
         return df_specific_brand
+
+    def set_bigquery_credentials(self):
+        """
+        A function to set the BigQuery credentials
+        """
+        # Set the BigQuery credentials
+        key_path_home_dir = os.path.expanduser("~") + "/bq_credentials.json"
+        credentials = service_account.Credentials.from_service_account_file(
+            key_path_home_dir, scopes=["https://www.googleapis.com/auth/cloud-platform"],
+        )
+
+        # Now, instantiate the client and upload the table to BigQuery
+        bq_client = bigquery.Client(project="web-scraping-371310", credentials=credentials)
+        bqstorage_client = bigquery_storage.BigQueryReadClient(credentials=credentials)
+
+        return bq_client, bqstorage_client
     
     ###------------------------------###------------------------------###
 
@@ -592,6 +614,9 @@ class CleaningFunctions(HelperFunctions):
         austattung_col = df_clean_8.pop("ausstattung")
         df_clean_8.insert(3, "ausstattung", austattung_col)
 
+        # Drop the fahrzeugbeschreibung_mod column
+        df_clean_8 = df_clean_8.drop("fahrzeugbeschreibung_mod", axis=1)
+
         return df_clean_8
 
     ### Aston Martin
@@ -680,4 +705,84 @@ class CleaningFunctions(HelperFunctions):
         austattung_col = df_clean_8.pop("ausstattung")
         df_clean_8.insert(3, "ausstattung", austattung_col)
 
+        # Drop the fahrzeugbeschreibung_mod column
+        df_clean_8 = df_clean_8.drop("fahrzeugbeschreibung_mod", axis=1)
+
         return df_clean_8
+
+def execute_cleaning():
+    # Instantiate the classes
+    hf = HelperFunctions()
+    cf = CleaningFunctions()
+
+    # Load the BQ credentials
+    bq_client, bqstorage_client = hf.set_bigquery_credentials()
+
+    # Extract the raw data from BigQuery
+    query = """
+        SELECT *
+        FROM `web-scraping-371310.crawled_datasets.lukas_mobile_de`
+        WHERE crawled_timestamp = (SELECT MAX(crawled_timestamp) FROM `web-scraping-371310.crawled_datasets.lukas_mobile_de`)
+    """
+    df = pd.DataFrame(bq_client.query(query).to_dataframe(bqstorage_client=bqstorage_client, progress_bar_type="tqdm_notebook"))
+
+    # Clean the data for specified models
+    df_combined = []
+    for mod in ["Porsche_992", "Lamborghini_Urus", "Aston Martin_DBX"]:
+        marke_to_clean = mod.split("_")[0]
+        modell_to_clean = mod.split("_")[1]
+
+        # Filter the data to a specific brand
+        df_specific_brand = hf.filter_for_a_specific_brand(df=df, marke=marke_to_clean, modell=modell_to_clean)
+
+        # Clean the data of each brand
+        if marke_to_clean == "Porsche" and modell_to_clean == "992":
+            logging.info("Cleaning Porsche 992 GT3...")
+            df_cleaned = cf.clean_porsche_992_gt3(df_specific_brand=df_specific_brand)
+        elif marke_to_clean == "Lamborghini" and modell_to_clean == "Urus":
+            logging.info("Cleaning Lamborghini Urus...")
+            df_cleaned = cf.clean_lamborghini_urus(df_specific_brand=df_specific_brand)
+        elif marke_to_clean == "Aston Martin" and modell_to_clean == "DBX":
+            logging.info("Cleaning Aston Martin DBX...")
+            df_cleaned = cf.clean_aston_martin_dbx(df_specific_brand=df_specific_brand)
+
+        # Append the cleaned data to the list
+        df_combined.append(df_cleaned)
+
+    # Concatenate the cleaned data
+    df_combined = pd.concat(df_combined)
+
+    # Upload the cleaned data to BigQuery
+    logging.info("Uploading the cleaned data to BigQuery...")
+    job_config = bigquery.LoadJobConfig(
+        schema = [
+            bigquery.SchemaField("marke", "STRING"),
+            bigquery.SchemaField("modell", "STRING"),
+            bigquery.SchemaField("variante", "STRING"),
+            bigquery.SchemaField("ausstattung", "STRING"),
+            bigquery.SchemaField("titel", "STRING"),
+            bigquery.SchemaField("form", "STRING"),
+            bigquery.SchemaField("fahrzeugzustand", "STRING"),
+            bigquery.SchemaField("leistung", "FLOAT64"),
+            bigquery.SchemaField("getriebe", "STRING"),
+            bigquery.SchemaField("farbe", "STRING"),
+            bigquery.SchemaField("preis", "INT64"),
+            bigquery.SchemaField("kilometer", "FLOAT64"),
+            bigquery.SchemaField("erstzulassung", "STRING"),
+            bigquery.SchemaField("fahrzeughalter", "FLOAT64"),
+            bigquery.SchemaField("standort", "STRING"),
+            bigquery.SchemaField("fahrzeugbeschreibung", "STRING"),
+            bigquery.SchemaField("url_to_crawl", "STRING"),
+            bigquery.SchemaField("page_rank", "INT64"),
+            bigquery.SchemaField("total_num_pages", "INT64"),
+            bigquery.SchemaField("crawled_timestamp", "TIMESTAMP")
+        ]
+    )
+    job_config.write_disposition = bigquery.WriteDisposition.WRITE_APPEND
+
+    # Upload the table
+    bq_client.load_table_from_dataframe(
+        dataframe=df_combined,
+        destination="web-scraping-371310.crawled_datasets.lukas_mobile_de_cleaned",
+        job_config=job_config
+    ).result()
