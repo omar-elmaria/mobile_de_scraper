@@ -123,7 +123,45 @@ class HelperFunctions:
         """
         A function to amend the `form` column for Ferrari SF90
         """
-        return self.amend_form_col_mercedes_benz_sls_amg(x)
+        if x.lower().find("cabrio") != -1 or x.lower().find("roadster") != -1:
+            return "Spider"
+        elif x.lower().find("sportwagen") != -1 or x.lower().find("coupe") != -1:
+            return "Coupe"
+        else:
+            return x
+    
+    def amend_form_col_ferrari_812_stg_1(self, x):
+        """
+        A function to amend the `form` column for Ferrari 812 (stg 1)
+        """
+        if x.lower().find("cabrio") != -1 or x.lower().find("roadster") != -1:
+            return "Cabrio"
+        elif x.lower().find("sportwagen") != -1 or x.lower().find("coupe") != -1:
+            return "Coupe"
+        else:
+            return x
+    
+    def amend_form_col_ferrari_812_stg_2(self, x):
+        """
+        A function to amend the `form` column for Ferrari 812 (stg 2)
+        """
+        if x["variante"] == "812 Competizione A":
+            return "Cabrio"
+        elif x["variante"] == "812 Competizione":
+            return "Coupe"
+        else:
+            return x["variante"]
+    
+    def amend_form_col_ferrari_812_stg_3(self, x):
+        """
+        A function to amend the `form` column for Ferrari 812 (stg 3)
+        """
+        if x["variante"] == "812 GTS":
+            return "Cabrio"
+        elif x["variante"] == "812 Superfast":
+            return "Coupe"
+        else:
+            return x["variante"]
         
     ###------------------------------###------------------------------###
     
@@ -260,6 +298,16 @@ class HelperFunctions:
         A function to amend the `getriebe` column for Ferrari SF90
         """
         return self.amend_getriebe_col_maserati(x)
+    
+    def amend_getriebe_col_ferrari_812(self, x):
+        """
+        A function to amend the `getriebe` column for Ferrari 812
+        """
+        if x == "" or x is None or pd.isnull(x) or x.lower().find("automatik") != -1 or x.lower().find("schaltgetriebe") != -1\
+        or x.lower().find("halbautomatik") != -1:
+            return "7-Gang-Doppelkupplungs-Getriebe"
+        else:
+            return x
     
     ###------------------------------###------------------------------###
 
@@ -544,6 +592,72 @@ class HelperFunctions:
         else:
             return x["variante"]
     
+    def amend_variante_col_ferrari_812_stg_1(self, x):
+        """
+        A function to amend the `variante` column for Ferrari 812 (stg 1)
+        """
+        if x["marke"] == "Ferrari" and x["modell"] == "812"\
+        and (
+            x["titel"].lower().find("aperta") != -1 or\
+            x["titel"].lower().find("competizione a") != -1 or\
+            x["fahrzeugbeschreibung_mod"].lower().find("aperta") != -1 or\
+            x["fahrzeugbeschreibung_mod"].lower().find("competizione a") != -1
+        ):
+            return "812 Competizione A"
+        else:
+            return x["variante"]
+    
+    def amend_variante_col_ferrari_812_stg_2(self, x):
+        """
+        A function to amend the `variante` column for Ferrari 812 (stg 2)
+        """
+        if x["marke"] == "Ferrari" and x["modell"] == "812"\
+        and (
+            x["titel"].lower().find("competi") != -1 or\
+            x["fahrzeugbeschreibung_mod"].lower().find("competi") != -1
+        ):
+            return "812 Competizione"
+        else:
+            return x["variante"]
+    
+    def amend_variante_col_ferrari_812_stg_3(self, x):
+        """
+        A function to amend the `variante` column for Ferrari 812 (stg 3)
+        """
+        if x["marke"] == "Ferrari" and x["modell"] == "812"\
+        and (
+            x["titel"].lower().find("gts") != -1
+        ):
+            return "812 GTS"
+        else:
+            return x["variante"]
+    
+    def amend_variante_col_ferrari_812_stg_4(self, x):
+        """
+        A function to amend the `variante` column for Ferrari 812 (stg 4)
+        """
+        if x["marke"] == "Ferrari" and x["modell"] == "812"\
+        and (
+            x["titel"].lower().find("superfast") != -1
+        ):
+            return "812 Superfast"
+        else:
+            return x["variante"]
+    
+    def amend_variante_col_ferrari_812_stg_5(self, x):
+        """
+        A function to amend the `variante` column for Ferrari 812 (stg 5)
+        """
+        if x["marke"] == "Ferrari" and x["modell"] == "812"\
+        and x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"])\
+        and (x["leistung"] >= 780 and x["leistung"] <= 820):
+            if x["form"] == "Coupe":
+                return "812 Superfast"
+            elif x["form"] == "Cabrio":
+                return "812 GTS"
+        else:
+            return x["variante"]
+    
     ###------------------------------###------------------------------###
     
     ## Leistung column helper functions
@@ -656,6 +770,17 @@ class HelperFunctions:
             return 1000
         else:
             return x["leistung"]
+    
+    def amend_leistung_col_ferrari_812(self, x):
+        """
+        A function to amend the `leistung` column for Ferrari 812 (stg 1)
+        """
+        if x["variante"] == "812 Competizione A" or x["variante"] == "812 Competizione":
+            return 830
+        elif x["variante"] == "812 GTS" or x["variante"] == "812 Superfast":
+            return 800
+        else:
+            return x["leistung"]
 
     ###------------------------------###------------------------------###
 
@@ -764,6 +889,19 @@ class HelperFunctions:
         elif x["marke"] == "Ferrari" and x["modell"] == "SF90"\
         and (x["titel"].lower().find("assetto") != -1 or x["fahrzeugbeschreibung_mod"].lower().find("assetto") != -1):
             return "Assetto Fiorano"
+        else:
+            return None
+    
+    def add_ausstattung_col_ferrari_812(self, x):
+        """
+        A function to add the `Ausstattung` column for Ferrari 812
+        """
+        if x["marke"] == "Ferrari" and x["modell"] == "812"\
+        and (x["titel"].lower().find("atelier") != -1 or x["fahrzeugbeschreibung_mod"].lower().find("atelier") != -1):
+            return "Atelier Car"
+        elif x["marke"] == "Ferrari" and x["modell"] == "812"\
+        and (x["titel"].lower().find("tailor") != -1 or x["fahrzeugbeschreibung_mod"].lower().find("tailor") != -1):
+            return "Tailor Made"
         else:
             return None
 
@@ -1642,6 +1780,112 @@ class CleaningFunctions(HelperFunctions):
 
         return df_clean_8
 
+    ### Ferrari
+    ## 812
+    def clean_ferrari_812(self, df_specific_brand):
+        """
+        A function to clean the data of Ferrari 812
+        """
+        # Make a copy of df_specific_brand
+        df_clean_1 = pd.DataFrame(df_specific_brand.copy())
+
+        # Add fahrzeugbeschreibung_mod column to replace None values in that column with an empty string
+        df_clean_1["fahrzeugbeschreibung_mod"] = df_clean_1["fahrzeugbeschreibung"].apply(lambda x: "" if x is None else x)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `form` column
+        # Spalte E = form = Wenn Spotwagen/Coupe, oder Sporwagen/Coupe, Tageszulassung, oder Sporwagen/Coupe, Jaheswagen, oder Sporwagen/Coupe, Neufahrzeug, oder Sporwagen/Coupe, Vorführfahrzeug, dann ändere auf "Coupé".
+        # Spalte E = form = Wenn Cabrio/Roadster, oder Cabrio/Roadster, Tageszulassung, oder Cabrio/Roadster, Jaheswagen, oder Cabrio/Roadster, Neufahrzeug, oder Cabrio/Roadster, Vorführfahrzeug, dann ändere auf "Cabrio".
+
+        df_clean_2 = df_clean_1.copy()
+
+        df_clean_2["form"] = df_clean_2["form"].apply(self.amend_form_col_ferrari_812_stg_1)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `fahrzeugzustand` column
+        # Spalte F = fahrzeugzustand = Wenn (Leere), oder unfallfrei, nicht fahrtauglich, dann ändere auf "Unfallfrei"
+        df_clean_3 = df_clean_2.copy()
+
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        
+        ###------------------------------###------------------------------###
+        
+        ## Amend the `kilometer` column
+        # Spalte K = kilometer = Wenn (Leere), dann ändere auf "1"
+        df_clean_4 = df_clean_3.copy()
+
+        df_clean_4["kilometer"] = df_clean_4["kilometer"].apply(self.amend_kilometer_col)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `getriebe` column
+        # Wenn (Leere), oder Automatik,  oder Schaltgetriebe, oder Halbautomatik, dann ändere auf "7-Gang-Doppelkupplungs-Getriebe"
+
+        df_clean_5 = df_clean_4.copy()
+
+        df_clean_5["getriebe"] = df_clean_5["getriebe"].apply(self.amend_getriebe_col_ferrari_812)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `Marke` col based on the `titel` col
+        # Spalte A = marke = Wenn Spalte D Titel Novitec enthält, dann ändere auf "Ferrari | Novitec"
+        # Spalte A = marke = Wenn Spalte D Titel Mansory enthält, dann ändere auf "Ferrari | Mansory"
+        df_clean_6 = df_clean_5.copy()
+
+        ferrari_812_marke_dict = {
+            "novitec": "Novitec",
+            "mansory": "Mansory",
+        }
+
+        for key, value in ferrari_812_marke_dict.items():
+            df_clean_6["marke"] = df_clean_6.apply(lambda x: self.amend_marke_col_various_brands(x, key, value, "Ferrari"), axis=1)
+        
+        ###------------------------------###------------------------------###
+
+        ## Amend the `variante` and `leistung` columns
+        # Spalte C = Variante = Wenn Marke Ferrari, und modell 812, und entweder im titel  Aperta oder Competizione A oder fahrzeugbeschreibung  Aperta, dann ändere auf "812 Competizione A".
+        # Spalte C = Variante = Wenn Marke Ferrari, und modell 812, und entweder im titel  Competi oder fahrzeugbeschreibung Competi, dann ändere auf "812 Competizione".
+        # Spate E & G = Form | Leistung = Wenn variante 812 Competizione A, dann änndere Spalte E form auf "Cabrio" und Spalte G leistung auf "830".
+        # Spate E & G = Form | Leistung = Wenn variante 812 Competizione, dann änndere Spalte E form auf "Coupé" und Spalte G leistung auf "830".
+                
+        # Spalte C = Variante = Wenn Marke Ferrari, und modell 812, und im titel  GTS, dann ändere auf "812 GTS".
+        # Spalte C = Variante = Wenn Marke Ferrari, und modell 812, und im titel  Superfast, dann ändere auf "812 Superfast".
+        # Spalte C = Variante = Wenn variante (Leere), und Marke Ferrari, und modell 812, und Leistung zwischen 780 und 820, und form Coupe , dann ändere auf "812 Superfast".
+        # Spalte C = Variante = Wenn variante (Leere), und Marke Ferrari, und modell 812, und Leistung zwischen 780 und 820, und form Cabrio, dann ändere auf "812 GTS".
+        # Spate E & G = Form | Leistung = Wenn variante 812 GTS, dann änndere Spalte E form auf "Cabrio" und Spalte G leistung auf "800".
+        # Spate E & G = Form | Leistung = Wenn variante 812 Superfast, dann änndere Spalte E form auf "Coupé" und Spalte G leistung auf "800".
+        df_clean_7 = df_clean_6.copy()
+
+        df_clean_7["variante"] = df_clean_7.apply(lambda x: self.amend_variante_col_ferrari_812_stg_1(x), axis=1)
+        df_clean_7["variante"] = df_clean_7.apply(lambda x: self.amend_variante_col_ferrari_812_stg_2(x), axis=1)
+        df_clean_7["form"] = df_clean_7.apply(lambda x: self.amend_form_col_ferrari_812_stg_2(x), axis=1)
+        df_clean_7["leistung"] = df_clean_7.apply(lambda x: self.amend_leistung_col_ferrari_812(x), axis=1)
+        df_clean_7["variante"] = df_clean_7.apply(lambda x: self.amend_variante_col_ferrari_812_stg_3(x), axis=1)
+        df_clean_7["variante"] = df_clean_7.apply(lambda x: self.amend_variante_col_ferrari_812_stg_4(x), axis=1)
+        df_clean_7["variante"] = df_clean_7.apply(lambda x: self.amend_variante_col_ferrari_812_stg_5(x), axis=1)
+        df_clean_7["form"] = df_clean_7.apply(lambda x: self.amend_form_col_ferrari_812_stg_3(x), axis=1)
+        df_clean_7["leistung"] = df_clean_7.apply(lambda x: self.amend_leistung_col_ferrari_812(x), axis=1)
+
+        ###------------------------------###------------------------------###
+
+        ## Create a new column `Ausstattung`
+        # Neue Spalte D	= Ausstattung = Wenn Marke Ferrari, und modell 812, und entweder im titel tailor oder in Fahrzeugbeschreibung tailor steht, dann ändere auf "Tailor Made".
+        # Neue Spalte D	= Ausstattung = Wenn Marke Ferrari, und modell 812, und entweder im titel atelier oder in Fahrzeugbeschreibung atelier steht, dann ändere auf "Atelier Car".
+        df_clean_8 = df_clean_7.copy()
+
+        df_clean_8["ausstattung"] = df_clean_8.apply(lambda x: self.add_ausstattung_col_ferrari_812(x), axis=1)
+
+        # Move the Austattung column to be between "variante" and "titel"
+        austattung_col = df_clean_8.pop("ausstattung")
+        df_clean_8.insert(3, "ausstattung", austattung_col)
+
+        # Drop the fahrzeugbeschreibung_mod column
+        df_clean_8 = df_clean_8.drop("fahrzeugbeschreibung_mod", axis=1)
+
+        return df_clean_8
+
 def execute_cleaning():
     # Instantiate the classes
     hf = HelperFunctions()
@@ -1663,7 +1907,7 @@ def execute_cleaning():
     for mod in [
         "Porsche_992", "Lamborghini_Urus", "Aston Martin_DBX",
         "Mercedes-Benz_G 63 AMG", "Mercedes-Benz_SLS AMG", "McLaren_765LT",
-        "McLaren_720S", "Masarati_MC20", "Ferrari_SF90"
+        "McLaren_720S", "Masarati_MC20", "Ferrari_SF90", "Ferrari_812"
     ]:
         marke_to_clean = mod.split("_")[0]
         modell_to_clean = mod.split("_")[1]
@@ -1699,6 +1943,9 @@ def execute_cleaning():
         elif marke_to_clean == "Ferrari" and modell_to_clean == "SF90":
             logging.info("Cleaning Ferrari SF90...")
             df_cleaned = cf.clean_ferrari_sf90(df_specific_brand=df_specific_brand)
+        elif marke_to_clean == "Ferrari" and modell_to_clean == "812":
+            logging.info("Cleaning Ferrari 812...")
+            df_cleaned = cf.clean_ferrari_812(df_specific_brand=df_specific_brand)
 
         # Append the cleaned data to the list
         df_combined.append(df_cleaned)
