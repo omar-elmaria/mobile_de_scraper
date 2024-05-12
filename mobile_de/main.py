@@ -8,13 +8,15 @@ import pandas as pd
 import pytz
 import yagmail
 from google.cloud import bigquery
-from google.oauth2 import service_account
+from scrapy.crawler import CrawlerRunner
+from scrapy.utils.log import configure_logging
+from twisted.internet import defer, reactor
 
+from data_cleaning_functions import execute_cleaning, HelperFunctions
 from gdrive_upload_script import upload_file_to_gdrive
 from inputs import (
     change_cwd,
-    listing_page_crawling_framework,
-    marke_list,
+    listing_page_crawling_framework, marke_list,
     modell_list
 )
 from mobile_de.spiders.mobile_de_zyte_api_car_page_spider import run_car_page_spider
@@ -22,9 +24,7 @@ from mobile_de_selenium_code_prod_listing_page_func import (
     date_start_for_log_file_name,
     mobile_de_local_single_func
 )
-from scrapy.crawler import CrawlerRunner
-from scrapy.utils.log import configure_logging
-from twisted.internet import defer, reactor
+
 
 def is_between_time_range():
     # Set the timezone to CET
@@ -44,6 +44,9 @@ def is_between_time_range():
 def main():
     # Mark the start of the script
     t1 = datetime.now()
+
+    # Instantiate the HelperFunctions class
+    hf = HelperFunctions()
 
     # Set the G-drive folder ID. The Folder ID is the ID of the folder called "vm_logs"
     gdrive_folder_id="16e4f41zhwV67Pm01I0jHwL2l59kpn8WY"
@@ -128,13 +131,8 @@ def main():
 
     # Upload to bigquery
     # First, set the credentials
-    key_path_home_dir = os.path.expanduser("~") + "/bq_credentials.json"
-    credentials = service_account.Credentials.from_service_account_file(
-        key_path_home_dir, scopes=["https://www.googleapis.com/auth/cloud-platform"],
-    )
+    bq_client, _ = hf.set_bigquery_credentials()
 
-    # Now, instantiate the client and upload the table to BigQuery
-    client = bigquery.Client(project="web-scraping-371310", credentials=credentials)
     job_config = bigquery.LoadJobConfig(
         schema = [
             bigquery.SchemaField("marke", "STRING"),
@@ -161,11 +159,14 @@ def main():
     job_config.write_disposition = bigquery.WriteDisposition.WRITE_APPEND
 
     # Upload the table
-    client.load_table_from_dataframe(
+    bq_client.load_table_from_dataframe(
         dataframe=df_data_all_car_brands_cleaned,
         destination="web-scraping-371310.crawled_datasets.lukas_mobile_de",
         job_config=job_config
     ).result()
+
+    # Clean the data according to the custom rules
+    execute_cleaning()
 
     # Print a status message
     logging.info("Uploading the data to BigQuery is done. Now, uploading the logs to G-drive...")
