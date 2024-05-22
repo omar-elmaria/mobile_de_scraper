@@ -3,20 +3,16 @@ import logging
 import os
 import re
 from datetime import datetime, timedelta
-
 import pandas as pd
 import pytz
 import yagmail
 from google.cloud import bigquery
-from scrapy.crawler import CrawlerRunner
-from scrapy.utils.log import configure_logging
-from twisted.internet import defer, reactor
 
-from data_cleaning_functions import execute_cleaning, HelperFunctions
 from gdrive_upload_script import upload_file_to_gdrive
 from inputs import (
     change_cwd,
-    listing_page_crawling_framework, marke_list,
+    listing_page_crawling_framework,
+    marke_list,
     modell_list
 )
 from mobile_de.spiders.mobile_de_zyte_api_car_page_spider import run_car_page_spider
@@ -24,6 +20,10 @@ from mobile_de_selenium_code_prod_listing_page_func import (
     date_start_for_log_file_name,
     mobile_de_local_single_func
 )
+from scrapy.crawler import CrawlerRunner
+from scrapy.utils.log import configure_logging
+from twisted.internet import defer, reactor
+from data_cleaning_functions import execute_cleaning, HelperFunctions
 
 
 def is_between_time_range():
