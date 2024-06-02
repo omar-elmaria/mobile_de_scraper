@@ -1,4 +1,5 @@
 # Import packages
+from datetime import datetime
 import logging
 import os
 
@@ -48,10 +49,19 @@ class HelperFunctions:
         """
         A function to amend the `form` column for Porsche 992 GT3
         """
-        if x.find("sportwagen/coup") != -1:
-            return "Coupé"
+        if x.find("sportwagen") != -1 or x.find("coup") != -1:
+            return "Coupe"
         else:
             return x
+    
+    def amend_form_col_porsche_cayenne(self, x):
+        """
+        A function to amend the `form` column for Porsche Cayenne
+        """
+        if any(l in x["form"].lower() for l in ["suv", "geländewagen", "pickup", "sportwagen", "coupe"]):
+            return "SUV"
+        else:
+            return x["form"]
     
     def amend_form_col_lamborghini_urus(self, x):
         """
@@ -74,6 +84,65 @@ class HelperFunctions:
             return "SUV"
         else:
             return x
+    
+    def amend_form_col_aston_martin_dbs(self, x):
+        """
+        A function to amend the `form` column for Aston Martin DBS
+        """
+        if x.lower().find("cabrio") != -1 or x.lower().find("roadster") != -1 or x.lower().find("volante") != -1:
+            return "Volante"
+        elif x.lower().find("sportwagen") != -1 or x.lower().find("coupe") != -1:
+            return "Coupe"
+        else:
+            return x
+    
+    def amend_form_col_bentley_bentayga(self, x):
+        """
+        A function to amend the `form` column for Bentley Bentayga
+        """
+        if x.lower().find("suv") != -1 or x.lower().find("geländewagen") != -1\
+        or x.lower().find("pickup") != -1 or x.lower().find("andere") != -1\
+        or x.lower().find("kombi") != -1 or x.lower().find("van") != -1 or x.lower().find("minibus") != -1\
+        or x.lower().find("limo") != -1 or x.lower().find("vorführfahrzeug") != -1:
+            return "SUV"
+        else:
+            return x
+    
+    def amend_form_col_bentley_continental_gt(self, x):
+        """
+        A function to amend the `form` column for Bentley Continental GT
+        """
+        if x.lower().find("sportwagen") != -1 or x.lower().find("coup") != -1\
+        or x.lower().find("limo") != -1:
+            return "Coupe"
+        if x.lower().find("cabrio") != -1 or x.lower().find("roadster") != -1\
+        or x.lower().find("convertible") != -1:
+            return "Convertible"
+        else:
+            return x
+    
+    def amend_form_col_bentley_continental_gtc(self, x):
+        """
+        A function to amend the `form` column for Bentley Continental GTC
+        """
+        if x.lower().find("cabrio") != -1 or x.lower().find("roadster") != -1\
+        or x.lower().find("gtc") != -1:
+            return "Convertible"
+        else:
+            return x
+        
+    def amend_form_col_bmw_m3(self, x):
+        """
+        A function to amend the `form` column for BMW M3
+        """
+        if x["form"].lower().find("kombi") != -1 or x["form"].lower().find("touring") != -1:
+            return "Touring"
+        elif x["form"].lower().find("limo") != -1:
+            return "Limousine"
+        elif x["leistung"] in [480, 510, 551] and x["form"].lower().find("sportwagen") != -1 or x["form"].lower().find("coupe") != -1:
+            return "Coupe"
+        else:
+            return x["form"]
     
     def amend_form_col_mercedes_benz_g_63_amg(self, x):
         """
@@ -285,6 +354,17 @@ class HelperFunctions:
         else:
             return x["getriebe"]
     
+    def amend_getriebe_col_porsche_cayenne(self, x):
+        """
+        A function to amend the `getriebe` column for Porsche Cayenne
+        """
+        if x == "" or x is None or pd.isnull(x):
+            return x
+        elif x.lower().find("automatik") != -1 or x.lower().find("schaltgetriebe") != -1 or x.lower().find("halbautomatik") != -1:
+            return "Achtgang-Tiptronic S"
+        else:
+            return x
+    
     def amend_getriebe_col_stg_1_lamborghini_urus(self, x):
         """
         A function to amend the `getriebe` column for Lamborghini Urus (stg 1)
@@ -306,7 +386,50 @@ class HelperFunctions:
             return "9-Gang-Automatik-Getriebe"
         else:
             return x
+        
+    def amend_getriebe_col_aston_martin_dbs(self, x):
+        """
+        A function to amend the `getriebe` column for Aston Martin DBS
+        """
+        if x == "" or x is None or pd.isnull(x) or x.lower().find("automatik") != -1:
+            return "8-Stufen-Automatikgetriebe"
+        else:
+            return x
     
+    def amend_getriebe_col_bentley_bentayga(self, x):
+        """
+        A function to amend the `getriebe` column for Bentley Bentayga
+        """
+        return self.amend_getriebe_col_aston_martin_dbs(x)
+    
+    def amend_getriebe_col_bentley_continental_gt(self, x):
+        """
+        A function to amend the `getriebe` column for Continental GT
+        """
+        if x == "" or x is None or pd.isnull(x) or x.lower().find("automatik") != -1:
+            return "8-Gang-Doppelkupplungsgetriebe"
+        else:
+            return x
+    
+    def amend_getriebe_col_bentley_continental_gtc(self, x):
+        """
+        A function to amend the `getriebe` column for Bentley Continental GTC
+        """
+        return self.amend_getriebe_col_bentley_continental_gt(x)
+    
+    def amend_getriebe_col_bmw_m3(self, x):
+        """
+        A function to amend the `getriebe` column for BMW M3
+        """
+        if (x["getriebe"] == "" or x["getriebe"] is None or pd.isnull(x["getriebe"]) or x["getriebe"].lower().find("automatik") != -1)\
+        and x["leistung"] in [510, 551]:
+            return "8-Gang-Automatikgetriebe"
+        elif (x["getriebe"] == "" or x["getriebe"] is None or pd.isnull(x["getriebe"]) or x["getriebe"].lower().find("schaltung") != -1)\
+        and x["leistung"] == 480:
+            return "6-Gang-Schaltgetriebe"
+        else:
+            return x["getriebe"]
+
     def amend_getriebe_col_mercedes_benz_g_63_amg(self, x):
         """
         A function to amend the `getriebe` column for Mercedes-Benz G 63 AMG
@@ -464,6 +587,15 @@ class HelperFunctions:
             return "GT3"
         else:
             return x["variante"]
+        
+    def amend_variante_col_porsche_cayenne(self, x):
+        """
+        A function to amend the `variante` column for Porsche 992 GT3
+        """
+        if x["marke"] == "Porsche" and x["modell"] == "Cayenne" and x["leistung"] == 640:
+            return "Cayenne Turbo GT"
+        else:
+            return x["variante"]
     
     def amend_variante_col_lamborghini_urus_stg_1(self, x):
         """
@@ -527,6 +659,127 @@ class HelperFunctions:
         """
         if x["marke"] == "Aston Martin" and x["modell"] == "DBX" and x["variante"] != "DBX707":
             return "DBX V8"
+        else:
+            return x["variante"]
+        
+    def amend_variante_col_aston_martin_dbs(self, x):
+        """
+        A function to amend the `variante` column for Aston Martin DBS
+        """
+        if x["marke"] == "Aston Martin" and x["modell"] == "DBS" and x["leistung"] == 725 and x["form"] == "Coupe":
+            return "DBS Superleggera"
+        elif x["marke"] == "Aston Martin" and x["modell"] == "DBS" and x["leistung"] == 725 and x["form"] == "Volante":
+            return "DBS Superleggera Volante"
+        if x["marke"] == "Aston Martin" and x["modell"] == "DBS" and x["leistung"] == 770 and x["form"] == "Coupe":
+            return "DBS 770 Ultimate"
+        elif x["marke"] == "Aston Martin" and x["modell"] == "DBS" and x["leistung"] == 770 and x["form"] == "Volante":
+            return "DBS 770 Ultimate Volante"
+        elif x["marke"] == "Aston Martin" and x["modell"] == "DBS" and x["titel"].lower().find("ultimate") != -1 and x["form"] == "Coupe":
+            return "DBS 770 Ultimate"
+        elif x["marke"] == "Aston Martin" and x["modell"] == "DBS" and x["titel"].lower().find("ultimate") != -1 and x["form"] == "Volante":
+            return "DBS 770 Ultimate Volante"
+        else:
+            return x["variante"]
+    
+    def amend_variante_col_bentley_bentayga(self, x):
+        """
+        A function to amend the `variante` column for Bentley Bentayga
+        """
+        if x["marke"] == "Bentley" and x["modell"] == "Bentayga" and x["form"] == "SUV" and x["leistung"] == 435:
+            return "Bentayga V8 Diesel"
+        elif x["marke"] == "Bentley" and x["modell"] == "Bentayga" and x["titel"].lower().find("speed") != -1 and x["form"] == "SUV" and x["leistung"] == 635:
+            return "Bentayga W12 Speed"
+        elif x["marke"] == "Bentley" and x["modell"] == "Bentayga" and x["form"] == "SUV" and x["leistung"] == 608:
+            return "Bentayga W12"
+        elif x["marke"] == "Bentley" and x["modell"] == "Bentayga" and x["form"] == "SUV" and\
+        any(l in x["titel"].lower() for l in ["hybrid", "v6"]) and x["leistung"] in [340, 449]:
+            return "Bentayga V6 Hybrid"
+        elif x["marke"] == "Bentley" and x["modell"] == "Bentayga" and x["form"] == "SUV" and\
+        any(l in x["titel"].lower() for l in ["hybrid", "v6"]) and x["leistung"] == 462:
+            return "Bentayga V6 Hybrid S"
+        elif x["marke"] == "Bentley" and x["modell"] == "Bentayga" and x["form"] == "SUV" and\
+        any(l in x["titel"].lower() for l in ["bentayga s", "first edition", "v8 s", "my23", "2023"]) and (x["leistung"] >= 449 and x["leistung"] <= 551):
+            return "Bentayga V8 S"
+        elif x["marke"] == "Bentley" and x["modell"] == "Bentayga" and x["form"] == "SUV" and\
+        x["titel"].lower().find("ewb") != -1:
+            return "Bentayga V8 EWB"
+        elif x["marke"] == "Bentley" and x["modell"] == "Bentayga" and x["form"] == "SUV" and\
+        (x["erstzulassung"] != "" and x["erstzulassung"] is not None and not(pd.isnull(x["erstzulassung"])))\
+        and (x["leistung"] >= 545 and x["leistung"] <= 555):
+            if datetime(2018, 1, 1) <= datetime.strptime(x["erstzulassung"], '%m/%Y') <= datetime(2019, 12, 31):
+                return "Bentayga V8"
+            else:
+                return x["variante"]
+        else:
+            return x["variante"]
+        
+    def amend_variante_col_bentley_continental_gt(self, x):
+        """
+        A function to amend the `variante` column for Bentley GT
+        """
+        if x["marke"] == "Bentley" and x["modell"] == "Continental GT" and x["form"] == "Coupe" and\
+        x["leistung"] == 635 and (x["erstzulassung"] != "" and x["erstzulassung"] is not None and not(pd.isnull(x["erstzulassung"]))):
+            if (
+                datetime(2019, 1, 1) <= datetime.strptime(x["erstzulassung"], '%m/%Y') <= datetime.now()
+            ) or (
+                datetime(2018, 1, 1) <= datetime.strptime(x["erstzulassung"], '%m/%Y') <= datetime(2018, 12, 31)\
+                and any(l in x["titel"].lower() for l in ["first", "new"])
+            ):
+                return "Continental GT W12"
+        elif x["marke"] == "Bentley" and x["modell"] == "Continental GT" and x["form"] == "Coupe" and\
+        x["leistung"] == 635 and (x["erstzulassung"] == "" or x["erstzulassung"] is None or pd.isnull(x["erstzulassung"])):
+            return "Continental GT W12"
+        elif x["marke"] == "Bentley" and x["modell"] == "Continental GT" and x["form"] == "Coupe" and\
+        x["leistung"] >= 449 and x["leistung"] <= 551:
+            return "Continental GT V8"
+        elif x["marke"] == "Bentley" and x["modell"] == "Continental GT" and x["form"] == "Coupe" and\
+        x["leistung"] == 659:
+            return "Continental GT Speed W12"
+        else:
+            return x["variante"]
+    
+    def amend_variante_col_bentley_continental_gtc(self, x):
+        """
+        A function to amend the `variante` column for Bentley GTC
+        """
+        if x["marke"] == "Bentley" and x["modell"] == "Continental GTC" and x["form"] == "Convertible" and\
+        x["leistung"] == 635 and (x["erstzulassung"] != "" and x["erstzulassung"] is not None and not(pd.isnull(x["erstzulassung"]))):
+            if (
+                datetime(2020, 1, 1) <= datetime.strptime(x["erstzulassung"], '%m/%Y') <= datetime.now()
+            ) or (
+                datetime(2019, 1, 1) <= datetime.strptime(x["erstzulassung"], '%m/%Y') <= datetime(2019, 12, 31)\
+                and any(l in x["titel"].lower() for l in ["first", "new"])
+            ):
+                return "Continental GTC W12"
+        elif x["marke"] == "Bentley" and x["modell"] == "Continental GTC" and x["form"] == "Convertible" and\
+        x["leistung"] == 635 and (x["erstzulassung"] == "" or x["erstzulassung"] is None or pd.isnull(x["erstzulassung"])):
+            return "Continental GTC W12"
+        elif x["marke"] == "Bentley" and x["modell"] == "Continental GTC" and x["form"] == "Convertible" and\
+        x["leistung"] >= 449 and x["leistung"] <= 551:
+            return "Continental GTC V8"
+        elif x["marke"] == "Bentley" and x["modell"] == "Continental GTC" and x["form"] == "Convertible" and\
+        x["leistung"] == 659:
+            return "Continental GTC Speed W12"
+        else:
+            return x["variante"]
+    
+    def amend_variante_col_bmw_m3(self, x):
+        """
+        A function to amend the `variante` column for BMW M3
+        """
+        if x["marke"] == "BMW" and x["modell"] == "M3" and x["form"] == "Limousine" and x["leistung"] == 480\
+        and x["getriebe"] == "6-Gang-Schaltgetriebe":
+            return "M3"
+        elif x["marke"] == "BMW" and x["modell"] == "M3" and x["form"] == "Touring" and x["leistung"] == 510:
+            return "M3 Competition Touring M xDrive"
+        elif x["marke"] == "BMW" and x["modell"] == "M3" and x["form"] == "Limousine" and x["leistung"] == 551\
+        and x["titel"].lower().find("cs") != -1:
+            return "M3 CS"
+        elif x["marke"] == "BMW" and x["modell"] == "M3" and x["form"] == "Limousine" and x["leistung"] == 510:
+            if any(l in x["titel"].lower() for l in ["xDrive", "x Drive", "Allrad", "xD"]):
+                return "M3 Competition M xDrive"
+            else:
+                return "M3 Competition"
         else:
             return x["variante"]
     
@@ -800,6 +1053,15 @@ class HelperFunctions:
     ###------------------------------###------------------------------###
     
     ## Leistung column helper functions
+    def amend_leistung_col_porsche_cayenne(self, x):
+        """
+        A function to amend the `variante` column for Porsche 992 GT3
+        """
+        if x["marke"] == "Porsche" and x["modell"] == "Cayenne" and (x["leistung"] >= 635 and x["leistung"] <= 650) and x["titel"].lower().find("turbo gt") != -1:
+            return 640
+        else:
+            return x["leistung"]
+    
     def amend_leistung_col_lamborghini_urus_stg_1(self, x):
         """
         A function to amend the `leistung` column for Lamborghini Urus (stg 1)
@@ -843,6 +1105,19 @@ class HelperFunctions:
         """
         if x["variante"] == "DBX V8":
             return 550
+        else:
+            return x["leistung"]
+        
+    def amend_leistung_col_aston_martin_dbs(self, x):
+        """
+        A function to amend the `variante` column for Aston Martin DBS
+        """
+        if (
+            x["marke"] == "Aston Martin" and x["modell"] == "DBS" and x["titel"].lower().find("ultimate") != -1 and x["form"] == "Coupe"
+        ) or (
+            x["marke"] == "Aston Martin" and x["modell"] == "DBS" and x["titel"].lower().find("ultimate") != -1 and x["form"] == "Volante"
+        ):
+            return 770
         else:
             return x["leistung"]
     
@@ -958,20 +1233,30 @@ class HelperFunctions:
         A function to add the `Ausstattung` column for Porsche 992 GT3
         """
         if x["marke"] == "Porsche" and x["modell"] == "992" and (x["variante"] == "GT3" or x["variante"] == "GT3 mit Touring-Paket")\
-        and x["form"] == "Coupé" and x["fahrzeugzustand"].lower() == "unfallfrei" and x["leistung"] == 510\
+        and x["form"] == "Coupe" and x["fahrzeugzustand"].lower() == "unfallfrei" and x["leistung"] == 510\
         and (
             ("pts" in x["titel"].lower() and "pccb" in x["titel"].lower()) or\
             ("pts" in x["fahrzeugbeschreibung_mod"].lower() and "pccb" in x["fahrzeugbeschreibung_mod"].lower())
         ):
             return "PTS + PCCB"
         elif x["marke"] == "Porsche" and x["modell"] == "992" and (x["variante"] == "GT3" or x["variante"] == "GT3 mit Touring-Paket")\
-        and x["form"] == "Coupé" and x["fahrzeugzustand"].lower() == "unfallfrei" and x["leistung"] == 510\
+        and x["form"] == "Coupe" and x["fahrzeugzustand"].lower() == "unfallfrei" and x["leistung"] == 510\
         and (x["titel"].lower().find("pts") != -1):
             return "PTS"
         elif x["marke"] == "Porsche" and x["modell"] == "992" and (x["variante"] == "GT3" or x["variante"] == "GT3 mit Touring-Paket")\
-        and x["form"] == "Coupé" and x["fahrzeugzustand"] == "Unfallfrei" and x["leistung"] == 510\
+        and x["form"] == "Coupe" and x["fahrzeugzustand"] == "Unfallfrei" and x["leistung"] == 510\
         and (x["titel"].lower().find("pccb") != -1 or x["fahrzeugbeschreibung_mod"].lower().find("pccb") != -1):
             return "PCCB"
+        else:
+            return None
+    
+    def add_ausstattung_col_porsche_cayenne(self, x):
+        """
+        A function to add the `Ausstattung` column for Porsche Cayenne
+        """
+        if x["marke"] == "Porsche" and x["modell"] == "Cayenne" and x["variante"] == "Cayenne Turbo GT"\
+        and x["leistung"] == 640 and (x["titel"].lower().find("pts") != -1):
+            return "PTS"
         else:
             return None
     
@@ -993,6 +1278,49 @@ class HelperFunctions:
         and x["variante"] == "DBX V8" and x["form"] == "SUV" and x["fahrzeugzustand"].lower() == "unfallfrei"\
         and x["leistung"] == 550 and (x["titel"].lower().find("1913") != -1 or x["fahrzeugbeschreibung_mod"].lower().find("1913") != -1):
             return "1913 Edition"
+        else:
+            return None
+    
+    def add_ausstattung_col_bentley_bentayga(self, x):
+        """
+        A function to add the `Ausstattung` column for Bentley Bentayga
+        """
+        if x["marke"] == "Bentley" and x["modell"] == "Bentayga"\
+        and x["titel"].lower().find("mulliner") != -1:
+            return "Mulliner"
+        elif x["marke"] == "Bentley" and x["modell"] == "Bentayga"\
+        and x["titel"].lower().find("centenary edition") != -1:
+            return "Centenary Edition"
+        else:
+            return None
+    
+    def add_ausstattung_col_bentley_continental_gt(self, x):
+        """
+        A function to add the `Ausstattung` column for Bentley Continental GT
+        """
+        if x["marke"] == "Bentley" and x["modell"] == "Continental GT":
+            if x["titel"].lower().find("le mans") != -1:
+                return "Le Mans"
+            elif x["titel"].lower().find("number 9") != -1:
+                return "Number 9"
+            elif x["titel"].lower().find("mulliner") != -1:
+                return "Mulliner"
+            else:
+                return None
+        else:
+            return None
+    
+    def add_ausstattung_col_bentley_continental_gtc(self, x):
+        """
+        A function to add the `Ausstattung` column for Bentley Continental GTC
+        """
+        if x["marke"] == "Bentley" and x["modell"] == "Continental GTC":
+            if x["titel"].lower().find("mulliner") != -1:
+                return "Mulliner"
+            elif x["titel"].lower().find("edition 12") != -1:
+                return "Edition 12"
+            else:
+                return None
         else:
             return None
     
@@ -1203,6 +1531,90 @@ class CleaningFunctions(HelperFunctions):
 
         return df_clean_9
 
+    ### Porsche
+    ## Cayenne
+    def clean_porsche_cayenne(self, df_specific_brand):
+        """
+        A function to clean the data of Porsche Cayenne
+        """
+        # Make a copy of df_specific_brand
+        df_clean_1 = pd.DataFrame(df_specific_brand.copy())
+
+        # Add fahrzeugbeschreibung_mod column to replace None values in that column with an empty string
+        df_clean_1["fahrzeugbeschreibung_mod"] = df_clean_1["fahrzeugbeschreibung"].apply(lambda x: "" if x is None else x)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `form` column
+        # Spalte E = form = Wenn SUV / Geländewagen / Pickup, oder SUV / Geländewagen / Pickup, Tageszulassung, oder SUV / Geländewagen / Pickup, Jahreswagen, oder SUV / Geländewagen / Pickup, Neufahrzeug, oder SUV / Geländewagen / Pickup, Vorführfahrzeug, dann ändere auf "SUV".
+        # Spalte E = form = Wenn Sportwagen/Coupe, oder Sportwagen/Coupe, Tageszulassung, oder Sportwagen/Coupe, Jahreswagen, oder Sportwagen/Coupe, Neufahrzeug, oder Sportwagen/Coupe, Vorführfahrzeug, dann ändere auf "SUV".
+        df_clean_2 = df_clean_1.copy()
+
+        df_clean_2["form"] = df_clean_2.apply(lambda x: self.amend_form_col_porsche_cayenne(x), axis=1)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `fahrzeugzustand` column
+        # Spalte F = fahrzeugzustand = Wenn Unfallfrei, Nicht fahrtauglich, oder (Leere) abgebildet wird, dann auf “Unfallfrei“ ändern
+        df_clean_3 = df_clean_2.copy()
+
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `kilometer` column
+        # Spalte K = kilometer = Wenn (Leere) abgebildet wird, dann auf „1“ ändern. (Info: Sind oftmals Neuwagen und haben Werkskilometer)
+        df_clean_4 = df_clean_3.copy()
+
+        df_clean_4["kilometer"] = df_clean_4["kilometer"].apply(self.amend_kilometer_col)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `Getriebe` column
+        # Spalte H = getriebe = Wenn (Leere), oder Automatik, oder Schaltgetriebe, oder Halbautomatik, dann ändere auf "Achtgang-Tiptronic S"
+        df_clean_5 = df_clean_4.copy()
+
+        df_clean_5["getriebe"] = df_clean_5["getriebe"].apply(self.amend_getriebe_col_porsche_cayenne)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `Marke` col based on the `titel` col
+        # Spalte A = marke = Wenn Spalte D Titel Techart enthält, dann ändere auf "Porsche | Techart"
+        df_clean_6 = df_clean_5.copy()
+
+        porsche_cayenne_dict = {
+            "techart": "Techart"
+        }
+
+        for key, value in porsche_cayenne_dict.items():
+            df_clean_6["marke"] = df_clean_6.apply(lambda x: self.amend_marke_col_various_brands(x, key, value, "BMW"), axis=1)
+
+        ###------------------------------###------------------------------###
+
+        # Spalte G = Leistung = Wenn marke Porsche, und modell Cayenne, und Titel enthält "Turbo GT", und Leistung zwischen 635 bis 650, dann ändere leistung auf "640".
+        # Spalte C = Variante = Wenn Marke Porsche, und Modell Cayenne, und Leistung 640, dann ändere variante auf "Cayenne Turbo GT".
+        df_clean_6 = df_clean_5.copy()
+
+        df_clean_6["leistung"] = df_clean_6.apply(lambda x: self.amend_leistung_col_porsche_cayenne(x), axis=1)
+        df_clean_6["variante"] = df_clean_6.apply(lambda x: self.amend_variante_col_porsche_cayenne(x), axis=1)
+
+        ###------------------------------###------------------------------###
+
+        # Neue Spalte D = Ausstattung = Wenn Marke Porsche, und Variante Cayenne Turbo GT,  und Leistung 640, und im Titel steht PTS, dann ändere auf "PTS".
+        ## Create a new column `Ausstattung`
+        df_clean_7 = df_clean_6.copy()
+
+        df_clean_7["ausstattung"] = df_clean_7.apply(lambda x: self.add_ausstattung_col_porsche_cayenne(x), axis=1)
+
+        # Move the Austattung column to be between "variante" and "titel"
+        austattung_col = df_clean_7.pop("ausstattung")
+        df_clean_7.insert(3, "ausstattung", austattung_col)
+
+        # Drop the fahrzeugbeschreibung_mod column
+        df_clean_7 = df_clean_7.drop("fahrzeugbeschreibung_mod", axis=1)
+
+        return df_clean_7
+
     ### Lamborghini
     ## Urus
     def clean_lamborghini_urus(self, df_specific_brand):
@@ -1398,6 +1810,454 @@ class CleaningFunctions(HelperFunctions):
 
         return df_clean_8
     
+    ### Aston Martin
+    ## DBS
+    def clean_aston_martin_dbs(self, df_specific_brand):
+        """
+        A function to clean the data of Aston Martin DBS
+        """
+        # Make a copy of df_specific_brand
+        df_clean_1 = pd.DataFrame(df_specific_brand.copy())
+
+        # Add fahrzeugbeschreibung_mod column to replace None values in that column with an empty string
+        df_clean_1["fahrzeugbeschreibung_mod"] = df_clean_1["fahrzeugbeschreibung"].apply(lambda x: "" if x is None else x)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `form` column
+        # Spalte E = form = Wenn Sportwagen/Coupe, oder Sportwagen/Coupe, Tageszulassung, oder Sportwagen/Coupe, Jahreswagen, oder Sportwagen/Coupe, Neufahrzeug, oder Sportwagen/Coupe, Vorführfahrzeug, dann ändere auf "Coupe".
+        # Spalte E = form = Wenn Cabrio/Roadster, oder Cabrio/Roadster, Tageszulassung, oder Cabrio/Roadster, Jaheswagen, oder Cabrio/Roadster, Neufahrzeug, oder Cabrio/Roadster, Vorführfahrzeug, dann ändere auf "Volante".
+        # Spalte E = form = Wenn im Titel Volante, dann ändere Form auf "Volante"
+        df_clean_2 = df_clean_1.copy()
+
+        df_clean_2["form"] = df_clean_2["form"].apply(self.amend_form_col_aston_martin_dbs)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `fahrzeugzustand` column
+        # Spalte F = fahrzeugzustand = Wenn Unfallfrei, Nicht fahrtauglich, oder (Leere) abgebildet wird, dann auf “Unfallfrei“ ändern
+        df_clean_3 = df_clean_2.copy()
+
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `kilometer` column
+        # Spalte K = kilometer = Wenn (Leere) abgebildet wird, dann auf „1“ ändern. (Info: Sind oftmals Neuwagen und haben Werkskilometer)
+        df_clean_4 = df_clean_3.copy()
+
+        df_clean_4["kilometer"] = df_clean_4["kilometer"].apply(self.amend_kilometer_col)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `Getriebe` column
+        # Spalte H = getriebe = Wenn Automatik und (Leere), dann ändere auf "8-Stufen-Automatikgetriebe"
+        df_clean_5 = df_clean_4.copy()
+
+        df_clean_5["getriebe"] = df_clean_5["getriebe"].apply(self.amend_getriebe_col_aston_martin_dbs)
+
+        ###------------------------------###------------------------------###
+
+        # Spalte C = Variante = Wenn Marke Aston Martin, und Modell DBS, und Leistung 725, und Form Coupe, dann ändere variante auf "DBS Superleggera".
+        # Spalte C = Variante = Wenn Marke Aston Martin, und Modell DBS, und Leistung 725, und Form Volante, dann ändere variante auf "DBS Superleggera Volante".
+                
+        # Spalte C = Variante = Wenn Marke Aston Martin, und Modell DBS, und Leistung 770, und Form Coupe, dann ändere variante auf "DBS 770 Ultimate".
+        # Spalte C = Variante = Wenn Marke Aston Martin, und Modell DBS, und Leistung 770, und Form Volante, dann ändere variante auf "DBS 770 Ultimate Volante".
+                
+        # Spalte C = Variante = Wenn Marke Aston Martin, und Modell DBS, und Titel steht Ultimate, und Coupe, dann ändere variante auf "DBS 770 Ultimate" und Leistung auf "770".
+        # Spalte C = Variante = Wenn Marke Aston Martin, und Modell DBS, und Titel steht Ultimate, und Volante/Cabrio, dann ändere variante auf "DBS 770 Ultimate Volante" und Leistung auf "770"
+        df_clean_6 = df_clean_5.copy()
+
+        df_clean_6["variante"] = df_clean_6.apply(lambda x: self.amend_variante_col_aston_martin_dbs(x), axis=1)
+        df_clean_6["leistung"] = df_clean_6.apply(lambda x: self.amend_leistung_col_aston_martin_dbs(x), axis=1)
+
+        ###------------------------------###------------------------------###
+
+        ## Create a new column `Ausstattung`
+        # Neue Spalte D = Wenn marke aston Martin, und Modell DBX, und Variante DBX V8, und form SUV und fahrzeugzustand unfallfrei, und leistung 550, und entweder im titel 1913 oder im fahrzeugbeschreibung 1913 steht, dann ändere ausstattung auf 1913 Edition
+        df_clean_7 = df_clean_6.copy()
+
+        df_clean_7["ausstattung"] = None
+
+        # Move the Austattung column to be between "variante" and "titel"
+        austattung_col = df_clean_7.pop("ausstattung")
+        df_clean_7.insert(3, "ausstattung", austattung_col)
+
+        # Drop the fahrzeugbeschreibung_mod column
+        df_clean_7 = df_clean_7.drop("fahrzeugbeschreibung_mod", axis=1)
+
+        return df_clean_7
+    
+    ### Bentley
+    ## Bentayga
+    def clean_bentley_bentayga(self, df_specific_brand):
+        """
+        A function to clean the data of Bentley Bentayga
+        """
+        # Make a copy of df_specific_brand
+        df_clean_1 = pd.DataFrame(df_specific_brand.copy())
+
+        # Add fahrzeugbeschreibung_mod column to replace None values in that column with an empty string
+        df_clean_1["fahrzeugbeschreibung_mod"] = df_clean_1["fahrzeugbeschreibung"].apply(lambda x: "" if x is None else x)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `form` column
+        # Spalte E = form = Wenn SUV / Geländewagen / Pickup, oder SUV / Geländewagen / Pickup, Tageszulassung, oder SUV / Geländewagen / Pickup, Jahreswagen, oder SUV / Geländewagen / Pickup, Neufahrzeug, oder SUV / Geländewagen / Pickup, Vorführfahrzeug, dann ändere auf "SUV".
+        # Spalte E = form = Wenn Andere, Vorführfahrzeug, oder Kombi, oder Van/Minibus, oder Limousine, dann ändere auf "SUV"
+        df_clean_2 = df_clean_1.copy()
+
+        df_clean_2["form"] = df_clean_2["form"].apply(self.amend_form_col_bentley_bentayga)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `fahrzeugzustand` column
+        # Spalte F = fahrzeugzustand = Wenn Unfallfrei, Nicht fahrtauglich, oder (Leere) abgebildet wird, dann auf “Unfallfrei“ ändern
+        df_clean_3 = df_clean_2.copy()
+
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `kilometer` column
+        # Spalte K = kilometer = Wenn (Leere) abgebildet wird, dann auf „1“ ändern. (Info: Sind oftmals Neuwagen und haben Werkskilometer)
+        df_clean_4 = df_clean_3.copy()
+
+        df_clean_4["kilometer"] = df_clean_4["kilometer"].apply(self.amend_kilometer_col)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `Getriebe` column
+        # Spalte H = getriebe = Wenn Automatik und (Leere), dann ändere auf "8-Stufen-Automatikgetriebe"
+        df_clean_5 = df_clean_4.copy()
+
+        df_clean_5["getriebe"] = df_clean_5["getriebe"].apply(self.amend_getriebe_col_bentley_bentayga)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `Marke` col based on the `titel` col
+        # Spalte A = marke = Wenn Spalte D Titel gepanzert oder Trasco enthält, dann ändere auf "Bentley | Trasco"
+        # Spalte A = marke = Wenn Spalte D Titel Mansory enthält, dann ändere auf "Bentley | Mansory"
+        # Spalte A = marke = Wenn Spalte D Titel Startech enthält, dann ändere auf "Bentley | Startech"
+        # Spalte A = marke = Wenn Spalte D Titel Techart enthält, dann ändere auf "Bentley | Techart"
+        # Spalte A = marke = Wenn Spalte D Titel Keyvany enthält, dann ändere auf "Bentley | Keyvany"
+        df_clean_6 = df_clean_5.copy()
+
+        bentley_bentayga_dict = {
+            "gepanzert": "Trasco",
+            "trasco": "Trasco",
+            "mansory": "Mansory",
+            "startech": "Startech",
+            "techart": "Techart",
+            "keyvany": "Keyvany"
+        }
+
+        for key, value in bentley_bentayga_dict.items():
+            df_clean_6["marke"] = df_clean_6.apply(lambda x: self.amend_marke_col_various_brands(x, key, value, "Bentley"), axis=1)
+
+        ###------------------------------###------------------------------###
+
+        # Spalte C = Variante = Wenn Marke Bentley, und Modell Bentayga, und Form SUV, und Leistung 435, dann ändere variante auf "Bentayga V8 Diesel".
+        # Spalte C = Variante = Wenn Marke Bentley, und Modell Bentayga, und Titel Speed, und Form SUV, und Leistung 635, dann ändere variante auf "Bentayga W12 Speed".
+        # Spalte C = Variante = Wenn Marke Bentley, und Modell Bentayga, und Form SUV, und Leistung 608, dann ändere variante auf "Bentayga W12".
+        # Spalte C = Variante = Wenn Marke Bentley, und Modell Bentayga, und Form SUV, und Titel ist entweder Hybrid oder V6, und Leistung ist entweder 340 oder 449, dann ändere variante auf "Bentayga V6 Hybrid".
+        # Spalte C = Variante = Wenn Marke Bentley, und Modell Bentayga, und Form SUV, und Titel ist entweder Hybrid oder V6, und Leistung ist 462, dann ändere variante auf "Bentayga V6 Hybrid S".
+        # Spalte C = Variante = Wenn Marke Bentley, und Modell Bentayga, und Form SUV, und Titel ist entweder Bentayga S oder First Edition oder V8 S oder MY23 oder 2023, und Leistung ist zwischen 449 und 551 PS, dann ändere variante auf "Bentayga V8 S".
+        # Spalte C = Variante = Wenn Marke Bentley, und Modell Bentayga, und Form SUV, und Titel ist EWB, dann ändere variante auf "Bentayga V8 EWB".
+        # Spalte C = Variante = Wenn Marke Bentley, und Modell Bentayga, und Form SUV, und Erstzulassung ist zwischen 01.01.2018 und 31.12.2019, und leistung ist zwischen 545 und 555, dann ändere variante auf "Bentayga V8".
+        df_clean_6 = df_clean_5.copy()
+
+        df_clean_6["variante"] = df_clean_6.apply(lambda x: self.amend_variante_col_bentley_bentayga(x), axis=1)
+
+        ###------------------------------###------------------------------###
+
+        ## Create a new column `Ausstattung`
+        # Neue Spalte D = Wenn marke aston Martin, und Modell DBX, und Variante DBX V8, und form SUV und fahrzeugzustand unfallfrei, und leistung 550, und entweder im titel 1913 oder im fahrzeugbeschreibung 1913 steht, dann ändere ausstattung auf 1913 Edition
+        df_clean_7 = df_clean_6.copy()
+
+        df_clean_7["ausstattung"] = df_clean_7.apply(lambda x: self.add_ausstattung_col_bentley_bentayga(x), axis=1)
+
+        # Move the Austattung column to be between "variante" and "titel"
+        austattung_col = df_clean_7.pop("ausstattung")
+        df_clean_7.insert(3, "ausstattung", austattung_col)
+
+        # Drop the fahrzeugbeschreibung_mod column
+        df_clean_7 = df_clean_7.drop("fahrzeugbeschreibung_mod", axis=1)
+
+        return df_clean_7
+    
+    ### Bentley
+    ## Continental GT
+    def clean_bentley_continental_gt(self, df_specific_brand):
+        """
+        A function to clean the data of Bentley Continental GT
+        """
+        # Make a copy of df_specific_brand
+        df_clean_1 = pd.DataFrame(df_specific_brand.copy())
+
+        # Add fahrzeugbeschreibung_mod column to replace None values in that column with an empty string
+        df_clean_1["fahrzeugbeschreibung_mod"] = df_clean_1["fahrzeugbeschreibung"].apply(lambda x: "" if x is None else x)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `form` column
+        # Spalte E = form = Wenn Sportwagen/Coupe, oder Sportwagen/Coupe, Tageszulassung, oder Sportwagen/Coupe, Jaheswagen, oder Sportwagen/Coupe, Neufahrzeug, oder Sportwagen/Coupe, Vorführfahrzeug, dann ändere auf "Coupe".
+        # Spalte E = form = Wenn Limousine, oder Limousine, Neufahrzeug, dann ändere auf "Coupe"
+        # Spalte E = form = Wenn Cabrio/Roadster, oder Cabrio/Roadster, Tageszulassung, oder Cabrio/Roadster, Jaheswagen, oder Cabrio/Roadster, Neufahrzeug, oder Cabrio/Roadster, Vorführfahrzeug, dann ändere auf "Convertible".
+        # Spalte E = form = Wenn im Titel Convertible steht, ändere form auf Convertible.
+        df_clean_2 = df_clean_1.copy()
+
+        df_clean_2["form"] = df_clean_2["form"].apply(self.amend_form_col_bentley_continental_gt)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `fahrzeugzustand` column
+        # Spalte F = fahrzeugzustand = Wenn Unfallfrei, Nicht fahrtauglich, oder (Leere) abgebildet wird, dann auf “Unfallfrei“ ändern
+        df_clean_3 = df_clean_2.copy()
+
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `kilometer` column
+        # Spalte K = kilometer = Wenn (Leere) abgebildet wird, dann auf „1“ ändern. (Info: Sind oftmals Neuwagen und haben Werkskilometer)
+        df_clean_4 = df_clean_3.copy()
+
+        df_clean_4["kilometer"] = df_clean_4["kilometer"].apply(self.amend_kilometer_col)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `Getriebe` column
+        # Spalte H = getriebe = Wenn Automatik und (Leere), dann ändere auf "8-Gang-Doppelkupplungsgetriebe"
+        df_clean_5 = df_clean_4.copy()
+
+        df_clean_5["getriebe"] = df_clean_5["getriebe"].apply(self.amend_getriebe_col_bentley_continental_gt)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `Marke` col based on the `titel` col
+        # Spalte A = marke = Wenn Spalte D Titel Mansory enthält, dann ändere auf "Bentley | Mansory"
+        # Spalte A = marke = Wenn Spalte D Titel Keyvany enthält, dann ändere auf "Bentley | Keyvany"
+        df_clean_6 = df_clean_5.copy()
+
+        bentley_continental_gt_dict = {
+            "mansory": "Mansory",
+            "keyvany": "Keyvany"
+        }
+
+        for key, value in bentley_continental_gt_dict.items():
+            df_clean_6["marke"] = df_clean_6.apply(lambda x: self.amend_marke_col_various_brands(x, key, value, "Bentley"), axis=1)
+
+        ###------------------------------###------------------------------###
+
+        # Spalte C = Variante = Wenn Marke Bentley, und Modell Continental GT, und Form Coupe, und Leistung 635, und Erstzulassung ist von 01.01.2019 bis heute (einschließlich (leere)), dann ändere variante auf "Continental GT W12".
+        # Spalte C = Variante = Wenn Marke Bentley, und Modell Continental GT, und Form Coupe, und Leistung 635, und Erstzulassung ist vom 01.01.2018 bis 31.12.2018, und Titel enthält entweder "First" oder "New", dann ändere variante auf "Continental GT W12".
+        # Spalte C = Variante = Wenn Marke Bentley, und Modell Continental GT, und Form Coupe, und Leistung ist zwischen 449 und 551, dann ändere variante auf "Continental GT V8".
+        # Spalte C = Variante = Wenn Marke Bentley, und Modell Continental GT, und Form Coupe, und Leistung ist 659, dann ändere variante auf "Continental GT Speed W12".
+        df_clean_6 = df_clean_5.copy()
+
+        df_clean_6["variante"] = df_clean_6.apply(lambda x: self.amend_variante_col_bentley_continental_gt(x), axis=1)
+
+        ###------------------------------###------------------------------###
+
+        ## Create a new column `Ausstattung`
+        # Neue Spalte D = Ausstattung = Wenn Marke Benltey, und Variante Continental GT, und im Titel steht Le Mans, dann ändere auf "Le Mans".
+        # Neue Spalte D	= Ausstattung = Wenn Marke Benltey, und Variante Continental GT, und im Titel steht Number 9, dann ändere auf "Number 9".
+        # Neue Spalte D	= Ausstattung = Wenn Marke Benltey, und Variante Continental GT, und im Titel steht Mulliner, dann ändere auf "Mulliner".
+        df_clean_7 = df_clean_6.copy()
+
+        df_clean_7["ausstattung"] = df_clean_7.apply(lambda x: self.add_ausstattung_col_bentley_continental_gt(x), axis=1)
+
+        # Move the Austattung column to be between "variante" and "titel"
+        austattung_col = df_clean_7.pop("ausstattung")
+        df_clean_7.insert(3, "ausstattung", austattung_col)
+
+        # Drop the fahrzeugbeschreibung_mod column
+        df_clean_7 = df_clean_7.drop("fahrzeugbeschreibung_mod", axis=1)
+
+        return df_clean_7
+    
+    ### Bentley
+    ## Continental GTC
+    def clean_bentley_continental_gtc(self, df_specific_brand):
+        """
+        A function to clean the data of Bentley Continental GTC
+        """
+        # Make a copy of df_specific_brand
+        df_clean_1 = pd.DataFrame(df_specific_brand.copy())
+
+        # Add fahrzeugbeschreibung_mod column to replace None values in that column with an empty string
+        df_clean_1["fahrzeugbeschreibung_mod"] = df_clean_1["fahrzeugbeschreibung"].apply(lambda x: "" if x is None else x)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `form` column
+        # Spalte E = form = Wenn Cabrio/Roadster, oder Cabrio/Roadster, Tageszulassung, oder Cabrio/Roadster, Jaheswagen, oder Cabrio/Roadster, Neufahrzeug, oder Cabrio/Roadster, Vorführfahrzeug, dann ändere auf "Convertible".
+        # Spalte E = form = Wenn im Titel GTC steht, ändere form auf Convertible.
+        df_clean_2 = df_clean_1.copy()
+
+        df_clean_2["form"] = df_clean_2["form"].apply(self.amend_form_col_bentley_continental_gtc)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `fahrzeugzustand` column
+        # Spalte F = fahrzeugzustand = Wenn Unfallfrei, Nicht fahrtauglich, oder (Leere) abgebildet wird, dann auf “Unfallfrei“ ändern
+        df_clean_3 = df_clean_2.copy()
+
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `kilometer` column
+        # Spalte K = kilometer = Wenn (Leere) abgebildet wird, dann auf „1“ ändern. (Info: Sind oftmals Neuwagen und haben Werkskilometer)
+        df_clean_4 = df_clean_3.copy()
+
+        df_clean_4["kilometer"] = df_clean_4["kilometer"].apply(self.amend_kilometer_col)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `Getriebe` column
+        # Spalte H = getriebe = Wenn Automatik und (Leere), dann ändere auf "8-Gang-Doppelkupplungsgetriebe"
+        df_clean_5 = df_clean_4.copy()
+
+        df_clean_5["getriebe"] = df_clean_5["getriebe"].apply(self.amend_getriebe_col_bentley_continental_gtc)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `Marke` col based on the `titel` col
+        # Spalte A = marke = Wenn Spalte D Titel Mansory enthält, dann ändere auf "Bentley | Mansory"
+        # Spalte A = marke = Wenn Spalte D Titel Keyvany enthält, dann ändere auf "Bentley | Keyvany"
+        df_clean_6 = df_clean_5.copy()
+
+        bentley_continental_gtc_dict = {
+            "mansory": "Mansory",
+            "keyvany": "Keyvany"
+        }
+
+        for key, value in bentley_continental_gtc_dict.items():
+            df_clean_6["marke"] = df_clean_6.apply(lambda x: self.amend_marke_col_various_brands(x, key, value, "Bentley"), axis=1)
+
+        ###------------------------------###------------------------------###
+
+        # Spalte C = Variante = Wenn Marke Bentley, und Modell Continental GT C, und Form Convertible, und Leistung 635, und Erstzulassung ist von 01.01.2020 bis heute (einschließlich (leere)), dann ändere variante auf "Continental GTC W12".
+        # Spalte C = Variante = Wenn Marke Bentley, und Modell Continental GT C, und Form Convertible, und Leistung 635, und Erstzulassung ist vom 01.01.2019 bis 31.12.2019, und Titel enthält entweder "First" oder "New", dann ändere variante auf "Continental GTC W12".
+        # Spalte C = Variante = Wenn Marke Bentley, und Modell Continental GT C, und Form Convertible, und Leistung ist zwischen 449 und 551, dann ändere variante auf "Continental GTC V8".
+        # Spalte C = Variante = Wenn Marke Bentley, und Modell Continental GT C, und Form Convertibele, und Leistung ist 659, dann ändere variante auf "Continental GTC Speed W12".
+        df_clean_6 = df_clean_5.copy()
+
+        df_clean_6["variante"] = df_clean_6.apply(lambda x: self.amend_variante_col_bentley_continental_gtc(x), axis=1)
+
+        ###------------------------------###------------------------------###
+
+        ## Create a new column `Ausstattung`
+        # Neue Spalte D = Ausstattung = Wenn Marke Benltey, und Variante Continental GT C, und im Titel steht Mulliner, dann ändere auf "Mulliner".
+        # Neue Spalte D	= Ausstattung = Wenn Marke Benltey, und Variante Continental GT C, und im Titel steht Edition 12, dann ändere auf "Edition 12".
+        df_clean_7 = df_clean_6.copy()
+
+        df_clean_7["ausstattung"] = df_clean_7.apply(lambda x: self.add_ausstattung_col_bentley_continental_gtc(x), axis=1)
+
+        # Move the Austattung column to be between "variante" and "titel"
+        austattung_col = df_clean_7.pop("ausstattung")
+        df_clean_7.insert(3, "ausstattung", austattung_col)
+
+        # Drop the fahrzeugbeschreibung_mod column
+        df_clean_7 = df_clean_7.drop("fahrzeugbeschreibung_mod", axis=1)
+
+        return df_clean_7
+    
+    ### BMW
+    ## M3
+    def clean_bmw_m3(self, df_specific_brand):
+        """
+        A function to clean the data of BMW M3
+        """
+        # Make a copy of df_specific_brand
+        df_clean_1 = pd.DataFrame(df_specific_brand.copy())
+
+        # Add fahrzeugbeschreibung_mod column to replace None values in that column with an empty string
+        df_clean_1["fahrzeugbeschreibung_mod"] = df_clean_1["fahrzeugbeschreibung"].apply(lambda x: "" if x is None else x)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `form` column
+        # Spalte E = form = Wenn Kombi, oder Kombi, Tageszulassung, oder Kombi, Jaheswagen, oder Kombi, Neufahrzeug, oder Kombi, Vorführfahrzeug, dann ändere auf "Touring".
+        # Spalte E = form = Wenn Marke BMW, und Modell M3, und Titel Touring steht, dann ändere form auf Touring.
+        # Spalte E = form = Wenn Limousine, oder Limousine, Tageszulassung, oder Limousine, Jaheswagen, oder Limousine, Neufahrzeug, oder Limousine, Vorführfahrzeug, dann ändere auf "Limousine".
+        # Spalte E = form = Wenn Leistung 480 oder 510 oder 551, und Sportwagen/Coupe, oder Sportwagen/Coupe, Tageszulassung, oder Sportwagen/Coupe, Jaheswagen, oder Sportwagen/Coupe, Neufahrzeug, oder Sportwagen/Coupe, Vorführfahrzeug, dann ändere auf "Limousine".
+        df_clean_2 = df_clean_1.copy()
+
+        df_clean_2["form"] = df_clean_2.apply(lambda x: self.amend_form_col_bmw_m3(x), axis=1)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `fahrzeugzustand` column
+        # Spalte F = fahrzeugzustand = Wenn Unfallfrei, Nicht fahrtauglich, oder (Leere) abgebildet wird, dann auf “Unfallfrei“ ändern
+        df_clean_3 = df_clean_2.copy()
+
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `kilometer` column
+        # Spalte K = kilometer = Wenn (Leere) abgebildet wird, dann auf „1“ ändern. (Info: Sind oftmals Neuwagen und haben Werkskilometer)
+        df_clean_4 = df_clean_3.copy()
+
+        df_clean_4["kilometer"] = df_clean_4["kilometer"].apply(self.amend_kilometer_col)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `Getriebe` column
+        # Spalte H = getriebe = Wenn Automatik und (Leere), und Leistung entweder 510 oder 551 dann ändere auf "8-Gang-Automatikgetriebe"
+        # Spalte H = getriebe = Wenn Schaltung und (Leere), und Leistung 480, dann ändere auf "6-Gang-Schaltgetriebe"
+        df_clean_5 = df_clean_4.copy()
+
+        df_clean_5["getriebe"] = df_clean_5.apply(lambda x: self.amend_getriebe_col_bmw_m3(x), axis=1)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `Marke` col based on the `titel` col
+        # Spalte A = marke = Wenn Spalte D Titel G Power oder G-Power enthält, dann ändere auf "BMW | G-Power"
+        # Spalte A = marke = Wenn Spalte D Titel Aulitzky enthält, dann ändere auf "BMW | Aulitzky"
+        # Spalte A = marke = Wenn Spalte D Titel Schnitzer enthält, dann ändere auf "BMW | AC Schnitzer"
+        df_clean_6 = df_clean_5.copy()
+
+        bmw_m3_dict = {
+            "g power": "G-Power",
+            "g-power": "G-Power",
+            "aulitzky": "Aulitzky",
+            "schnitzer": "AC Schnitzer",
+        }
+
+        for key, value in bmw_m3_dict.items():
+            df_clean_6["marke"] = df_clean_6.apply(lambda x: self.amend_marke_col_various_brands(x, key, value, "BMW"), axis=1)
+
+        ###------------------------------###------------------------------###
+
+        # Spalte C = Variante = Wenn Marke BMW, und Modell M3, und Form Limousine, und Leistung 480, und getriebe 6-Gang-Schaltgetriebe,dann ändere variante auf "M3".
+        # Spalte C = Variante = Wenn Marke BMW, und Modell M3, und Form Touring, und Leistung 510, ,dann ändere variante auf "M3 Competition Touring M xDrive".
+        # Spalte C = Variante = Wenn Marke BMW, und Modell M3, und Form Limousine, und titel steht CS, und Leistung 551, ,dann ändere variante auf "M3 CS".
+        # Spalte C = Variante = Wenn Marke BMW, und Modell M3, und Form Limousine, und titel steht entweder xDrive oder x Drive oder Allrad oder xD, und Leistung 510, ,dann ändere variante auf "M3 Competition M xDrive".
+        # Spalte C = Variante = Wenn Marke BMW, und Modell M3, und Form Limousine, und Leistung 510,dann ändere variante auf "M3 Competition".   (=also alle Modelle bei denen im Titel nicht entweder xDrive oder x Drive oder Allrad oder xD steht)
+        df_clean_6 = df_clean_5.copy()
+
+        df_clean_6["variante"] = df_clean_6.apply(lambda x: self.amend_variante_col_bmw_m3(x), axis=1)
+
+        ###------------------------------###------------------------------###
+
+        ## Create a new column `Ausstattung`
+        df_clean_7 = df_clean_6.copy()
+
+        df_clean_7["ausstattung"] = None
+
+        # Move the Austattung column to be between "variante" and "titel"
+        austattung_col = df_clean_7.pop("ausstattung")
+        df_clean_7.insert(3, "ausstattung", austattung_col)
+
+        # Drop the fahrzeugbeschreibung_mod column
+        df_clean_7 = df_clean_7.drop("fahrzeugbeschreibung_mod", axis=1)
+
+        return df_clean_7
+
     ### Mercedes-Benz
     ## G 63 AMG
     def clean_mercedes_benz_g_63_amg(self, df_specific_brand):
@@ -1521,7 +2381,7 @@ class CleaningFunctions(HelperFunctions):
         ###------------------------------###------------------------------###
 
         ## Amend the `form` column
-        # Spalte E = form = Wenn Spotwagen/Coupe, oder Sporwagen/Coupe, Tageszulassung, oder Sporwagen/Coupe, Jaheswagen, oder Sporwagen/Coupe, Neufahrzeug, oder Sporwagen/Coupe, Vorführfahrzeug, dann ändere auf "Coupé".
+        # Spalte E = form = Wenn Spotwagen/Coupe, oder Sporwagen/Coupe, Tageszulassung, oder Sporwagen/Coupe, Jaheswagen, oder Sporwagen/Coupe, Neufahrzeug, oder Sporwagen/Coupe, Vorführfahrzeug, dann ändere auf "Coupe".
         # Spalte E = form = Wenn Cabrio/Roadster, oder Cabrio/Roadster, Tageszulassung, oder Cabrio/Roadster, Jaheswagen, oder Cabrio/Roadster, Neufahrzeug, oder Cabrio/Roadster, Vorführfahrzeug, dann ändere auf "Roadster".
         # Spalte E = form = Wenn im titel Roadster steht, dann ändere form auf "Roadster".
         df_clean_2 = df_clean_1.copy()
@@ -1620,7 +2480,7 @@ class CleaningFunctions(HelperFunctions):
         ###------------------------------###------------------------------###
 
         ## Amend the `form` column
-        # Spalte E = form = Wenn Spotwagen/Coupe, oder Sporwagen/Coupe, Tageszulassung, oder Sporwagen/Coupe, Jaheswagen, oder Sporwagen/Coupe, Neufahrzeug, oder Sporwagen/Coupe, Vorführfahrzeug, dann ändere auf "Coupé".
+        # Spalte E = form = Wenn Spotwagen/Coupe, oder Sporwagen/Coupe, Tageszulassung, oder Sporwagen/Coupe, Jaheswagen, oder Sporwagen/Coupe, Neufahrzeug, oder Sporwagen/Coupe, Vorführfahrzeug, dann ändere auf "Coupe".
         # Spalte E = form = Wenn Cabrio/Roadster, oder Cabrio/Roadster, Tageszulassung, oder Cabrio/Roadster, Jaheswagen, oder Cabrio/Roadster, Neufahrzeug, oder Cabrio/Roadster, Vorführfahrzeug, dann ändere auf "Spider".
 
         df_clean_2 = df_clean_1.copy()
@@ -1701,7 +2561,7 @@ class CleaningFunctions(HelperFunctions):
         ###------------------------------###------------------------------###
 
         ## Amend the `form` column
-        # Spalte E = form = Wenn Spotwagen/Coupe, oder Sporwagen/Coupe, Tageszulassung, oder Sporwagen/Coupe, Jaheswagen, oder Sporwagen/Coupe, Neufahrzeug, oder Sporwagen/Coupe, Vorführfahrzeug, dann ändere auf "Coupé".
+        # Spalte E = form = Wenn Spotwagen/Coupe, oder Sporwagen/Coupe, Tageszulassung, oder Sporwagen/Coupe, Jaheswagen, oder Sporwagen/Coupe, Neufahrzeug, oder Sporwagen/Coupe, Vorführfahrzeug, dann ändere auf "Coupe".
         # Spalte E = form = Wenn Cabrio/Roadster, oder Cabrio/Roadster, Tageszulassung, oder Cabrio/Roadster, Jaheswagen, oder Cabrio/Roadster, Neufahrzeug, oder Cabrio/Roadster, Vorführfahrzeug, dann ändere auf "Spider".
 
         df_clean_2 = df_clean_1.copy()
@@ -1791,7 +2651,7 @@ class CleaningFunctions(HelperFunctions):
         ###------------------------------###------------------------------###
 
         ## Amend the `form` column
-        # Spalte E = form = Wenn Spotwagen/Coupe, oder Sporwagen/Coupe, Tageszulassung, oder Sporwagen/Coupe, Jaheswagen, oder Sporwagen/Coupe, Neufahrzeug, oder Sporwagen/Coupe, Vorführfahrzeug, dann ändere auf "Coupé".
+        # Spalte E = form = Wenn Spotwagen/Coupe, oder Sporwagen/Coupe, Tageszulassung, oder Sporwagen/Coupe, Jaheswagen, oder Sporwagen/Coupe, Neufahrzeug, oder Sporwagen/Coupe, Vorführfahrzeug, dann ändere auf "Coupe".
         # Spalte E = form = Wenn Cabrio/Roadster, oder Cabrio/Roadster, Tageszulassung, oder Cabrio/Roadster, Jaheswagen, oder Cabrio/Roadster, Neufahrzeug, oder Cabrio/Roadster, Vorführfahrzeug, dann ändere auf "Spider".
 
         df_clean_2 = df_clean_1.copy()
@@ -1878,7 +2738,7 @@ class CleaningFunctions(HelperFunctions):
         ###------------------------------###------------------------------###
 
         ## Amend the `form` column
-        # Spalte E = form = Wenn Spotwagen/Coupe, oder Sporwagen/Coupe, Tageszulassung, oder Sporwagen/Coupe, Jaheswagen, oder Sporwagen/Coupe, Neufahrzeug, oder Sporwagen/Coupe, Vorführfahrzeug, dann ändere auf "Coupé".
+        # Spalte E = form = Wenn Spotwagen/Coupe, oder Sporwagen/Coupe, Tageszulassung, oder Sporwagen/Coupe, Jaheswagen, oder Sporwagen/Coupe, Neufahrzeug, oder Sporwagen/Coupe, Vorführfahrzeug, dann ändere auf "Coupe".
         # Spalte E = form = Wenn Cabrio/Roadster, oder Cabrio/Roadster, Tageszulassung, oder Cabrio/Roadster, Jaheswagen, oder Cabrio/Roadster, Neufahrzeug, oder Cabrio/Roadster, Vorführfahrzeug, dann ändere auf "Spider".
 
         df_clean_2 = df_clean_1.copy()
@@ -1981,7 +2841,7 @@ class CleaningFunctions(HelperFunctions):
         ###------------------------------###------------------------------###
 
         ## Amend the `form` column
-        # Spalte E = form = Wenn Spotwagen/Coupe, oder Sporwagen/Coupe, Tageszulassung, oder Sporwagen/Coupe, Jaheswagen, oder Sporwagen/Coupe, Neufahrzeug, oder Sporwagen/Coupe, Vorführfahrzeug, dann ändere auf "Coupé".
+        # Spalte E = form = Wenn Spotwagen/Coupe, oder Sporwagen/Coupe, Tageszulassung, oder Sporwagen/Coupe, Jaheswagen, oder Sporwagen/Coupe, Neufahrzeug, oder Sporwagen/Coupe, Vorführfahrzeug, dann ändere auf "Coupe".
         # Spalte E = form = Wenn Cabrio/Roadster, oder Cabrio/Roadster, Tageszulassung, oder Cabrio/Roadster, Jaheswagen, oder Cabrio/Roadster, Neufahrzeug, oder Cabrio/Roadster, Vorführfahrzeug, dann ändere auf "Cabrio".
 
         df_clean_2 = df_clean_1.copy()
@@ -2034,14 +2894,14 @@ class CleaningFunctions(HelperFunctions):
         # Spalte C = Variante = Wenn Marke Ferrari, und modell 812, und entweder im titel  Aperta oder Competizione A oder fahrzeugbeschreibung  Aperta, dann ändere auf "812 Competizione A".
         # Spalte C = Variante = Wenn Marke Ferrari, und modell 812, und entweder im titel  Competi oder fahrzeugbeschreibung Competi, dann ändere auf "812 Competizione".
         # Spate E & G = Form | Leistung = Wenn variante 812 Competizione A, dann änndere Spalte E form auf "Cabrio" und Spalte G leistung auf "830".
-        # Spate E & G = Form | Leistung = Wenn variante 812 Competizione, dann änndere Spalte E form auf "Coupé" und Spalte G leistung auf "830".
+        # Spate E & G = Form | Leistung = Wenn variante 812 Competizione, dann änndere Spalte E form auf "Coupe" und Spalte G leistung auf "830".
                 
         # Spalte C = Variante = Wenn Marke Ferrari, und modell 812, und im titel  GTS, dann ändere auf "812 GTS".
         # Spalte C = Variante = Wenn Marke Ferrari, und modell 812, und im titel  Superfast, dann ändere auf "812 Superfast".
         # Spalte C = Variante = Wenn variante (Leere), und Marke Ferrari, und modell 812, und Leistung zwischen 780 und 820, und form Coupe , dann ändere auf "812 Superfast".
         # Spalte C = Variante = Wenn variante (Leere), und Marke Ferrari, und modell 812, und Leistung zwischen 780 und 820, und form Cabrio, dann ändere auf "812 GTS".
         # Spate E & G = Form | Leistung = Wenn variante 812 GTS, dann änndere Spalte E form auf "Cabrio" und Spalte G leistung auf "800".
-        # Spate E & G = Form | Leistung = Wenn variante 812 Superfast, dann änndere Spalte E form auf "Coupé" und Spalte G leistung auf "800".
+        # Spate E & G = Form | Leistung = Wenn variante 812 Superfast, dann änndere Spalte E form auf "Coupe" und Spalte G leistung auf "800".
         df_clean_7 = df_clean_6.copy()
 
         df_clean_7["variante"] = df_clean_7.apply(lambda x: self.amend_variante_col_ferrari_812_stg_1(x), axis=1)
@@ -2087,7 +2947,7 @@ class CleaningFunctions(HelperFunctions):
         ###------------------------------###------------------------------###
 
         ## Amend the `form` column
-        # Spalte E = form = Wenn Spotwagen/Coupe, oder Sporwagen/Coupe, Tageszulassung, oder Sporwagen/Coupe, Jaheswagen, oder Sporwagen/Coupe, Neufahrzeug, oder Sporwagen/Coupe, Vorführfahrzeug, dann ändere auf "Coupé".
+        # Spalte E = form = Wenn Spotwagen/Coupe, oder Sporwagen/Coupe, Tageszulassung, oder Sporwagen/Coupe, Jaheswagen, oder Sporwagen/Coupe, Neufahrzeug, oder Sporwagen/Coupe, Vorführfahrzeug, dann ändere auf "Coupe".
 
         df_clean_2 = df_clean_1.copy()
 
@@ -2137,7 +2997,7 @@ class CleaningFunctions(HelperFunctions):
 
         ## Amend the `variante`, `form`, `leistung` columns
         # Spalte C = Variante = Wenn Marke Ferrari, und modell F12, und im titel tdf steht, und leistung zwischen 770 und 800 ist, dann ändere auf "F12 TDF".
-        # Spate E & G = Form | Leistung = Wenn variante F12 TDF, dann ändere Spalte E form auf "Coupé" und Spalte G leistung auf "780".
+        # Spate E & G = Form | Leistung = Wenn variante F12 TDF, dann ändere Spalte E form auf "Coupe" und Spalte G leistung auf "780".
                 
         # Spalte C = Variante = Wenn Marke Ferrari, und modell F12, und leistung ist zwischen 730 und 750, dann ändere auf "F12 Berlinetta".
         # Spate E & G = Form | Leistung = Wenn variante F12 Berlinetta, dann änndere Spalte E form auf "Coupe" und Spalte G leistung auf "740".
@@ -2183,7 +3043,7 @@ class CleaningFunctions(HelperFunctions):
         ###------------------------------###------------------------------###
 
         ## Amend the `form` column
-        # Spalte E = form = Wenn Spotwagen/Coupe, oder Sporwagen/Coupe, Tageszulassung, oder Sporwagen/Coupe, Jaheswagen, oder Sporwagen/Coupe, Neufahrzeug, oder Sporwagen/Coupe, Vorführfahrzeug, dann ändere auf "Coupé".
+        # Spalte E = form = Wenn Spotwagen/Coupe, oder Sporwagen/Coupe, Tageszulassung, oder Sporwagen/Coupe, Jaheswagen, oder Sporwagen/Coupe, Neufahrzeug, oder Sporwagen/Coupe, Vorführfahrzeug, dann ändere auf "Coupe".
         # Spalte E = form = Wenn Cabrio/Roadster, oder Cabrio/Roadster, Tageszulassung, oder Cabrio/Roadster, Jaheswagen, oder Cabrio/Roadster, Neufahrzeug, oder Cabrio/Roadster, Vorführfahrzeug, dann ändere auf "Spider".
         df_clean_2 = df_clean_1.copy()
 
@@ -2239,7 +3099,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte C = Variante = Wenn variante (Leere), und Marke Ferrari, und modell F8, und Leistung zwischen 710 und 730, und form Coupe , dann ändere auf "F8 Tributo".
         # Spalte C = Variante = Wenn variante (Leere), und Marke Ferrari, und modell F8, und Leistung zwischen 710 und 730, und form Spider , dann ändere auf "F8 Spider".
         # Spate E & G = Form | Leistung = Wenn variante F8 Spider, dann änndere Spalte E form auf "Spider" und Spalte G leistung auf "720".
-        # Spate E & G = Form | Leistung = Wenn variante F8 Tributo, dann änndere Spalte E form auf "Coupé" und Spalte G leistung auf "720".
+        # Spate E & G = Form | Leistung = Wenn variante F8 Tributo, dann änndere Spalte E form auf "Coupe" und Spalte G leistung auf "720".
         df_clean_7 = df_clean_6.copy()
 
         df_clean_7["variante"] = df_clean_7.apply(lambda x: self.amend_variante_col_ferrari_f8_stg_1(x), axis=1)
@@ -2375,7 +3235,8 @@ def execute_cleaning():
     # Clean the data for specified models
     df_combined = []
     for mod in [
-        "Porsche_992", "Lamborghini_Urus", "Aston Martin_DBX",
+        "Porsche_992", "Porsche_Cayenne", "Lamborghini_Urus", "Aston Martin_DBX", "Aston Martin_DBS",
+        "Bentley_Bentayga", "Bentley_Continental GT", "Bentley_Continental GTC", "BMW_M3",
         "Mercedes-Benz_G 63 AMG", "Mercedes-Benz_SLS AMG", "McLaren_765LT",
         "McLaren_720S", "Masarati_MC20", "Ferrari_SF90",
         "Ferrari_812", "Ferrari_F12", "Ferrari_F8",
@@ -2397,6 +3258,24 @@ def execute_cleaning():
         elif marke_to_clean == "Aston Martin" and modell_to_clean == "DBX":
             logging.info("Cleaning Aston Martin DBX...")
             df_cleaned = cf.clean_aston_martin_dbx(df_specific_brand=df_specific_brand)
+        elif marke_to_clean == "Aston Martin" and modell_to_clean == "DBS":
+            logging.info("Cleaning Aston Martin DBS...")
+            df_cleaned = cf.clean_aston_martin_dbs(df_specific_brand=df_specific_brand)
+        elif marke_to_clean == "Bentley" and modell_to_clean == "Bentayga":
+            logging.info("Cleaning Bentley Bentayga...")
+            df_cleaned = cf.clean_bentley_bentayga(df_specific_brand=df_specific_brand)
+        elif marke_to_clean == "Bentley" and modell_to_clean == "Continental GT":
+            logging.info("Cleaning Bentley Continental GT...")
+            df_cleaned = cf.clean_bentley_continental_gt(df_specific_brand=df_specific_brand)
+        elif marke_to_clean == "Bentley" and modell_to_clean == "Continental GTC":
+            logging.info("Cleaning Bentley Continental GTC...")
+            df_cleaned = cf.clean_bentley_continental_gtc(df_specific_brand=df_specific_brand)
+        elif marke_to_clean == "BMW" and modell_to_clean == "M3":
+            logging.info("Cleaning BMW M3...")
+            df_cleaned = cf.clean_bmw_m3(df_specific_brand=df_specific_brand)
+        elif marke_to_clean == "Porsche" and modell_to_clean == "Cayenne":
+            logging.info("Cleaning Porsche Cayenne...")
+            df_cleaned = cf.clean_porsche_cayenne(df_specific_brand=df_specific_brand)
         elif marke_to_clean == "Mercedes-Benz" and modell_to_clean == "G 63 AMG":
             logging.info("Cleaning Mercedes-Benz G 63 AMG...")
             df_cleaned = cf.clean_mercedes_benz_g_63_amg(df_specific_brand=df_specific_brand)
