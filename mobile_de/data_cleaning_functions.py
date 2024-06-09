@@ -17,13 +17,19 @@ class HelperFunctions:
         """
         A function to filter for a specific brand and model
         """
+        # Implement a special filter for Lamborghini Huracan
+        if modell.find("Hurac") == -1:
+            modell_to_filter = modell
+        else:
+            modell_to_filter = "Hurac"
+        
         # Filter for the marke and modell
         df_specific_brand = df[
             (df["marke"] == marke) & # Brand (e.g., Porsche)
-            (df["modell"] == modell) & # Model (e.g., 992)
+            (df["modell"].str.contains(modell_to_filter)) & # Model (e.g., 992)
             (df["standort"].str.lower().str.contains("de")) # Filter for DE as we are only interested in the German market
         ].reset_index(drop=True)
-
+        
         return df_specific_brand
 
     def set_bigquery_credentials(self):
@@ -73,6 +79,18 @@ class HelperFunctions:
             return "Super Sport Utility Vehicle"
         else:
             return x
+    
+    def amend_form_col_lamborghini_huracan(self, x):
+        """
+        A function to amend the `form` column for Lamborghini Huracan
+        """
+        if x["form"].lower().find("sportwagen") != -1 or x["form"].lower().find("coup") != -1:
+            return "Coupe"
+        elif x["form"].lower().find("cabrio") != -1 or x["form"].lower().find("roadster") != -1\
+        or x["titel"].lower().find("spyder") != -1 or x["titel"].lower().find("spider") != -1:
+            return "Spyder"
+        else:
+            return x["form"]
     
     def amend_form_col_aston_martin_dbx(self, x):
         """
@@ -376,6 +394,16 @@ class HelperFunctions:
         else:
             return x
     
+    def amend_getriebe_col_lamborghini_huracan(self, x):
+        """
+        A function to amend the `getriebe` column for Lamborghini Huracan
+        """
+        if x == "" or x is None or pd.isnull(x)\
+        or x.lower().find("automatik") != -1 or x.lower().find("halbautomatik") != -1 or x.lower().find("schaltgetriebe") != -1:
+            return "7-Gang-Doppelkupplungsgetriebe"
+        else:
+            return x
+    
     def amend_getriebe_col_stg_1_aston_martin_dbx(self, x):
         """
         A function to amend the `getriebe` column for Aston Martin DBX (stg 1)
@@ -642,7 +670,55 @@ class HelperFunctions:
             return "Urus"
         else:
             return x["variante"]
-        
+    
+    def amend_variante_col_lamborghini_huracan(self, x):
+        """
+        A function to amend the `variante` column for Lamborghini Huracan
+        """
+        if x["marke"] == "Lamborghini" and x["modell"] == "Huracan" and x["leistung"] in [639, 640]\
+        and x["titel"].lower().find("tecnica") != -1:
+            return "Huracan Tecnica"
+        elif x["marke"] == "Lamborghini" and x["modell"] == "Huracan" and x["leistung"] == 610\
+        and x["titel"].lower().find("sterrato") != -1:
+            return "Huracan Sterrato"
+        elif x["marke"] == "Lamborghini" and x["modell"] == "Huracan" and (x["leistung"] >= 639 and x["leistung"] <= 650)\
+        and x["titel"].lower().find("sto") != -1 and x["titel"].lower().find("stock") == -1:
+            return "Huracan STO"
+        elif x["marke"] == "Lamborghini" and x["modell"] == "Huracan" and x["leistung"] in [639, 640]\
+        and x["titel"].lower().find("performante") != -1:
+            if x["form"] == "Coupe":
+                return "Huracan Performante Coupe"
+            elif x["form"] == "Spyder":
+                return "Huracan Performante Spyder"
+            else:
+                x["variante"]
+        elif x["marke"] == "Lamborghini" and x["modell"] == "Huracan" and (x["leistung"] >= 609 and x["leistung"] <= 611)\
+        and x["titel"].lower().find("rwd") != -1:
+            if x["form"] == "Coupe":
+                return "Huracan Evo RWD Coupe"
+            elif x["form"] == "Spyder":
+                return "Huracan Evo RWD Spyder"
+        elif x["marke"] == "Lamborghini" and x["modell"] == "Huracan" and (x["leistung"] >= 631 and x["leistung"] <= 640)\
+        and x["titel"].lower().find("evo") != -1:
+            if x["form"] == "Coupe":
+                return "Huracan Evo Coupe"
+            elif x["form"] == "Spyder":
+                return "Huracan Evo Spyder"
+            else:
+                x["variante"]
+        elif x["marke"] == "Lamborghini" and x["modell"] == "Huracan" and (x["leistung"] >= 609 and x["leistung"] <= 611)\
+        and x["titel"].lower().find("610") != -1:
+            if x["form"] == "Coupe":
+                return "Huracan LP610-4 Coupe"
+            elif x["form"] == "Spyder":
+                return "Huracan LP610-4 Spyder"
+        elif x["marke"] == "Lamborghini" and x["modell"] == "Huracan" and (x["leistung"] >= 579 and x["leistung"] <= 581):
+            if x["form"] == "Coupe":
+                return "Huracan LP580-2 RWD Coupe"
+            elif x["form"] == "Spyder":
+                return "Huracan LP580-2 RWD Spyder"
+        else:
+            return x["variante"]
 
     def amend_variante_col_aston_martin_dbx_stg_1(self, x):
         """
@@ -1270,6 +1346,22 @@ class HelperFunctions:
         else:
             return None
     
+    def add_ausstattung_col_lamborghini_huracan(self, x):
+        """
+        A function to add the `Ausstattung` column for Lamborghini Huracan
+        """
+        if x["marke"] == "Lamborghini" and x["modell"] == "Huracan":
+            if x["titel"].lower().find("avio") != -1:
+                return "Avio"
+            elif x["titel"].lower().find("gt celebration") != -1:
+                return "GT Celebration"
+            elif x["titel"].lower().find("ad personam") != -1:
+                return "Ad Personam"
+            elif any(l in x["titel"].lower() for l in ["anniversio", "anniversary", "60 jahre"]):
+                return "60th Anniversary"
+        else:
+            return None
+    
     def add_ausstattung_col_aston_martin_dbx(self, x):
         """
         A function to add the `Ausstattung` column for Aston Martin DBX
@@ -1709,6 +1801,114 @@ class CleaningFunctions(HelperFunctions):
         df_clean_8["ausstattung"] = df_clean_8.apply(lambda x: self.add_ausstattung_col_lamborghini_urus(x), axis=1)
         df_clean_8["variante"] = df_clean_8.apply(lambda x: self.amend_variante_col_lamborghini_urus_stg_5(x), axis=1)
         df_clean_8["leistung"] = df_clean_8.apply(lambda x: self.amend_leistung_col_lamborghini_urus_stg_3(x), axis=1)
+
+        # Move the Austattung column to be between "variante" and "titel"
+        austattung_col = df_clean_8.pop("ausstattung")
+        df_clean_8.insert(3, "ausstattung", austattung_col)
+
+        # Drop the fahrzeugbeschreibung_mod column
+        df_clean_8 = df_clean_8.drop("fahrzeugbeschreibung_mod", axis=1)
+
+        return df_clean_8
+
+    ### Lamborghini
+    ## Huracan
+    def clean_lamborghini_huracan(self, df_specific_brand):
+        """
+        A function to clean the data of Lamborghini Huracan
+        """
+        # Make a copy of df_specific_brand
+        df_clean_1 = pd.DataFrame(df_specific_brand.copy())
+
+        # Add fahrzeugbeschreibung_mod column to replace None values in that column with an empty string
+        df_clean_1["fahrzeugbeschreibung_mod"] = df_clean_1["fahrzeugbeschreibung"].apply(lambda x: "" if x is None else x)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `modell` column
+        df_clean_2 = df_clean_1.copy()
+        df_clean_2["modell"] = df_clean_2["modell"].apply(lambda x: "Huracan" if x is not None else x)
+
+        ## Amend the `form` column
+        # Spalte E = form = Wenn Sportwagen/Coupe, oder Sportwagen/Coupe, Tageszulassung, oder Sportwagen/Coupe, Jaheswagen, oder Sportwagen/Coupe, Neufahrzeug, oder Sportwagen/Coupe, Vorführfahrzeug, dann ändere auf "Coupé".
+        # Spalte E = form = Wenn Cabrio/Roadster, oder Cabrio/Roadster, Tageszulassung, oder Cabrio/Roadster, Jaheswagen, oder Cabrio/Roadster, Neufahrzeug, oder Cabrio/Roadster, Vorführfahrzeug, dann ändere auf "Spyder".
+        # Spalte E = form = Wenn Marke Lamborghini, und modell huracan, und im titel steht entweder Spyder oder Spider, dann ändere form auf Sypder
+        df_clean_2["form"] = df_clean_2.apply(lambda x: self.amend_form_col_lamborghini_huracan(x), axis=1)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `fahrzeugzustand` column
+        # Spalte F = fahrzeugzustand = Wenn Unfallfrei, Nicht fahrtauglich, oder (Leere) abgebildet wird, dann auf “Unfallfrei“ ändern
+        df_clean_3 = df_clean_2.copy()
+
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `kilometer` column
+        # Spalte K = kilometer = Wenn (Leere) abgebildet wird, dann auf „1“ ändern. (Info: Sind oftmals Neuwagen und haben Werkskilometer)
+        df_clean_4 = df_clean_3.copy()
+
+        df_clean_4["kilometer"] = df_clean_4["kilometer"].apply(self.amend_kilometer_col)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `Getriebe` col
+        # Wenn (Leere), oder Automatik, oder Schaltgetriebe, oder Halbautomatik, dann ändere auf "7-Gang-Doppelkupplungsgetriebe"
+        df_clean_5 = df_clean_4.copy()
+
+        df_clean_5["getriebe"] = df_clean_5["getriebe"].apply(self.amend_getriebe_col_lamborghini_huracan)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `Marke` col based on the `titel` col
+        # Spalte A = marke = Wenn Spalte D Titel Mansory enthält, dann ändere auf "Lamborghini | Mansory"
+        # Spalte A = marke = Wenn Spalte D Titel Prior enthält, dann ändere auf "Lamborghini | Prior"
+        # Spalte A = marke = Wenn Spalte D Titel Novitec enthält, dann ändere auf "Lamborghini | Novitec"
+        # Spalte A = marke = Wenn Spalte D Titel entweder Super Trofeo oder GT3 enthält, dann ändere auf "Lamborghini | Racing"
+        df_clean_6 = df_clean_5.copy()
+
+        lamborghini_huracan_marke_dict = {
+            "mansory": "Mansory",
+            "prior": "Prior",
+            "novitec": "Novitec",
+            "super trofeo": "Racing",
+            "gt3": "Racing",
+        }
+
+        for key, value in lamborghini_huracan_marke_dict.items():
+            df_clean_6["marke"] = df_clean_6.apply(lambda x: self.amend_marke_col_various_brands(x, key, value, "Lamborghini"), axis=1)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `variante` and leistung columns
+        # Spalte C = Variante = Wenn Marke Lamborghini, und modell Huracan, und im titel Tecnica, und Leistung ist zwischen 639 und 640, dann ändere auf "Huracan Tecnica".
+        # Spalte C = Variante = Wenn Marke Lamborghini, und modell Huracan, und im titel Sterrato, und Leistung ist 610, dann ändere auf "Huracan Sterrato".
+        # Spalte C = Variante = Wenn Marke Lamborghini, und modell Huracan, und im titel STO (Nicht verwechseln mit STOCK NICHT!), und Leistung ist zwischen 639 und 650, dann ändere auf "Huracan STO".
+        # Spalte C = Variante = Wenn Marke Lamborghini, und modell Huracan, und im titel Performante, und form Coupe, und Leistung ist zwischen 639 und 640, dann ändere auf "Huracan Performante Coupe".
+        # Spalte C = Variante = Wenn Marke Lamborghini, und modell Huracan, und im titel Performante, und form Spyder, und Leistung ist zwischen 639 und 640, dann ändere auf "Huracan Performante Spyder".
+        # Spalte C = Variante = Wenn Marke Lamborghini, und modell Huracan, und im titel Evo, und form Coupe, und Leistung ist zwischen 631 und 640, dann ändere auf "Huracan Evo Coupe".
+        # Spalte C = Variante = Wenn Marke Lamborghini, und modell Huracan, und im titel Evo, und form Spyder, und Leistung ist zwischen 631 und 640, dann ändere auf "Huracan Evo Spyder".
+        # Spalte C = Variante = Wenn Marke Lamborghini, und modell Huracan, und form Coupe, und Leistung ist zwischen 579 und 581, dann ändere auf "Huracan LP580-2 RWD Coupe".
+        # Spalte C = Variante = Wenn Marke Lamborghini, und modell Huracan, und form Spyder, und Leistung ist zwischen 579 und 581, dann ändere auf "Huracan LP580-2 RWD Spyder".
+        # Spalte C = Variante = Wenn Marke Lamborghini,und titel steht RWD, und modell Huracan, und form Coupe, und Leistung ist zwischen 609 und 611, dann ändere auf "Huracan Evo RWD Coupe".
+        # Spalte C = Variante = Wenn Marke Lamborghini,und titel steht RWD, und modell Huracan, und form Spyder, und Leistung ist zwischen 609 und 611, dann ändere auf "Huracan Evo RWD Spyder".
+        # Spalte C = Variante = Wenn Marke Lamborghini, und modell Huracan, und titel steht 610, und form Coupe, und Leistung ist zwischen 609 und 611, dann ändere auf "Huracan LP610-4 Coupe".
+        # Spalte C = Variante = Wenn Marke Lamborghini, und modell Huracan, und titel steht 610, und form Spyder, und Leistung ist zwischen 609 und 611, dann ändere auf "Huracan LP610-4 Spyder".
+
+        df_clean_7 = df_clean_6.copy()
+        df_clean_7["variante"] = df_clean_7.apply(lambda x: self.amend_variante_col_lamborghini_huracan(x), axis=1)
+
+        ###------------------------------###------------------------------###
+
+        ## Create a new column `Ausstattung`
+        # Neue Spalte D = Ausstattung = Wenn Marke Lamborghini, und Variante Huracan, und im Titel steht Avio, dann ändere auf "Avio".
+        # Neue Spalte D = Ausstattung = Wenn Marke Lamborghini, und Variante Huracan, und im Titel steht GT Celebration, dann ändere auf "GT Celebration".
+        # Neue Spalte D = Ausstattung = Wenn Marke Lamborghini, und Variante Huracan, und im Titel steht Ad Personam, dann ändere auf "Ad Personam".
+        # Neue Spalte D = Ausstattung = Wenn Marke Lamborghini, und Variante Huracan, und im Titel steht entweder Anniversio oder Anniversary oder 60 Jahre, dann ändere auf "60th Anniversary".
+        df_clean_8 = df_clean_7.copy()
+
+        df_clean_8["ausstattung"] = df_clean_8.apply(lambda x: self.add_ausstattung_col_lamborghini_huracan(x), axis=1)
 
         # Move the Austattung column to be between "variante" and "titel"
         austattung_col = df_clean_8.pop("ausstattung")
