@@ -394,7 +394,9 @@ class HelperFunctions:
         """
         A function to amend the `getriebe` column for Porsche 991 (stg 1)
         """
-        if x.lower().find("automatik") != -1:
+        if x == "" or x is None or pd.isnull(x):
+            return x
+        elif x.lower().find("automatik") != -1:
             return "PDK"
         elif x.lower().find("schaltgetriebe") != -1:
             return "6-Gang Schaltgetriebe"
@@ -415,7 +417,7 @@ class HelperFunctions:
         A function to amend the `getriebe` column for Porsche Cayenne
         """
         if x == "" or x is None or pd.isnull(x):
-            return x
+            return "Achtgang-Tiptronic S"
         elif x.lower().find("automatik") != -1 or x.lower().find("schaltgetriebe") != -1 or x.lower().find("halbautomatik") != -1:
             return "Achtgang-Tiptronic S"
         else:
@@ -1712,7 +1714,7 @@ class CleaningFunctions(HelperFunctions):
         ## Amend the `form` column
         # Spalte E	form	Wenn Sportwagen/Coupe, oder Sportwagen/Coupe, Tageszulassung, oder Sportwagen/Coupe, Jahreswagen, oder Sportwagen/Coupe, Neufahrzeug, oder Sportwagen/Coupe, Vorführfahrzeug, dann ändere auf "Coupe".
         df_clean_2 = df_clean_1.copy()
-        df_clean_2["form"] = df_clean_2.apply(lambda x: self.amend_form_col_porsche_991(x), axis=1)
+        df_clean_2["form"] = df_clean_2["form"].apply(self.amend_form_col_porsche_991)
 
         ###------------------------------###------------------------------###
 
@@ -3832,7 +3834,7 @@ def execute_cleaning():
     # Clean the data for specified models
     df_combined = []
     for mod in [
-        "Porsche 991", "Porsche_992", "Porsche_Cayenne", "Lamborghini_Urus", "Lamborghini_Aventador",
+        "Porsche_991", "Porsche_992", "Porsche_Cayenne", "Lamborghini_Urus", "Lamborghini_Aventador",
         "Lamborghini_Huracan", "Aston Martin_DBX", "Aston Martin_DBS",
         "Bentley_Bentayga", "Bentley_Continental GT", "Bentley_Continental GTC", "BMW_M3",
         "Mercedes-Benz_G 63 AMG", "Mercedes-Benz_SLS AMG", "McLaren_765LT",
