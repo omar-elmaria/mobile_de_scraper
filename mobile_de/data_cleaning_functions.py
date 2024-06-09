@@ -3235,12 +3235,12 @@ def execute_cleaning():
     # Clean the data for specified models
     df_combined = []
     for mod in [
-        "Porsche_992", "Porsche_Cayenne", "Lamborghini_Urus", "Aston Martin_DBX", "Aston Martin_DBS",
+        "Porsche_992", "Porsche_Cayenne", "Lamborghini_Urus", "Lamborghini_Aventador",
+        "Lamborghini_Huracan", "Aston Martin_DBX", "Aston Martin_DBS",
         "Bentley_Bentayga", "Bentley_Continental GT", "Bentley_Continental GTC", "BMW_M3",
         "Mercedes-Benz_G 63 AMG", "Mercedes-Benz_SLS AMG", "McLaren_765LT",
         "McLaren_720S", "Masarati_MC20", "Ferrari_SF90",
-        "Ferrari_812", "Ferrari_F12", "Ferrari_F8",
-        "Ferrari_Purosangue"
+        "Ferrari_812", "Ferrari_F12", "Ferrari_F8", "Ferrari_Purosangue"
     ]:
         marke_to_clean = mod.split("_")[0]
         modell_to_clean = mod.split("_")[1]
@@ -3249,63 +3249,31 @@ def execute_cleaning():
         df_specific_brand = hf.filter_for_a_specific_brand(df=df, marke=marke_to_clean, modell=modell_to_clean)
 
         # Clean the data of each brand
-        if marke_to_clean == "Porsche" and modell_to_clean == "992":
-            logging.info("Cleaning Porsche 992 GT3...")
-            df_cleaned = cf.clean_porsche_992_gt3(df_specific_brand=df_specific_brand)
-        elif marke_to_clean == "Lamborghini" and modell_to_clean == "Urus":
-            logging.info("Cleaning Lamborghini Urus...")
-            df_cleaned = cf.clean_lamborghini_urus(df_specific_brand=df_specific_brand)
-        elif marke_to_clean == "Aston Martin" and modell_to_clean == "DBX":
-            logging.info("Cleaning Aston Martin DBX...")
-            df_cleaned = cf.clean_aston_martin_dbx(df_specific_brand=df_specific_brand)
-        elif marke_to_clean == "Aston Martin" and modell_to_clean == "DBS":
-            logging.info("Cleaning Aston Martin DBS...")
-            df_cleaned = cf.clean_aston_martin_dbs(df_specific_brand=df_specific_brand)
-        elif marke_to_clean == "Bentley" and modell_to_clean == "Bentayga":
-            logging.info("Cleaning Bentley Bentayga...")
-            df_cleaned = cf.clean_bentley_bentayga(df_specific_brand=df_specific_brand)
-        elif marke_to_clean == "Bentley" and modell_to_clean == "Continental GT":
-            logging.info("Cleaning Bentley Continental GT...")
-            df_cleaned = cf.clean_bentley_continental_gt(df_specific_brand=df_specific_brand)
-        elif marke_to_clean == "Bentley" and modell_to_clean == "Continental GTC":
-            logging.info("Cleaning Bentley Continental GTC...")
-            df_cleaned = cf.clean_bentley_continental_gtc(df_specific_brand=df_specific_brand)
-        elif marke_to_clean == "BMW" and modell_to_clean == "M3":
-            logging.info("Cleaning BMW M3...")
-            df_cleaned = cf.clean_bmw_m3(df_specific_brand=df_specific_brand)
-        elif marke_to_clean == "Porsche" and modell_to_clean == "Cayenne":
-            logging.info("Cleaning Porsche Cayenne...")
-            df_cleaned = cf.clean_porsche_cayenne(df_specific_brand=df_specific_brand)
-        elif marke_to_clean == "Mercedes-Benz" and modell_to_clean == "G 63 AMG":
-            logging.info("Cleaning Mercedes-Benz G 63 AMG...")
-            df_cleaned = cf.clean_mercedes_benz_g_63_amg(df_specific_brand=df_specific_brand)
-        elif marke_to_clean == "Mercedes-Benz" and modell_to_clean == "SLS AMG":
-            logging.info("Cleaning Mercedes-Benz SLS AMG...")
-            df_cleaned = cf.clean_mercedes_benz_sls_amg(df_specific_brand=df_specific_brand)
-        elif marke_to_clean == "McLaren" and modell_to_clean == "765LT":
-            logging.info("Cleaning McLaren 765LT...")
-            df_cleaned = cf.clean_mclaren_765lt(df_specific_brand=df_specific_brand)
-        elif marke_to_clean == "McLaren" and modell_to_clean == "720S":
-            logging.info("Cleaning McLaren 720S...")
-            df_cleaned = cf.clean_mclaren_720S(df_specific_brand=df_specific_brand)
-        elif marke_to_clean == "Maserati" and modell_to_clean == "MC20":
-            logging.info("Cleaning Maserati MC20...")
-            df_cleaned = cf.clean_maserati_mc20(df_specific_brand=df_specific_brand)
-        elif marke_to_clean == "Ferrari" and modell_to_clean == "SF90":
-            logging.info("Cleaning Ferrari SF90...")
-            df_cleaned = cf.clean_ferrari_sf90(df_specific_brand=df_specific_brand)
-        elif marke_to_clean == "Ferrari" and modell_to_clean == "812":
-            logging.info("Cleaning Ferrari 812...")
-            df_cleaned = cf.clean_ferrari_812(df_specific_brand=df_specific_brand)
-        elif marke_to_clean == "Ferrari" and modell_to_clean == "F12":
-            logging.info("Cleaning Ferrari F12...")
-            df_cleaned = cf.clean_ferrari_F12(df_specific_brand=df_specific_brand)
-        elif marke_to_clean == "Ferrari" and modell_to_clean == "F8":
-            logging.info("Cleaning Ferrari F8...")
-            df_cleaned = cf.clean_ferrari_F8(df_specific_brand=df_specific_brand)
-        elif marke_to_clean == "Ferrari" and modell_to_clean == "Purosangue":
-            logging.info("Cleaning Ferrari Purosangue...")
-            df_cleaned = cf.clean_ferrari_purosangue(df_specific_brand=df_specific_brand)
+        model_to_function_mapping_dict = {
+            "Porsche_992": cf.clean_porsche_992_gt3,
+            "Porsche_Cayenne": cf.clean_porsche_cayenne,
+            "Lamborghini_Urus": cf.clean_lamborghini_urus,
+            "Lamborghini_Aventador": cf.clean_lamborghini_aventador,
+            "Lamborghini_Huracan": cf.clean_lamborghini_huracan,
+            "Aston Martin_DBX": cf.clean_aston_martin_dbx,
+            "Aston Martin_DBS": cf.clean_aston_martin_dbs,
+            "Bentley_Bentayga": cf.clean_bentley_bentayga,
+            "Bentley_Continental GT": cf.clean_bentley_continental_gt,
+            "Bentley_Continental GTC": cf.clean_bentley_continental_gtc,
+            "BMW_M3": cf.clean_bmw_m3,
+            "Mercedes-Benz_G 63 AMG": cf.clean_mercedes_benz_g_63_amg,
+            "Mercedes-Benz_SLS AMG": cf.clean_mercedes_benz_sls_amg,
+            "McLaren_765LT": cf.clean_mclaren_765lt,
+            "McLaren_720S": cf.clean_mclaren_720S,
+            "Masarati_MC20": cf.clean_maserati_mc20,
+            "Ferrari_SF90": cf.clean_ferrari_sf90,
+            "Ferrari_812": cf.clean_ferrari_812,
+            "Ferrari_F12": cf.clean_ferrari_F12,
+            "Ferrari_F8": cf.clean_ferrari_F8,
+            "Ferrari_Purosangue": cf.clean_ferrari_purosangue
+        }
+        logging.info(f"Cleaning {mod}...")
+        df_cleaned = model_to_function_mapping_dict[mod](df_specific_brand=df_specific_brand)
 
         # Append the cleaned data to the list
         df_combined.append(df_cleaned)
