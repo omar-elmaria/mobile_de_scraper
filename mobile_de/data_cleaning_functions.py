@@ -3838,7 +3838,7 @@ def execute_cleaning():
         "Lamborghini_Huracan", "Aston Martin_DBX", "Aston Martin_DBS",
         "Bentley_Bentayga", "Bentley_Continental GT", "Bentley_Continental GTC", "BMW_M3",
         "Mercedes-Benz_G 63 AMG", "Mercedes-Benz_SLS AMG", "McLaren_765LT",
-        "McLaren_720S", "Masarati_MC20", "Ferrari_SF90",
+        "McLaren_720S", "Maserati_MC20", "Ferrari_SF90",
         "Ferrari_812", "Ferrari_F12", "Ferrari_F8", "Ferrari_Purosangue"
     ]:
         marke_to_clean = mod.split("_")[0]
@@ -3865,7 +3865,7 @@ def execute_cleaning():
             "Mercedes-Benz_SLS AMG": cf.clean_mercedes_benz_sls_amg,
             "McLaren_765LT": cf.clean_mclaren_765lt,
             "McLaren_720S": cf.clean_mclaren_720S,
-            "Masarati_MC20": cf.clean_maserati_mc20,
+            "Maserati_MC20": cf.clean_maserati_mc20,
             "Ferrari_SF90": cf.clean_ferrari_sf90,
             "Ferrari_812": cf.clean_ferrari_812,
             "Ferrari_F12": cf.clean_ferrari_F12,
