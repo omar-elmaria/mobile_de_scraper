@@ -52,12 +52,44 @@ class ListingPageSpider(scrapy.Spider):
             
             # Send the scrapy request
             yield scrapy.Request(
-                url=url,
+                url="https://suchen.mobile.de/",
                 meta={
                     "zyte_api_automap": {
-                        "browserHtml": True,  
-                        "productList": True,  
-                        "productListOptions": {"extractFrom":"browserHtml"} 
+                        "browserHtml": True,
+                        "actions": [
+                            {
+                                "action": "goto",
+                                "options": {
+                                    "waitUntil": "load",
+                                    "timeout": 30
+                                },
+                                "onError": "return",
+                                "url": url
+                            },
+                            {
+                                "action": "click",
+                                "selector": {
+                                    "type": "css",
+                                    "value": "button.sc-aYaIB.bvhjeW.mde-consent-accept-btn"
+                                },
+                                "delay": 0,
+                                "button": "left",
+                                "onError": "return"
+                            },
+                            {
+                                "action": "waitForTimeout",
+                                "timeout": 5,
+                                "onError": "return"
+                            },
+                            {
+                                "action": "scrollBottom",
+                                "timeout": 5,
+                                "maxScrollDelay": 1.5,
+                                "onError": "return"
+                            }
+                        ],
+                        "productList": True,
+                        "productListOptions": {"extractFrom":"browserHtml"}
                     },
                     "marke": marke,
                     "modell": modell,
@@ -80,12 +112,44 @@ class ListingPageSpider(scrapy.Spider):
             paginated_url = response.meta["target_url"] + f"&pageNumber={page}"
             logging.info(f"Extracting the URLs of car pages of {response.meta['marke']} {response.meta['modell']} page {num_pages} from {paginated_url}...")
             yield scrapy.Request(
-                url=paginated_url,
+                url="https://suchen.mobile.de/",
                 meta={
                     "zyte_api_automap": {
-                        "browserHtml": True,  
-                        "productList": True,  
-                        "productListOptions": {"extractFrom":"browserHtml"} 
+                        "browserHtml": True,
+                        "productList": True,
+                        "actions": [
+                            {
+                                "action": "goto",
+                                "options": {
+                                    "waitUntil": "load",
+                                    "timeout": 30
+                                },
+                                "onError": "return",
+                                "url": paginated_url
+                            },
+                            {
+                                "action": "click",
+                                "selector": {
+                                    "type": "css",
+                                    "value": "button.sc-aYaIB.bvhjeW.mde-consent-accept-btn"
+                                },
+                                "delay": 0,
+                                "button": "left",
+                                "onError": "return"
+                            },
+                            {
+                                "action": "waitForTimeout",
+                                "timeout": 5,
+                                "onError": "return"
+                            },
+                            {
+                                "action": "scrollBottom",
+                                "timeout": 5,
+                                "maxScrollDelay": 1.5,
+                                "onError": "return"
+                            }
+                        ],
+                        "productListOptions": {"extractFrom":"browserHtml"}
                     },
                     "marke": response.meta["marke"],
                     "modell": response.meta["modell"],
