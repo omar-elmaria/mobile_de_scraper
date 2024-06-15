@@ -645,7 +645,7 @@ class HelperFunctions:
             elif x["leistung"] == 520 and any(l in x["titel"].lower() for l in ["gt3rs", "gt3 rs"]):
                 return "991.2"
             else:
-                x["modell"]
+                return x["modell"]
         else:
             return x["modell"]
 
@@ -702,7 +702,7 @@ class HelperFunctions:
             elif x["leistung"] in [500, 520] and any(l in x["titel"].lower() for l in ["gt3 rs", "gt3rs"]):
                 return "GT3 RS"
             else:
-                x["variante"]
+                return x["variante"]
         else:
             return x["variante"]
         
@@ -781,7 +781,7 @@ class HelperFunctions:
             elif x["form"] == "Spyder":
                 return "Huracan Performante Spyder"
             else:
-                x["variante"]
+                return x["variante"]
         elif x["marke"] == "Lamborghini" and x["modell"] == "Huracan" and (x["leistung"] >= 609 and x["leistung"] <= 611)\
         and x["titel"].lower().find("rwd") != -1:
             if x["form"] == "Coupe":
@@ -795,7 +795,7 @@ class HelperFunctions:
             elif x["form"] == "Spyder":
                 return "Huracan Evo Spyder"
             else:
-                x["variante"]
+                return x["variante"]
         elif x["marke"] == "Lamborghini" and x["modell"] == "Huracan" and (x["leistung"] >= 609 and x["leistung"] <= 611)\
         and x["titel"].lower().find("610") != -1:
             if x["form"] == "Coupe":
@@ -3908,6 +3908,11 @@ def execute_cleaning():
         ]
     )
     job_config.write_disposition = bigquery.WriteDisposition.WRITE_APPEND
+    job_config.time_partitioning = bigquery.TimePartitioning(
+        type_=bigquery.TimePartitioningType.DAY,
+        field="crawled_timestamp"
+    )
+    job_config.clustering_fields = ["marke", "modell"]
 
     # Upload the table
     bq_client.load_table_from_dataframe(
