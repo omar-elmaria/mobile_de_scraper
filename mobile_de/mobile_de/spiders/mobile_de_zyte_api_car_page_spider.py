@@ -70,30 +70,30 @@ class CarPageSpider(scrapy.Spider):
         logging.info(f"Received a response. Now, scraping the data of the car page under {response.meta['marke']} {response.meta['modell']} with URL {response.meta['url_to_crawl']}")
 
         # Extract the title
-        title_1 = response.xpath("//h1[@id='ad-title']/text()").get()
-        title_2 = response.xpath("//div[@class='listing-subtitle']/text()").get()
+        title_1 = response.xpath("//h2[@class='dNpqi']/text()").get()
+        title_2 = response.xpath("//div[@class='GOIOV fqe3L EevEz']/text()").get()
         if title_2 is not None:
             title = title_1 + " " + title_2
         else:
             title = title_1
 
         # Extract the form
-        form = response.xpath("//div[@id='category-v']/text()").get()
+        form = response.xpath("//dt[@data-testid='category-item']//following-sibling::dd[1]/text()").get()
 
         # Extract the fahrzeugzustand
-        fahrzeugzustand = response.xpath("//div[@id='damageCondition-v']/text()").get()
+        fahrzeugzustand = response.xpath("//dt[@data-testid='damageCondition-item']//following-sibling::dd[1]/text()").get()
 
         # Extract the leistung
-        leistung = response.xpath("//div[text()='Leistung']/following-sibling::div/text()").get()
-        
+        leistung = response.xpath("//div[text()='Leistung']/following-sibling::div/text() | //dt[@data-testid='power-item']//following-sibling::dd[1]/text()").get()
+
         # Extract the Getriebe
-        getriebe = response.xpath("//div[text()='Getriebe']/following-sibling::div/text()").get()
+        getriebe = response.xpath("//div[text()='Getriebe']/following-sibling::div/text() | //dt[@data-testid='transmission-item']//following-sibling::dd[1]/text()").get()
 
         # Extract the Farbe
-        farbe = response.xpath("//div[@id='color-v']/text()").get()
+        farbe = response.xpath("//dt[@data-testid='color-item']//following-sibling::dd[1]/text()").get()
 
         # Extract the price
-        preis = response.xpath("//span[@data-testid='prime-price']/text()").get()
+        preis = response.xpath("//div[@data-testid='vip-price-label']/div[1]/text()").get()
         
         # Extract the Kilometer
         kilometer = response.xpath("//div[text()='Kilometerstand']/following-sibling::div/text()").get()
@@ -105,10 +105,10 @@ class CarPageSpider(scrapy.Spider):
         fahrzeughalter = response.xpath("//div[text()='Fahrzeughalter']/following-sibling::div/text()").get()
         
         # Extract the standort
-        standort = response.xpath("//p[@id='seller-address']/text()").get()
+        standort = response.xpath("//div[@data-testid='seller-title-address']/span/text()").get()
 
         # Extract the vehicle description and join it
-        fahrzeug_beschreibung = response.xpath("//div[@class='g-col-12 description']//text()").getall()
+        fahrzeug_beschreibung = response.xpath("//div[@data-testid='vip-vehicle-description-text']//text()").getall()
         if fahrzeug_beschreibung is not None:
             fahrzeug_beschreibung = "\n".join(fahrzeug_beschreibung)
         else:
