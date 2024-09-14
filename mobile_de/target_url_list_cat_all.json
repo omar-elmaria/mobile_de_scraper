@@ -26,6 +26,11 @@
     ],
     [
         "Aston Martin",
+        "DB12",
+        "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&ms=1700%3B23%3B%3B&ref=dsp&s=Car&sb=rel&vc=Car"
+    ],
+    [
+        "Aston Martin",
         "DB9",
         "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&ms=1700%3B5%3B%3B%3B&ref=dsp&s=Car&vc=Car"
     ],
@@ -546,6 +551,11 @@
     ],
     [
         "Lamborghini",
+        "Revuelto",
+        "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&ms=14600%3B19%3B%3B&ref=dsp&s=Car&sb=rel&vc=Car"
+    ],
+    [
+        "Lamborghini",
         "Urus",
         "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&ms=14600%3B13%3B%3B%3B&ref=dsp&s=Car&vc=Car"
     ],
@@ -568,6 +578,11 @@
         "Lotus",
         "Emira",
         "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&ms=15900%3B14%3B%3B%3B&ref=dsp&s=Car&vc=Car"
+    ],
+    [
+        "Lotus",
+        "Eletre",
+        "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&ms=15900%3B15%3B%3B&ref=dsp&s=Car&sb=rel&vc=Car"
     ],
     [
         "Lotus",
@@ -1098,6 +1113,11 @@
         "Rolls-Royce",
         "Silver Spur",
         "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&ms=21600%3B11%3B%3B%3B&ref=dsp&s=Car&vc=Car"
+    ],
+    [
+        "Rolls-Royce",
+        "Spectre",
+        "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&ms=21600%3B18%3B%3B&ref=dsp&s=Car&sb=rel&vc=Car"
     ],
     [
         "Rolls-Royce",
