@@ -1641,12 +1641,17 @@ class HelperFunctions:
         """
         A function to add the `Ausstattung` column for McLaren 720S
         """
-        if x["marke"] == "McLaren" and x["modell"] == "720S"\
-        and x["titel"].lower().find("apex") != -1:
-            return "MSO Apex Collection"
-        elif x["marke"] == "McLaren" and x["modell"] == "720S"\
-        and x["titel"].lower().find("performance") != -1:
-            return "Performance Pack"
+        if x["marke"] == "McLaren" and x["modell"] == "720S":
+            if x["titel"].lower().find("apex") != -1:
+                return "MSO Apex Collection"
+            elif x["titel"].lower().find("performance") != -1:
+                return "Performance Pack"
+            elif x["titel"].lower().find("le mans") != -1:
+                return "Le Mans Edition"
+            elif x["titel"].lower().find("borealis") != -1:
+                return "MSO S. Borealis"
+            elif x["titel"].lower().find("velocity") != -1:
+                return "MSO Velocity"
         else:
             return None
     
@@ -3180,7 +3185,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn (Leere), oder unfallfrei, nicht fahrtauglich, dann ändere auf "Unfallfrei"
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
         
         ###------------------------------###------------------------------###
         
