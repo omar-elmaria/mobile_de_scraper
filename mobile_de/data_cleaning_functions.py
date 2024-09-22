@@ -125,9 +125,9 @@ class HelperFunctions:
         """
         A function to amend the `form` column for Aston Martin DBS
         """
-        if x.lower().find("cabrio") != -1 or x.lower().find("roadster") != -1 or x.lower().find("volante") != -1:
+        if x["form"].lower().find("cabrio") != -1 or x["form"].lower().find("roadster") != -1 or x["titel"].lower().find("volante") != -1:
             return "Volante"
-        elif x.lower().find("sportwagen") != -1 or x.lower().find("coupe") != -1:
+        elif x["form"].lower().find("sportwagen") != -1 or x["form"].lower().find("coupe") != -1:
             return "Coupe"
         else:
             return x
@@ -471,6 +471,16 @@ class HelperFunctions:
         """
         if x == "" or x is None or pd.isnull(x) or x.lower().find("automatik") != -1:
             return "8-Stufen-Automatikgetriebe"
+        else:
+            return x
+    
+    def amend_fahrzeugzustand_col_extended(self, x):
+        """
+        A function to amend the `fahrzeugzustand` column but it adds more conditions for Unfallfrei. Applies to some models only
+        """
+        if x == "" or x is None or pd.isnull(x) or x.lower().find("unfallfrei") != -1\
+        or x.lower().find("gebrauchtfahrzeug") != -1 or x.lower().find("neufahrzeug") != -1:
+            return "Unfallfrei"
         else:
             return x
     
@@ -2344,7 +2354,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn Unfallfrei, Nicht fahrtauglich, oder (Leere) abgebildet wird, dann auf “Unfallfrei“ ändern
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
 
         ###------------------------------###------------------------------###
 
@@ -2429,7 +2439,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte E = form = Wenn im Titel Volante, dann ändere Form auf "Volante"
         df_clean_2 = df_clean_1.copy()
 
-        df_clean_2["form"] = df_clean_2["form"].apply(self.amend_form_col_aston_martin_dbs)
+        df_clean_2["form"] = df_clean_2.apply(lambda x: self.amend_form_col_aston_martin_dbs(x), axis=1)
 
         ###------------------------------###------------------------------###
 
@@ -2437,7 +2447,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn Unfallfrei, Nicht fahrtauglich, oder (Leere) abgebildet wird, dann auf “Unfallfrei“ ändern
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
 
         ###------------------------------###------------------------------###
 
