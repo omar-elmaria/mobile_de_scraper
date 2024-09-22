@@ -3881,6 +3881,12 @@ def execute_cleaning():
     # Concatenate the cleaned data
     df_combined = pd.concat(df_combined)
 
+    # Filter for Unfallfrei und remove tuning models
+    df_combined = df_combined[
+        (df_combined["fahrzeugzustand"] == "Unfallfrei") & 
+        (~df_combined["marke"].str.contains("|"))
+    ]
+
     # Upload the cleaned data to BigQuery
     logging.info("Uploading the cleaned data to BigQuery...")
     job_config = bigquery.LoadJobConfig(
