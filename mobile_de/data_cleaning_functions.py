@@ -643,6 +643,15 @@ class HelperFunctions:
             return f"{marke_var} | " + replacement_word
         else:
             return x["marke"]
+    
+    def amend_marke_col_various_brands_based_on_fahrzeugbeschreibung(self, x, y, replacement_word, marke_var):
+        """
+        A function to amend the `marke` column for various brands
+        """
+        if x["fahrzeugbeschreibung"].lower().find(y.lower()) != -1:
+            return f"{marke_var} | " + replacement_word
+        else:
+            return x["marke"]
         
     ###------------------------------###------------------------------###
     
@@ -1052,10 +1061,12 @@ class HelperFunctions:
         A function to amend the `variante` column for Mercedes-Benz SLS AMG (stg 3)
         """
         if x["marke"] == "Mercedes-Benz" and x["modell"] == "SLS AMG" and x["form"] == "Coupe"\
-        and x["titel"].find("GT") != -1 and x["leistung"] == 591:
+        and x["titel"].find("GT") != -1 and x["leistung"] == 591\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"])):
             return "SLS AMG GT"
         elif x["marke"] == "Mercedes-Benz" and x["modell"] == "SLS AMG" and x["form"] == "Roadster"\
-        and x["titel"].find("GT") != -1 and x["leistung"] == 591:
+        and x["titel"].find("GT") != -1 and x["leistung"] == 591\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"])):
             return "SLS AMG GT Roadster"
         else:
             return x["variante"]
@@ -1065,10 +1076,12 @@ class HelperFunctions:
         A function to amend the `variante` column for Mercedes-Benz SLS AMG (stg 4)
         """
         if x["marke"] == "Mercedes-Benz" and x["modell"] == "SLS AMG" and x["form"] == "Coupe"\
-        and x["leistung"] == 571:
+        and x["leistung"] == 571\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"])):
             return "SLS AMG"
         elif x["marke"] == "Mercedes-Benz" and x["modell"] == "SLS AMG" and x["form"] == "Roadster"\
-        and x["leistung"] == 571:
+        and x["leistung"] == 571\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"])):
             return "SLS AMG Roadster"
         else:
             return x["variante"]
@@ -3014,7 +3027,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn (Leere), oder unfallfrei, nicht fahrtauglich, dann ändere auf "Unfallfrei"
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
         
         ###------------------------------###------------------------------###
         
@@ -3043,11 +3056,19 @@ class CleaningFunctions(HelperFunctions):
         mercedes_benz_sls_amg_marke_dict = {
             "brabus": "Brabus",
             "umbau": "Umbau",
+            "black series optik": "Umbau",
             "gt3": "Rennwagen"
+        }
+        
+        mercedes_benz_sls_amg_marke_dict_based_on_fahrzeugbeschreibung = {
+            "umgebaut": "Umbau",
         }
 
         for key, value in mercedes_benz_sls_amg_marke_dict.items():
             df_clean_6["marke"] = df_clean_6.apply(lambda x: self.amend_marke_col_various_brands(x, key, value, "Mercedes-Benz"), axis=1)
+        
+        for key, value in mercedes_benz_sls_amg_marke_dict_based_on_fahrzeugbeschreibung.items():
+            df_clean_6["marke"] = df_clean_6.apply(lambda x: self.amend_marke_col_various_brands_based_on_fahrzeugbeschreibung(x, key, value, "Mercedes-Benz"), axis=1)
 
         ###------------------------------###------------------------------###
 
