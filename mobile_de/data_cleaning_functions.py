@@ -747,35 +747,21 @@ class HelperFunctions:
         """
         A function to amend the `variante` column for Lamborghini Urus (stg 1)
         """
-        if x["marke"] == "Lamborghini" and x["modell"] == "Urus" and (x["titel"].lower().find("performante") != -1):
-            return "Urus Performante"
-        else:
-            return x["variante"]
-
-    def amend_variante_col_lamborghini_urus_stg_2(self, x):
-        """
-        A function to amend the `variante` column for Lamborghini Urus (stg 2)
-        """
-        if x["marke"] == "Lamborghini" and x["modell"] == "Urus" and x["variante"] == "Urus Performante":
-            return "Urus S"
-        else:
-            return x["variante"]
-
-    def amend_variante_col_lamborghini_urus_stg_3(self, x):
-        """
-        A function to amend the `variante` column for Lamborghini Urus (stg 3)
-        """
-        if x["marke"] == "Lamborghini" and x["modell"] == "Urus" and (x["variante"] == "" or x["variante"] is None) and x["leistung"] == 666:
-            return "Urus S"
-        else:
-            return x["variante"]
-
-    def amend_variante_col_lamborghini_urus_stg_4(self, x):
-        """
-        A function to amend the `variante` column for Lamborghini Urus (stg 4)
-        """
-        if x["marke"] == "Lamborghini" and x["modell"] == "Urus" and (x["variante"] == "" or x["variante"] is None) and (x["leistung"] == 650 or x["leistung"] == 649 or x["leistung"] == 662):
-            return "Urus"
+        if x["marke"] == "Lamborghini" and x["modell"] == "Urus":
+            if any(l in x["titel"].lower() for l in ["urus s", "sport", "v8 s"]):
+                return "Urus S"
+            elif (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"])):
+                if any(l in x["titel"].lower() for l in ["sport", "v8 s"])\
+                and x["leistung"] >= 655:
+                    return "Urus S"
+                elif any(l in x["titel"].lower() for l in ["performante", "perfomante"]):
+                    return "Urus Performante"
+                elif any(l in x["titel"].lower() for l in ["urus se"]):
+                    return "Urus SE"
+                elif datetime.strptime(x["erstzulassung"], '%m/%Y') <= datetime(2022, 12, 31) or x["leistung"] == 650:
+                    return "Urus"
+            else:
+                return x["variante"]
         else:
             return x["variante"]
         
@@ -1547,9 +1533,11 @@ class HelperFunctions:
         """
         A function to add the `Ausstattung` column for Lamborghini Urus (stg 1)
         """
-        if x["marke"] == "Lamborghini" and x["modell"] == "Urus"\
-        and (x["titel"].lower().find("capsu") != -1 or x["fahrzeugbeschreibung_mod"].lower().find("capsu") != -1):
-            return "Pearl Capsule"
+        if x["marke"] == "Lamborghini" and x["modell"] == "Urus":
+            if (x["titel"].lower().find("capsu") != -1 or x["fahrzeugbeschreibung_mod"].lower().find("capsu") != -1):
+                return "Pearl Capsule"
+            elif x["titel"].lower().find("ad personam") != -1:
+                return "Ad Personam"
         else:
             return None
     
@@ -2071,7 +2059,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn Unfallfrei, Nicht fahrtauglich, oder (Leere) abgebildet wird, dann auf “Unfallfrei“ ändern
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
 
         ###------------------------------###------------------------------###
 
@@ -2123,10 +2111,7 @@ class CleaningFunctions(HelperFunctions):
 
         df_clean_7 = df_clean_6.copy()
         df_clean_7["variante"] = df_clean_7.apply(lambda x: self.amend_variante_col_lamborghini_urus_stg_1(x), axis=1)
-        df_clean_7["variante"] = df_clean_7.apply(lambda x: self.amend_variante_col_lamborghini_urus_stg_2(x), axis=1)
         df_clean_7["leistung"] = df_clean_7.apply(lambda x: self.amend_leistung_col_lamborghini_urus_stg_1(x), axis=1)
-        df_clean_7["variante"] = df_clean_7.apply(lambda x: self.amend_variante_col_lamborghini_urus_stg_3(x), axis=1)
-        df_clean_7["variante"] = df_clean_7.apply(lambda x: self.amend_variante_col_lamborghini_urus_stg_4(x), axis=1)
         df_clean_7["leistung"] = df_clean_7.apply(lambda x: self.amend_leistung_col_lamborghini_urus_stg_2(x), axis=1)
         
         ###------------------------------###------------------------------###
