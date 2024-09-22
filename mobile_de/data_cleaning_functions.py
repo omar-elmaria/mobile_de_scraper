@@ -3827,7 +3827,7 @@ def execute_cleaning():
     query = """
         SELECT *
         FROM `web-scraping-371310.crawled_datasets.lukas_mobile_de`
-        WHERE crawled_timestamp = (SELECT MAX(crawled_timestamp) FROM `web-scraping-371310.crawled_datasets.lukas_mobile_de`)
+        WHERE crawled_timestamp IS NOT NULL -- Get the entire dataset
     """
     df = pd.DataFrame(bq_client.query(query).to_dataframe(bqstorage_client=bqstorage_client))
 
@@ -3907,7 +3907,7 @@ def execute_cleaning():
             bigquery.SchemaField("crawled_timestamp", "TIMESTAMP")
         ]
     )
-    job_config.write_disposition = bigquery.WriteDisposition.WRITE_APPEND
+    job_config.write_disposition = bigquery.WriteDisposition.WRITE_TRUNCATE
     job_config.time_partitioning = bigquery.TimePartitioning(
         type_=bigquery.TimePartitioningType.DAY,
         field="crawled_timestamp"
