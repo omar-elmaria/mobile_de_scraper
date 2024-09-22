@@ -3891,8 +3891,9 @@ def execute_cleaning():
 
     # Filter for Unfallfrei und remove tuning models
     df_combined = df_combined[
-        (df_combined["fahrzeugzustand"] == "Unfallfrei") & 
-        (~df_combined["marke"].str.contains("|"))
+        (df_combined["fahrzeugzustand"] == "Unfallfrei") & # Only keep the cars that are Unfallfrei
+        (df_combined["preis"] != 999999) & # Remove the cars with price 999999
+        (~df_combined["marke"].str.contains("|")) # Remove the cars with multiple brands
     ]
 
     # Upload the cleaned data to BigQuery
