@@ -175,7 +175,7 @@ class HelperFunctions:
             return "Touring"
         elif x["form"].lower().find("limo") != -1:
             return "Limousine"
-        elif x["leistung"] in [480, 510, 551] and x["form"].lower().find("sportwagen") != -1 or x["form"].lower().find("coupe") != -1:
+        elif x["marke"] == "BMW" and x["modell"] == "M3" and x["leistung"] in [480, 510, 551] and x["form"].lower().find("sportwagen") != -1 or x["form"].lower().find("coupe") != -1:
             return "Coupe"
         else:
             return x["form"]
@@ -1020,7 +1020,10 @@ class HelperFunctions:
             if any(l in x["titel"].lower() for l in ["xDrive", "x Drive", "Allrad", "xD"]):
                 return "M3 Competition M xDrive"
             else:
-                return "M3 Competition"
+                if x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]):
+                    return "M3 Competition"
+                else:
+                    return x["variante"]
         else:
             return x["variante"]
     
@@ -2827,7 +2830,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn Unfallfrei, Nicht fahrtauglich, oder (Leere) abgebildet wird, dann auf “Unfallfrei“ ändern
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
 
         ###------------------------------###------------------------------###
 
