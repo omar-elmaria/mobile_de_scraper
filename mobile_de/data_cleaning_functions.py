@@ -1147,9 +1147,7 @@ class HelperFunctions:
         if x["marke"] == "Ferrari" and x["modell"] == "812"\
         and (
             x["titel"].lower().find("aperta") != -1 or\
-            x["titel"].lower().find("competizione a") != -1 or\
-            x["fahrzeugbeschreibung_mod"].lower().find("aperta") != -1 or\
-            x["fahrzeugbeschreibung_mod"].lower().find("competizione a") != -1
+            x["fahrzeugbeschreibung_mod"].lower().find("aperta") != -1
         ):
             return "812 Competizione A"
         else:
@@ -1185,6 +1183,7 @@ class HelperFunctions:
         A function to amend the `variante` column for Ferrari 812 (stg 4)
         """
         if x["marke"] == "Ferrari" and x["modell"] == "812"\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
         and (
             x["titel"].lower().find("superfast") != -1
         ):
@@ -3463,7 +3462,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn (Leere), oder unfallfrei, nicht fahrtauglich, dann ändere auf "Unfallfrei"
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
         
         ###------------------------------###------------------------------###
         
