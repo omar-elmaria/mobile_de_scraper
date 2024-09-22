@@ -218,6 +218,15 @@ class HelperFunctions:
         else:
             return x
     
+    def amend_form_col_mclaren_765lt(self, x):
+        """
+        A function to amend the `modell` column for McLaren 765LT
+        """
+        if x["marke"] == "McLaren" and x["modell"] == "765LT" and x["form"] == "Spider" or x["titel"].lower().find("spider") != -1:
+            return "Spider"
+        else:
+            return x["form"]
+
     def amend_form_col_maserati(self, x):
         """
         A function to amend the `form` column for Maserati
@@ -1070,7 +1079,7 @@ class HelperFunctions:
         """
         if x["marke"] == "McLaren" and x["modell"] == "765LT" and x["form"] == "Coupe":
             return "765LT"
-        elif x["marke"] == "McLaren" and x["modell"] == "765LT" and x["form"] == "Spider":
+        elif x["marke"] == "McLaren" and x["modell"] == "765LT" and x["form"] == "Spider" or x["titel"].lower().find("spider") != -1:
             return "765LT Spider"
         else:
             return x["variante"]
@@ -3104,7 +3113,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn (Leere), oder unfallfrei, nicht fahrtauglich, dann ändere auf "Unfallfrei"
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
         
         ###------------------------------###------------------------------###
         
@@ -3157,6 +3166,9 @@ class CleaningFunctions(HelperFunctions):
         # Move the Austattung column to be between "variante" and "titel"
         austattung_col = df_clean_8.pop("ausstattung")
         df_clean_8.insert(3, "ausstattung", austattung_col)
+
+        # Add one more amendment to the form column based on the new cleaning rules
+        df_clean_8["form"] = df_clean_8.apply(lambda x: self.amend_form_col_mclaren_765lt(x), axis=1)
 
         return df_clean_8
     
