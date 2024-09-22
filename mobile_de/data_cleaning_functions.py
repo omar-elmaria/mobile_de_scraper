@@ -1000,10 +1000,14 @@ class HelperFunctions:
         x["leistung"] == 635 and (x["erstzulassung"] == "" or x["erstzulassung"] is None or pd.isnull(x["erstzulassung"])):
             return "Continental GTC W12"
         elif x["marke"] == "Bentley" and x["modell"] == "Continental GTC" and x["form"] == "Convertible" and\
-        x["leistung"] >= 449 and x["leistung"] <= 551:
+        x["leistung"] >= 449 and x["leistung"] <= 551 and x["titel"].lower().find("v8") != -1:
+            return "Continental GTC V8"
+        elif x["marke"] == "Bentley" and x["modell"] == "Continental GTC"\
+        and x["leistung"] >= 449 and x["leistung"] <= 551\
+        and datetime.strptime(x["erstzulassung"], '%m/%Y') >= datetime(2019, 1, 1):
             return "Continental GTC V8"
         elif x["marke"] == "Bentley" and x["modell"] == "Continental GTC" and x["form"] == "Convertible" and\
-        x["leistung"] == 659:
+        x["leistung"] == 659 and x["titel"].lower().find("speed") != -1:
             return "Continental GTC Speed W12"
         else:
             return x["variante"]
@@ -2744,7 +2748,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn Unfallfrei, Nicht fahrtauglich, oder (Leere) abgebildet wird, dann auf “Unfallfrei“ ändern
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
 
         ###------------------------------###------------------------------###
 
