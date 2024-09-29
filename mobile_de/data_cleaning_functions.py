@@ -758,8 +758,13 @@ class HelperFunctions:
                     return "Urus Performante"
                 elif any(l in x["titel"].lower() for l in ["urus se"]):
                     return "Urus SE"
-                elif datetime.strptime(x["erstzulassung"], '%m/%Y') <= datetime(2022, 12, 31) or x["leistung"] == 650:
-                    return "Urus"
+                elif x["erstzulassung"] is not None:
+                    if datetime.strptime(x["erstzulassung"], '%m/%Y') <= datetime(2022, 12, 31) or x["leistung"] == 650:
+                        return "Urus"
+                    else:
+                        return x["variante"]
+                else:
+                    return x["variante"]
             else:
                 return x["variante"]
         else:
@@ -933,8 +938,11 @@ class HelperFunctions:
         elif x["marke"] == "Bentley" and x["modell"] == "Bentayga" and x["form"] == "SUV" and\
         (x["erstzulassung"] != "" and x["erstzulassung"] is not None and not(pd.isnull(x["erstzulassung"])))\
         and (x["leistung"] >= 545 and x["leistung"] <= 555):
-            if datetime(2018, 1, 1) <= datetime.strptime(x["erstzulassung"], '%m/%Y') <= datetime(2019, 12, 31):
-                return "Bentayga V8"
+            if x["erstzulassung"] is not None:
+                if datetime(2018, 1, 1) <= datetime.strptime(x["erstzulassung"], '%m/%Y') <= datetime(2019, 12, 31):
+                    return "Bentayga V8"
+                else:
+                    return x["variante"]
             else:
                 return x["variante"]
         else:
@@ -946,13 +954,18 @@ class HelperFunctions:
         """
         if x["marke"] == "Bentley" and x["modell"] == "Continental GT" and x["form"] == "Coupe" and\
         x["leistung"] == 635 and (x["erstzulassung"] != "" and x["erstzulassung"] is not None and not(pd.isnull(x["erstzulassung"]))):
-            if (
-                datetime(2019, 1, 1) <= datetime.strptime(x["erstzulassung"], '%m/%Y') <= datetime.now()
-            ) or (
-                datetime(2018, 1, 1) <= datetime.strptime(x["erstzulassung"], '%m/%Y') <= datetime(2018, 12, 31)\
-                and any(l in x["titel"].lower() for l in ["first", "new"])
-            ):
-                return "Continental GT W12"
+            if x["erstzulassung"] is not None:
+                if (
+                    datetime(2019, 1, 1) <= datetime.strptime(x["erstzulassung"], '%m/%Y') <= datetime.now()
+                ) or (
+                    datetime(2018, 1, 1) <= datetime.strptime(x["erstzulassung"], '%m/%Y') <= datetime(2018, 12, 31)\
+                    and any(l in x["titel"].lower() for l in ["first", "new"])
+                ):
+                    return "Continental GT W12"
+                else:
+                    return x["variante"]
+            else:
+                return x["variante"]
         elif x["marke"] == "Bentley" and x["modell"] == "Continental GT" and x["form"] == "Coupe" and\
         x["leistung"] == 635 and (x["erstzulassung"] == "" or x["erstzulassung"] is None or pd.isnull(x["erstzulassung"])):
             return "Continental GT W12"
@@ -960,9 +973,14 @@ class HelperFunctions:
         x["leistung"] >= 449 and x["leistung"] <= 551 and x["titel"].lower().find("v8") != -1:
             return "Continental GT V8"
         elif x["marke"] == "Bentley" and x["modell"] == "Continental GT"\
-        and x["leistung"] >= 449 and x["leistung"] <= 551\
-        and datetime.strptime(x["erstzulassung"], '%m/%Y') >= datetime(2019, 1, 1):
-            return "Continental GT V8"
+        and x["leistung"] >= 449 and x["leistung"] <= 551:
+            if x["erstzulassung"] is not None:
+                if datetime.strptime(x["erstzulassung"], '%m/%Y') >= datetime(2019, 1, 1):
+                    return "Continental GT V8"
+                else:
+                    return x["variante"]
+            else:
+                return x["variante"]
         elif x["marke"] == "Bentley" and x["modell"] == "Continental GT" and x["form"] == "Coupe" and\
         x["leistung"] == 659 and x["titel"].lower().find("speed") != -1:
             return "Continental GT Speed W12"
@@ -975,13 +993,18 @@ class HelperFunctions:
         """
         if x["marke"] == "Bentley" and x["modell"] == "Continental GTC" and x["form"] == "Convertible" and\
         x["leistung"] == 635 and (x["erstzulassung"] != "" and x["erstzulassung"] is not None and not(pd.isnull(x["erstzulassung"]))):
-            if (
-                datetime(2020, 1, 1) <= datetime.strptime(x["erstzulassung"], '%m/%Y') <= datetime.now()
-            ) or (
-                datetime(2019, 1, 1) <= datetime.strptime(x["erstzulassung"], '%m/%Y') <= datetime(2019, 12, 31)\
-                and any(l in x["titel"].lower() for l in ["first", "new"])
-            ):
-                return "Continental GTC W12"
+            if x["erstzulassung"] is not None:
+                if (
+                    datetime(2020, 1, 1) <= datetime.strptime(x["erstzulassung"], '%m/%Y') <= datetime.now()
+                ) or (
+                    datetime(2019, 1, 1) <= datetime.strptime(x["erstzulassung"], '%m/%Y') <= datetime(2019, 12, 31)\
+                    and any(l in x["titel"].lower() for l in ["first", "new"])
+                ):
+                    return "Continental GTC W12"
+                else:
+                    return x["variante"]
+            else:
+                return x["variante"]
         elif x["marke"] == "Bentley" and x["modell"] == "Continental GTC" and x["form"] == "Convertible" and\
         x["leistung"] == 635 and (x["erstzulassung"] == "" or x["erstzulassung"] is None or pd.isnull(x["erstzulassung"])):
             return "Continental GTC W12"
@@ -989,9 +1012,14 @@ class HelperFunctions:
         x["leistung"] >= 449 and x["leistung"] <= 551 and x["titel"].lower().find("v8") != -1:
             return "Continental GTC V8"
         elif x["marke"] == "Bentley" and x["modell"] == "Continental GTC"\
-        and x["leistung"] >= 449 and x["leistung"] <= 551\
-        and datetime.strptime(x["erstzulassung"], '%m/%Y') >= datetime(2019, 1, 1):
-            return "Continental GTC V8"
+        and x["leistung"] >= 449 and x["leistung"] <= 551:
+            if x["erstzulassung"] is not None:
+                if datetime.strptime(x["erstzulassung"], '%m/%Y') >= datetime(2019, 1, 1):
+                    return "Continental GTC V8"
+                else:
+                    return x["variante"]
+            else:
+                return x["variante"]
         elif x["marke"] == "Bentley" and x["modell"] == "Continental GTC" and x["form"] == "Convertible" and\
         x["leistung"] == 659 and x["titel"].lower().find("speed") != -1:
             return "Continental GTC Speed W12"
@@ -3870,6 +3898,7 @@ def execute_cleaning():
         SELECT *
         FROM `web-scraping-371310.crawled_datasets.lukas_mobile_de`
         WHERE crawled_timestamp IS NOT NULL -- Get the entire dataset
+        AND fahrzeugbeschreibung IS NOT NULL
     """
     df = pd.DataFrame(bq_client.query(query).to_dataframe(bqstorage_client=bqstorage_client))
 
@@ -3927,7 +3956,7 @@ def execute_cleaning():
     df_combined = df_combined[
         (df_combined["fahrzeugzustand"] == "Unfallfrei") & # Only keep the cars that are Unfallfrei
         (df_combined["preis"] != 999999) & # Remove the cars with price 999999
-        (~df_combined["marke"].str.contains("|")) # Remove the cars with multiple brands
+        (~df_combined["marke"].str.contains("\\|")) # Remove the cars with multiple brands
     ]
 
     # Upload the cleaned data to BigQuery
