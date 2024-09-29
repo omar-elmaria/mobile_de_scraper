@@ -125,9 +125,9 @@ class HelperFunctions:
         """
         A function to amend the `form` column for Aston Martin DBS
         """
-        if x.lower().find("cabrio") != -1 or x.lower().find("roadster") != -1 or x.lower().find("volante") != -1:
+        if x["form"].lower().find("cabrio") != -1 or x["form"].lower().find("roadster") != -1 or x["titel"].lower().find("volante") != -1:
             return "Volante"
-        elif x.lower().find("sportwagen") != -1 or x.lower().find("coupe") != -1:
+        elif x["form"].lower().find("sportwagen") != -1 or x["form"].lower().find("coupe") != -1:
             return "Coupe"
         else:
             return x
@@ -152,7 +152,7 @@ class HelperFunctions:
         or x.lower().find("limo") != -1:
             return "Coupe"
         if x.lower().find("cabrio") != -1 or x.lower().find("roadster") != -1\
-        or x.lower().find("convertible") != -1:
+        or x.lower().find("convertible") != -1 or x.lower().find("gtc") != -1:
             return "Convertible"
         else:
             return x
@@ -175,7 +175,7 @@ class HelperFunctions:
             return "Touring"
         elif x["form"].lower().find("limo") != -1:
             return "Limousine"
-        elif x["leistung"] in [480, 510, 551] and x["form"].lower().find("sportwagen") != -1 or x["form"].lower().find("coupe") != -1:
+        elif x["marke"] == "BMW" and x["modell"] == "M3" and x["leistung"] in [480, 510, 551] and x["form"].lower().find("sportwagen") != -1 or x["form"].lower().find("coupe") != -1:
             return "Coupe"
         else:
             return x["form"]
@@ -218,6 +218,15 @@ class HelperFunctions:
         else:
             return x
     
+    def amend_form_col_mclaren_765lt(self, x):
+        """
+        A function to amend the `modell` column for McLaren 765LT
+        """
+        if x["marke"] == "McLaren" and x["modell"] == "765LT" and x["form"] == "Spider" or x["titel"].lower().find("spider") != -1:
+            return "Spider"
+        else:
+            return x["form"]
+
     def amend_form_col_maserati(self, x):
         """
         A function to amend the `form` column for Maserati
@@ -474,6 +483,16 @@ class HelperFunctions:
         else:
             return x
     
+    def amend_fahrzeugzustand_col_extended(self, x):
+        """
+        A function to amend the `fahrzeugzustand` column but it adds more conditions for Unfallfrei. Applies to some models only
+        """
+        if x == "" or x is None or pd.isnull(x) or x.lower().find("unfallfrei") != -1\
+        or x.lower().find("gebrauchtfahrzeug") != -1 or x.lower().find("neufahrzeug") != -1:
+            return "Unfallfrei"
+        else:
+            return x
+    
     def amend_getriebe_col_bentley_bentayga(self, x):
         """
         A function to amend the `getriebe` column for Bentley Bentayga
@@ -624,6 +643,15 @@ class HelperFunctions:
             return f"{marke_var} | " + replacement_word
         else:
             return x["marke"]
+    
+    def amend_marke_col_various_brands_based_on_fahrzeugbeschreibung(self, x, y, replacement_word, marke_var):
+        """
+        A function to amend the `marke` column for various brands
+        """
+        if x["fahrzeugbeschreibung"].lower().find(y.lower()) != -1:
+            return f"{marke_var} | " + replacement_word
+        else:
+            return x["marke"]
         
     ###------------------------------###------------------------------###
     
@@ -719,35 +747,26 @@ class HelperFunctions:
         """
         A function to amend the `variante` column for Lamborghini Urus (stg 1)
         """
-        if x["marke"] == "Lamborghini" and x["modell"] == "Urus" and (x["titel"].lower().find("performante") != -1):
-            return "Urus Performante"
-        else:
-            return x["variante"]
-
-    def amend_variante_col_lamborghini_urus_stg_2(self, x):
-        """
-        A function to amend the `variante` column for Lamborghini Urus (stg 2)
-        """
-        if x["marke"] == "Lamborghini" and x["modell"] == "Urus" and x["variante"] == "Urus Performante":
-            return "Urus S"
-        else:
-            return x["variante"]
-
-    def amend_variante_col_lamborghini_urus_stg_3(self, x):
-        """
-        A function to amend the `variante` column for Lamborghini Urus (stg 3)
-        """
-        if x["marke"] == "Lamborghini" and x["modell"] == "Urus" and (x["variante"] == "" or x["variante"] is None) and x["leistung"] == 666:
-            return "Urus S"
-        else:
-            return x["variante"]
-
-    def amend_variante_col_lamborghini_urus_stg_4(self, x):
-        """
-        A function to amend the `variante` column for Lamborghini Urus (stg 4)
-        """
-        if x["marke"] == "Lamborghini" and x["modell"] == "Urus" and (x["variante"] == "" or x["variante"] is None) and (x["leistung"] == 650 or x["leistung"] == 649 or x["leistung"] == 662):
-            return "Urus"
+        if x["marke"] == "Lamborghini" and x["modell"] == "Urus":
+            if any(l in x["titel"].lower() for l in ["urus s", "sport", "v8 s"]):
+                return "Urus S"
+            elif (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"])):
+                if any(l in x["titel"].lower() for l in ["sport", "v8 s"])\
+                and x["leistung"] >= 655:
+                    return "Urus S"
+                elif any(l in x["titel"].lower() for l in ["performante", "perfomante"]):
+                    return "Urus Performante"
+                elif any(l in x["titel"].lower() for l in ["urus se"]):
+                    return "Urus SE"
+                elif x["erstzulassung"] is not None:
+                    if datetime.strptime(x["erstzulassung"], '%m/%Y') <= datetime(2022, 12, 31) or x["leistung"] == 650:
+                        return "Urus"
+                    else:
+                        return x["variante"]
+                else:
+                    return x["variante"]
+            else:
+                return x["variante"]
         else:
             return x["variante"]
         
@@ -919,8 +938,11 @@ class HelperFunctions:
         elif x["marke"] == "Bentley" and x["modell"] == "Bentayga" and x["form"] == "SUV" and\
         (x["erstzulassung"] != "" and x["erstzulassung"] is not None and not(pd.isnull(x["erstzulassung"])))\
         and (x["leistung"] >= 545 and x["leistung"] <= 555):
-            if datetime(2018, 1, 1) <= datetime.strptime(x["erstzulassung"], '%m/%Y') <= datetime(2019, 12, 31):
-                return "Bentayga V8"
+            if x["erstzulassung"] is not None:
+                if datetime(2018, 1, 1) <= datetime.strptime(x["erstzulassung"], '%m/%Y') <= datetime(2019, 12, 31):
+                    return "Bentayga V8"
+                else:
+                    return x["variante"]
             else:
                 return x["variante"]
         else:
@@ -932,21 +954,35 @@ class HelperFunctions:
         """
         if x["marke"] == "Bentley" and x["modell"] == "Continental GT" and x["form"] == "Coupe" and\
         x["leistung"] == 635 and (x["erstzulassung"] != "" and x["erstzulassung"] is not None and not(pd.isnull(x["erstzulassung"]))):
-            if (
-                datetime(2019, 1, 1) <= datetime.strptime(x["erstzulassung"], '%m/%Y') <= datetime.now()
-            ) or (
-                datetime(2018, 1, 1) <= datetime.strptime(x["erstzulassung"], '%m/%Y') <= datetime(2018, 12, 31)\
-                and any(l in x["titel"].lower() for l in ["first", "new"])
-            ):
-                return "Continental GT W12"
+            if x["erstzulassung"] is not None:
+                if (
+                    datetime(2019, 1, 1) <= datetime.strptime(x["erstzulassung"], '%m/%Y') <= datetime.now()
+                ) or (
+                    datetime(2018, 1, 1) <= datetime.strptime(x["erstzulassung"], '%m/%Y') <= datetime(2018, 12, 31)\
+                    and any(l in x["titel"].lower() for l in ["first", "new"])
+                ):
+                    return "Continental GT W12"
+                else:
+                    return x["variante"]
+            else:
+                return x["variante"]
         elif x["marke"] == "Bentley" and x["modell"] == "Continental GT" and x["form"] == "Coupe" and\
         x["leistung"] == 635 and (x["erstzulassung"] == "" or x["erstzulassung"] is None or pd.isnull(x["erstzulassung"])):
             return "Continental GT W12"
         elif x["marke"] == "Bentley" and x["modell"] == "Continental GT" and x["form"] == "Coupe" and\
-        x["leistung"] >= 449 and x["leistung"] <= 551:
+        x["leistung"] >= 449 and x["leistung"] <= 551 and x["titel"].lower().find("v8") != -1:
             return "Continental GT V8"
+        elif x["marke"] == "Bentley" and x["modell"] == "Continental GT"\
+        and x["leistung"] >= 449 and x["leistung"] <= 551:
+            if x["erstzulassung"] is not None:
+                if datetime.strptime(x["erstzulassung"], '%m/%Y') >= datetime(2019, 1, 1):
+                    return "Continental GT V8"
+                else:
+                    return x["variante"]
+            else:
+                return x["variante"]
         elif x["marke"] == "Bentley" and x["modell"] == "Continental GT" and x["form"] == "Coupe" and\
-        x["leistung"] == 659:
+        x["leistung"] == 659 and x["titel"].lower().find("speed") != -1:
             return "Continental GT Speed W12"
         else:
             return x["variante"]
@@ -957,21 +993,35 @@ class HelperFunctions:
         """
         if x["marke"] == "Bentley" and x["modell"] == "Continental GTC" and x["form"] == "Convertible" and\
         x["leistung"] == 635 and (x["erstzulassung"] != "" and x["erstzulassung"] is not None and not(pd.isnull(x["erstzulassung"]))):
-            if (
-                datetime(2020, 1, 1) <= datetime.strptime(x["erstzulassung"], '%m/%Y') <= datetime.now()
-            ) or (
-                datetime(2019, 1, 1) <= datetime.strptime(x["erstzulassung"], '%m/%Y') <= datetime(2019, 12, 31)\
-                and any(l in x["titel"].lower() for l in ["first", "new"])
-            ):
-                return "Continental GTC W12"
+            if x["erstzulassung"] is not None:
+                if (
+                    datetime(2020, 1, 1) <= datetime.strptime(x["erstzulassung"], '%m/%Y') <= datetime.now()
+                ) or (
+                    datetime(2019, 1, 1) <= datetime.strptime(x["erstzulassung"], '%m/%Y') <= datetime(2019, 12, 31)\
+                    and any(l in x["titel"].lower() for l in ["first", "new"])
+                ):
+                    return "Continental GTC W12"
+                else:
+                    return x["variante"]
+            else:
+                return x["variante"]
         elif x["marke"] == "Bentley" and x["modell"] == "Continental GTC" and x["form"] == "Convertible" and\
         x["leistung"] == 635 and (x["erstzulassung"] == "" or x["erstzulassung"] is None or pd.isnull(x["erstzulassung"])):
             return "Continental GTC W12"
         elif x["marke"] == "Bentley" and x["modell"] == "Continental GTC" and x["form"] == "Convertible" and\
-        x["leistung"] >= 449 and x["leistung"] <= 551:
+        x["leistung"] >= 449 and x["leistung"] <= 551 and x["titel"].lower().find("v8") != -1:
             return "Continental GTC V8"
+        elif x["marke"] == "Bentley" and x["modell"] == "Continental GTC"\
+        and x["leistung"] >= 449 and x["leistung"] <= 551:
+            if x["erstzulassung"] is not None:
+                if datetime.strptime(x["erstzulassung"], '%m/%Y') >= datetime(2019, 1, 1):
+                    return "Continental GTC V8"
+                else:
+                    return x["variante"]
+            else:
+                return x["variante"]
         elif x["marke"] == "Bentley" and x["modell"] == "Continental GTC" and x["form"] == "Convertible" and\
-        x["leistung"] == 659:
+        x["leistung"] == 659 and x["titel"].lower().find("speed") != -1:
             return "Continental GTC Speed W12"
         else:
             return x["variante"]
@@ -992,7 +1042,10 @@ class HelperFunctions:
             if any(l in x["titel"].lower() for l in ["xDrive", "x Drive", "Allrad", "xD"]):
                 return "M3 Competition M xDrive"
             else:
-                return "M3 Competition"
+                if x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]):
+                    return "M3 Competition"
+                else:
+                    return x["variante"]
         else:
             return x["variante"]
     
@@ -1033,10 +1086,12 @@ class HelperFunctions:
         A function to amend the `variante` column for Mercedes-Benz SLS AMG (stg 3)
         """
         if x["marke"] == "Mercedes-Benz" and x["modell"] == "SLS AMG" and x["form"] == "Coupe"\
-        and x["titel"].find("GT") != -1 and x["leistung"] == 591:
+        and x["titel"].find("GT") != -1 and x["leistung"] == 591\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"])):
             return "SLS AMG GT"
         elif x["marke"] == "Mercedes-Benz" and x["modell"] == "SLS AMG" and x["form"] == "Roadster"\
-        and x["titel"].find("GT") != -1 and x["leistung"] == 591:
+        and x["titel"].find("GT") != -1 and x["leistung"] == 591\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"])):
             return "SLS AMG GT Roadster"
         else:
             return x["variante"]
@@ -1046,10 +1101,12 @@ class HelperFunctions:
         A function to amend the `variante` column for Mercedes-Benz SLS AMG (stg 4)
         """
         if x["marke"] == "Mercedes-Benz" and x["modell"] == "SLS AMG" and x["form"] == "Coupe"\
-        and x["leistung"] == 571:
+        and x["leistung"] == 571\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"])):
             return "SLS AMG"
         elif x["marke"] == "Mercedes-Benz" and x["modell"] == "SLS AMG" and x["form"] == "Roadster"\
-        and x["leistung"] == 571:
+        and x["leistung"] == 571\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"])):
             return "SLS AMG Roadster"
         else:
             return x["variante"]
@@ -1060,7 +1117,7 @@ class HelperFunctions:
         """
         if x["marke"] == "McLaren" and x["modell"] == "765LT" and x["form"] == "Coupe":
             return "765LT"
-        elif x["marke"] == "McLaren" and x["modell"] == "765LT" and x["form"] == "Spider":
+        elif x["marke"] == "McLaren" and x["modell"] == "765LT" and x["form"] == "Spider" or x["titel"].lower().find("spider") != -1:
             return "765LT Spider"
         else:
             return x["variante"]
@@ -1137,9 +1194,7 @@ class HelperFunctions:
         if x["marke"] == "Ferrari" and x["modell"] == "812"\
         and (
             x["titel"].lower().find("aperta") != -1 or\
-            x["titel"].lower().find("competizione a") != -1 or\
-            x["fahrzeugbeschreibung_mod"].lower().find("aperta") != -1 or\
-            x["fahrzeugbeschreibung_mod"].lower().find("competizione a") != -1
+            x["fahrzeugbeschreibung_mod"].lower().find("aperta") != -1
         ):
             return "812 Competizione A"
         else:
@@ -1175,6 +1230,7 @@ class HelperFunctions:
         A function to amend the `variante` column for Ferrari 812 (stg 4)
         """
         if x["marke"] == "Ferrari" and x["modell"] == "812"\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
         and (
             x["titel"].lower().find("superfast") != -1
         ):
@@ -1201,9 +1257,9 @@ class HelperFunctions:
         A function to amend the `variante` column for Ferrari F12 (stg 1)
         """
         if x["marke"] == "Ferrari" and x["modell"] == "F12"\
-        and (x["leistung"] >= 770 and x["leistung"] <= 800)\
+        and x["preis"] >= 1000000\
         and (
-            x["titel"].lower().find("tdf") != -1
+            x["titel"].lower().find("tdf") != -1 or x["fahrzeugbeschreibung"].lower().find("tdf") != -1
         ):
             return "F12 TDF"
         else:
@@ -1215,9 +1271,7 @@ class HelperFunctions:
         """
         if x["marke"] == "Ferrari" and x["modell"] == "F12"\
         and (x["leistung"] >= 730 and x["leistung"] <= 750)\
-        and (
-            x["titel"].lower().find("tdf") != -1
-        ):
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"])):
             return "F12 Berlinetta"
         else:
             return x["variante"]
@@ -1507,9 +1561,11 @@ class HelperFunctions:
         """
         A function to add the `Ausstattung` column for Lamborghini Urus (stg 1)
         """
-        if x["marke"] == "Lamborghini" and x["modell"] == "Urus"\
-        and (x["titel"].lower().find("capsu") != -1 or x["fahrzeugbeschreibung_mod"].lower().find("capsu") != -1):
-            return "Pearl Capsule"
+        if x["marke"] == "Lamborghini" and x["modell"] == "Urus":
+            if (x["titel"].lower().find("capsu") != -1 or x["fahrzeugbeschreibung_mod"].lower().find("capsu") != -1):
+                return "Pearl Capsule"
+            elif x["titel"].lower().find("ad personam") != -1:
+                return "Ad Personam"
         else:
             return None
     
@@ -1634,12 +1690,17 @@ class HelperFunctions:
         """
         A function to add the `Ausstattung` column for McLaren 720S
         """
-        if x["marke"] == "McLaren" and x["modell"] == "720S"\
-        and x["titel"].lower().find("apex") != -1:
-            return "MSO Apex Collection"
-        elif x["marke"] == "McLaren" and x["modell"] == "720S"\
-        and x["titel"].lower().find("performance") != -1:
-            return "Performance Pack"
+        if x["marke"] == "McLaren" and x["modell"] == "720S":
+            if x["titel"].lower().find("apex") != -1:
+                return "MSO Apex Collection"
+            elif x["titel"].lower().find("performance") != -1:
+                return "Performance Pack"
+            elif x["titel"].lower().find("le mans") != -1:
+                return "Le Mans Edition"
+            elif x["titel"].lower().find("borealis") != -1:
+                return "MSO S. Borealis"
+            elif x["titel"].lower().find("velocity") != -1:
+                return "MSO Velocity"
         else:
             return None
     
@@ -1660,7 +1721,7 @@ class HelperFunctions:
         and (x["titel"].lower().find("atelier") != -1 or x["fahrzeugbeschreibung_mod"].lower().find("atelier") != -1):
             return "Atelier Car"
         elif x["marke"] == "Ferrari" and x["modell"] == "SF90"\
-        and (x["titel"].lower().find("assetto") != -1 or x["fahrzeugbeschreibung_mod"].lower().find("assetto") != -1):
+        and (x["titel"].lower().find("ass") != -1 or x["fahrzeugbeschreibung_mod"].lower().find("assetto") != -1):
             return "Assetto Fiorano"
         else:
             return None
@@ -1722,7 +1783,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn Unfallfrei, Nicht fahrtauglich, oder (Leere) abgebildet wird, dann auf “Unfallfrei“ ändern
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
 
         ###------------------------------###------------------------------###
 
@@ -1849,7 +1910,7 @@ class CleaningFunctions(HelperFunctions):
         # Make a copy of df_clean_3
         df_clean_4 = df_clean_3.copy()
 
-        df_clean_4["fahrzeugzustand"] = df_clean_4["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_4["fahrzeugzustand"] = df_clean_4["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
 
         ###------------------------------###------------------------------###
 
@@ -1943,7 +2004,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn Unfallfrei, Nicht fahrtauglich, oder (Leere) abgebildet wird, dann auf “Unfallfrei“ ändern
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
 
         ###------------------------------###------------------------------###
 
@@ -2026,7 +2087,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn Unfallfrei, Nicht fahrtauglich, oder (Leere) abgebildet wird, dann auf “Unfallfrei“ ändern
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
 
         ###------------------------------###------------------------------###
 
@@ -2078,10 +2139,7 @@ class CleaningFunctions(HelperFunctions):
 
         df_clean_7 = df_clean_6.copy()
         df_clean_7["variante"] = df_clean_7.apply(lambda x: self.amend_variante_col_lamborghini_urus_stg_1(x), axis=1)
-        df_clean_7["variante"] = df_clean_7.apply(lambda x: self.amend_variante_col_lamborghini_urus_stg_2(x), axis=1)
         df_clean_7["leistung"] = df_clean_7.apply(lambda x: self.amend_leistung_col_lamborghini_urus_stg_1(x), axis=1)
-        df_clean_7["variante"] = df_clean_7.apply(lambda x: self.amend_variante_col_lamborghini_urus_stg_3(x), axis=1)
-        df_clean_7["variante"] = df_clean_7.apply(lambda x: self.amend_variante_col_lamborghini_urus_stg_4(x), axis=1)
         df_clean_7["leistung"] = df_clean_7.apply(lambda x: self.amend_leistung_col_lamborghini_urus_stg_2(x), axis=1)
         
         ###------------------------------###------------------------------###
@@ -2131,7 +2189,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn Unfallfrei, Nicht fahrtauglich, oder (Leere) abgebildet wird, dann auf “Unfallfrei“ ändern
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
 
         ###------------------------------###------------------------------###
 
@@ -2240,7 +2298,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn Unfallfrei, Nicht fahrtauglich, oder (Leere) abgebildet wird, dann auf “Unfallfrei“ ändern
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
 
         ###------------------------------###------------------------------###
 
@@ -2344,7 +2402,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn Unfallfrei, Nicht fahrtauglich, oder (Leere) abgebildet wird, dann auf “Unfallfrei“ ändern
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
 
         ###------------------------------###------------------------------###
 
@@ -2429,7 +2487,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte E = form = Wenn im Titel Volante, dann ändere Form auf "Volante"
         df_clean_2 = df_clean_1.copy()
 
-        df_clean_2["form"] = df_clean_2["form"].apply(self.amend_form_col_aston_martin_dbs)
+        df_clean_2["form"] = df_clean_2.apply(lambda x: self.amend_form_col_aston_martin_dbs(x), axis=1)
 
         ###------------------------------###------------------------------###
 
@@ -2437,7 +2495,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn Unfallfrei, Nicht fahrtauglich, oder (Leere) abgebildet wird, dann auf “Unfallfrei“ ändern
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
 
         ###------------------------------###------------------------------###
 
@@ -2514,7 +2572,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn Unfallfrei, Nicht fahrtauglich, oder (Leere) abgebildet wird, dann auf “Unfallfrei“ ändern
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
 
         ###------------------------------###------------------------------###
 
@@ -2614,7 +2672,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn Unfallfrei, Nicht fahrtauglich, oder (Leere) abgebildet wird, dann auf “Unfallfrei“ ändern
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
 
         ###------------------------------###------------------------------###
 
@@ -2703,7 +2761,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn Unfallfrei, Nicht fahrtauglich, oder (Leere) abgebildet wird, dann auf “Unfallfrei“ ändern
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
 
         ###------------------------------###------------------------------###
 
@@ -2793,7 +2851,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn Unfallfrei, Nicht fahrtauglich, oder (Leere) abgebildet wird, dann auf “Unfallfrei“ ändern
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
 
         ###------------------------------###------------------------------###
 
@@ -2881,7 +2939,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn (Leere), oder unfallfrei, nicht fahrtauglich, dann ändere auf "Unfallfrei"
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
         
         ###------------------------------###------------------------------###
         
@@ -2993,7 +3051,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn (Leere), oder unfallfrei, nicht fahrtauglich, dann ändere auf "Unfallfrei"
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
         
         ###------------------------------###------------------------------###
         
@@ -3022,11 +3080,19 @@ class CleaningFunctions(HelperFunctions):
         mercedes_benz_sls_amg_marke_dict = {
             "brabus": "Brabus",
             "umbau": "Umbau",
+            "black series optik": "Umbau",
             "gt3": "Rennwagen"
+        }
+        
+        mercedes_benz_sls_amg_marke_dict_based_on_fahrzeugbeschreibung = {
+            "umgebaut": "Umbau",
         }
 
         for key, value in mercedes_benz_sls_amg_marke_dict.items():
             df_clean_6["marke"] = df_clean_6.apply(lambda x: self.amend_marke_col_various_brands(x, key, value, "Mercedes-Benz"), axis=1)
+        
+        for key, value in mercedes_benz_sls_amg_marke_dict_based_on_fahrzeugbeschreibung.items():
+            df_clean_6["marke"] = df_clean_6.apply(lambda x: self.amend_marke_col_various_brands_based_on_fahrzeugbeschreibung(x, key, value, "Mercedes-Benz"), axis=1)
 
         ###------------------------------###------------------------------###
 
@@ -3092,7 +3158,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn (Leere), oder unfallfrei, nicht fahrtauglich, dann ändere auf "Unfallfrei"
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
         
         ###------------------------------###------------------------------###
         
@@ -3146,6 +3212,9 @@ class CleaningFunctions(HelperFunctions):
         austattung_col = df_clean_8.pop("ausstattung")
         df_clean_8.insert(3, "ausstattung", austattung_col)
 
+        # Add one more amendment to the form column based on the new cleaning rules
+        df_clean_8["form"] = df_clean_8.apply(lambda x: self.amend_form_col_mclaren_765lt(x), axis=1)
+
         return df_clean_8
     
     ### McLaren
@@ -3173,7 +3242,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn (Leere), oder unfallfrei, nicht fahrtauglich, dann ändere auf "Unfallfrei"
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
         
         ###------------------------------###------------------------------###
         
@@ -3263,7 +3332,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn (Leere), oder unfallfrei, nicht fahrtauglich, dann ändere auf "Unfallfrei"
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
         
         ###------------------------------###------------------------------###
         
@@ -3350,7 +3419,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn (Leere), oder unfallfrei, nicht fahrtauglich, dann ändere auf "Unfallfrei"
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
         
         ###------------------------------###------------------------------###
         
@@ -3453,7 +3522,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn (Leere), oder unfallfrei, nicht fahrtauglich, dann ändere auf "Unfallfrei"
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
         
         ###------------------------------###------------------------------###
         
@@ -3558,7 +3627,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn (Leere), oder unfallfrei, nicht fahrtauglich, dann ändere auf "Unfallfrei"
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
         
         ###------------------------------###------------------------------###
         
@@ -3586,6 +3655,7 @@ class CleaningFunctions(HelperFunctions):
 
         ferrari_f12_marke_dict = {
             "novitec": "Novitec",
+            "n-largo": "Novitec",
             "mansory": "Mansory",
         }
 
@@ -3654,7 +3724,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn (Leere), oder unfallfrei, nicht fahrtauglich, dann ändere auf "Unfallfrei"
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
         
         ###------------------------------###------------------------------###
         
@@ -3750,7 +3820,7 @@ class CleaningFunctions(HelperFunctions):
         # Spalte F = fahrzeugzustand = Wenn (Leere), oder unfallfrei, nicht fahrtauglich, dann ändere auf "Unfallfrei"
         df_clean_3 = df_clean_2.copy()
 
-        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col)
+        df_clean_3["fahrzeugzustand"] = df_clean_3["fahrzeugzustand"].apply(self.amend_fahrzeugzustand_col_extended)
         
         ###------------------------------###------------------------------###
         
@@ -3827,7 +3897,8 @@ def execute_cleaning():
     query = """
         SELECT *
         FROM `web-scraping-371310.crawled_datasets.lukas_mobile_de`
-        WHERE crawled_timestamp = (SELECT MAX(crawled_timestamp) FROM `web-scraping-371310.crawled_datasets.lukas_mobile_de`)
+        WHERE crawled_timestamp IS NOT NULL -- Get the entire dataset
+        AND fahrzeugbeschreibung IS NOT NULL -- Need to remove rows without a description because it is used in the cleaning functions
     """
     df = pd.DataFrame(bq_client.query(query).to_dataframe(bqstorage_client=bqstorage_client))
 
@@ -3881,6 +3952,16 @@ def execute_cleaning():
     # Concatenate the cleaned data
     df_combined = pd.concat(df_combined)
 
+    # For rows where ausstattung is None, replace it with "Keine Ausstattung"
+    df_combined["ausstattung"] = df_combined["ausstattung"].apply(lambda x: "Keine Ausstattung" if x is None else x)
+    
+    # Filter for Unfallfrei und remove tuning models
+    df_combined = df_combined[
+        (df_combined["fahrzeugzustand"] == "Unfallfrei") & # Only keep the cars that are Unfallfrei
+        (df_combined["preis"] != 999999) & # Remove the cars with price 999999
+        (~df_combined["marke"].str.contains("\\|")) # Remove the cars with multiple brands
+    ]
+
     # Upload the cleaned data to BigQuery
     logging.info("Uploading the cleaned data to BigQuery...")
     job_config = bigquery.LoadJobConfig(
@@ -3907,7 +3988,7 @@ def execute_cleaning():
             bigquery.SchemaField("crawled_timestamp", "TIMESTAMP")
         ]
     )
-    job_config.write_disposition = bigquery.WriteDisposition.WRITE_APPEND
+    job_config.write_disposition = bigquery.WriteDisposition.WRITE_TRUNCATE
     job_config.time_partitioning = bigquery.TimePartitioning(
         type_=bigquery.TimePartitioningType.DAY,
         field="crawled_timestamp"
