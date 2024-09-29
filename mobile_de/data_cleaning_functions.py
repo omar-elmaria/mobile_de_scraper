@@ -3898,7 +3898,7 @@ def execute_cleaning():
         SELECT *
         FROM `web-scraping-371310.crawled_datasets.lukas_mobile_de`
         WHERE crawled_timestamp IS NOT NULL -- Get the entire dataset
-        AND fahrzeugbeschreibung IS NOT NULL
+        AND fahrzeugbeschreibung IS NOT NULL -- Need to remove rows without a description because it is used in the cleaning functions
     """
     df = pd.DataFrame(bq_client.query(query).to_dataframe(bqstorage_client=bqstorage_client))
 
@@ -3952,6 +3952,9 @@ def execute_cleaning():
     # Concatenate the cleaned data
     df_combined = pd.concat(df_combined)
 
+    # For rows where ausstattung is None, replace it with "Keine Ausstattung"
+    df_combined["ausstattung"] = df_combined["ausstattung"].apply(lambda x: "Keine Ausstattung" if x is None else x)
+    
     # Filter for Unfallfrei und remove tuning models
     df_combined = df_combined[
         (df_combined["fahrzeugzustand"] == "Unfallfrei") & # Only keep the cars that are Unfallfrei
