@@ -1149,10 +1149,12 @@ class HelperFunctions:
         A function to amend the `variante` column for Ferrari SF90 (stg 1)
         """
         if x["marke"] == "Ferrari" and x["modell"] == "SF90"\
-        and x["titel"].lower().find("xx") != -1 and x["form"] == "Coupe":
+        and x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"])\
+        and x["titel"].lower().find("xx stradale") != -1:
             return "SF90 XX Stradale"
         elif x["marke"] == "Ferrari" and x["modell"] == "SF90"\
-        and x["titel"].lower().find("xx") != -1 and x["form"] == "Spider":
+        and x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"])\
+        and x["titel"].lower().find("xx spider") != -1:
             return "SF90 XX Spider"
         else:
             return x["variante"]
@@ -1163,12 +1165,12 @@ class HelperFunctions:
         """
         if x["marke"] == "Ferrari" and x["modell"] == "SF90"\
         and x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"])\
-        and (x["titel"].lower().find("spider") != -1 or x["titel"].lower().find("spyder") != -1):
-            return "SF90 Spider"
-        elif x["marke"] == "Ferrari" and x["modell"] == "SF90"\
-        and x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"])\
         and x["titel"].lower().find("stradale") != -1:
             return "SF90 Stradale"
+        elif x["marke"] == "Ferrari" and x["modell"] == "SF90"\
+        and x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"])\
+        and (x["titel"].lower().find("spider") != -1 or x["titel"].lower().find("spyder") != -1):
+            return "SF90 Spider"
         else:
             return x["variante"]
     
@@ -1711,11 +1713,8 @@ class HelperFunctions:
         A function to add the `Ausstattung` column for Ferrari SF90
         """
         if x["marke"] == "Ferrari" and x["modell"] == "SF90"\
-        and (
-            (x["titel"].lower().find("atelier") != -1 or x["fahrzeugbeschreibung_mod"].lower().find("atelier") != -1)\
-            and (x["titel"].lower().find("assetto") != -1 or x["fahrzeugbeschreibung_mod"].lower().find("assetto") != -1)
-        ):
-            return "Assetto Fiorano | Atelier Car"
+        and (x["titel"].lower().find("ass") != -1 or x["titel"].lower().find("asseto") != -1 or x["fahrzeugbeschreibung_mod"].lower().find("assetto") != -1):
+            return "Assetto Fiorano"
         elif x["marke"] == "Ferrari" and x["modell"] == "SF90"\
         and (x["titel"].lower().find("tailor") != -1 or x["fahrzeugbeschreibung_mod"].lower().find("tailor") != -1):
             return "Tailor Made"
@@ -1723,8 +1722,11 @@ class HelperFunctions:
         and (x["titel"].lower().find("atelier") != -1 or x["fahrzeugbeschreibung_mod"].lower().find("atelier") != -1):
             return "Atelier Car"
         elif x["marke"] == "Ferrari" and x["modell"] == "SF90"\
-        and (x["titel"].lower().find("ass") != -1 or x["fahrzeugbeschreibung_mod"].lower().find("assetto") != -1):
-            return "Assetto Fiorano"
+        and (
+            (x["titel"].lower().find("atelier") != -1 or x["fahrzeugbeschreibung_mod"].lower().find("atelier") != -1)\
+            and (x["titel"].lower().find("assetto") != -1 or x["fahrzeugbeschreibung_mod"].lower().find("assetto") != -1)
+        ):
+            return "Assetto Fiorano | Atelier Car"
         else:
             return None
     
@@ -3433,20 +3435,11 @@ class CleaningFunctions(HelperFunctions):
 
         ###------------------------------###------------------------------###
 
-        ## Amend the `getriebe` column
-        # Wenn (Leere), oder Automatik,  oder Schaltgetriebe, oder Halbautomatik, dann ändere auf "8-Gang-Doppelkupplungs-Getriebe"
-
-        df_clean_5 = df_clean_4.copy()
-
-        df_clean_5["getriebe"] = df_clean_5["getriebe"].apply(self.amend_getriebe_col_ferrari_sf90)
-
-        ###------------------------------###------------------------------###
-
         ## Amend the `Marke` col based on the `titel` col
         # Spalte A = marke = Wenn Spalte D Titel Novitec enthält, dann ändere auf "Ferrari | Novitec"
         # Spalte A = marke = Wenn Spalte D Titel Mansory enthält, dann ändere auf "Ferrari | Mansory"
         # Spalte A = marke = Wenn Spalte D Titel Keyvany enthält, dann ändere auf "Ferrari | Keyvany"
-        df_clean_6 = df_clean_5.copy()
+        df_clean_5 = df_clean_4.copy()
 
         ferrari_sf90_marke_dict = {
             "novitec": "Novitec",
@@ -3455,8 +3448,17 @@ class CleaningFunctions(HelperFunctions):
         }
 
         for key, value in ferrari_sf90_marke_dict.items():
-            df_clean_6["marke"] = df_clean_6.apply(lambda x: self.amend_marke_col_various_brands(x, key, value, "Ferrari"), axis=1)
-        
+            df_clean_5["marke"] = df_clean_5.apply(lambda x: self.amend_marke_col_various_brands(x, key, value, "Ferrari"), axis=1)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `getriebe` column
+        # Wenn (Leere), oder Automatik,  oder Schaltgetriebe, oder Halbautomatik, dann ändere auf "8-Gang-Doppelkupplungs-Getriebe"
+
+        df_clean_6 = df_clean_5.copy()
+
+        df_clean_6["getriebe"] = df_clean_6["getriebe"].apply(self.amend_getriebe_col_ferrari_sf90)
+
         ###------------------------------###------------------------------###
 
         ## Amend the `variante` and `leistung` columns
@@ -3472,10 +3474,8 @@ class CleaningFunctions(HelperFunctions):
         df_clean_7 = df_clean_6.copy()
 
         df_clean_7["variante"] = df_clean_7.apply(lambda x: self.amend_variante_col_ferrari_sf90_stg_1(x), axis=1)
-        df_clean_7["leistung"] = df_clean_7.apply(lambda x: self.amend_leistung_col_ferrari_sf90_stg_1(x), axis=1)
         df_clean_7["variante"] = df_clean_7.apply(lambda x: self.amend_variante_col_ferrari_sf90_stg_2(x), axis=1)
         df_clean_7["variante"] = df_clean_7.apply(lambda x: self.amend_variante_col_ferrari_sf90_stg_3(x), axis=1)
-        df_clean_7["leistung"] = df_clean_7.apply(lambda x: self.amend_leistung_col_ferrari_sf90_stg_2(x), axis=1)
 
         ###------------------------------###------------------------------###
 
