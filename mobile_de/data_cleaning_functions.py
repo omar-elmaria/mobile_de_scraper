@@ -1237,11 +1237,11 @@ class HelperFunctions:
         A function to amend the `variante` column for Ferrari SF90 (stg 1)
         """
         if x["marke"] == "Ferrari" and x["modell"] == "SF90"\
-        and x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"])\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
         and x["titel"].lower().find("xx stradale") != -1:
             return "SF90 XX Stradale"
         elif x["marke"] == "Ferrari" and x["modell"] == "SF90"\
-        and x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"])\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
         and x["titel"].lower().find("xx spider") != -1:
             return "SF90 XX Spider"
         else:
@@ -1252,11 +1252,11 @@ class HelperFunctions:
         A function to amend the `variante` column for Ferrari SF90 (stg 2)
         """
         if x["marke"] == "Ferrari" and x["modell"] == "SF90"\
-        and x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"])\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
         and x["titel"].lower().find("stradale") != -1:
             return "SF90 Stradale"
         elif x["marke"] == "Ferrari" and x["modell"] == "SF90"\
-        and x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"])\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
         and (x["titel"].lower().find("spider") != -1 or x["titel"].lower().find("spyder") != -1):
             return "SF90 Spider"
         else:
@@ -1267,11 +1267,11 @@ class HelperFunctions:
         A function to amend the `variante` column for Ferrari SF90 (stg 3)
         """
         if x["marke"] == "Ferrari" and x["modell"] == "SF90"\
-        and x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"])\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
         and x["form"] == "Coupe":
             return "SF90 Stradale"
         if x["marke"] == "Ferrari" and x["modell"] == "SF90"\
-        and x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"])\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
         and x["form"] == "Spider":
             return "SF90 Spider"
         else:
@@ -1282,7 +1282,7 @@ class HelperFunctions:
         A function to amend the `variante` column for Ferrari 812 (stg 1)
         """
         if x["marke"] == "Ferrari" and x["modell"] == "812"\
-        and x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"])\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
         and (
             x["titel"].lower().find("competizione aperta") != -1 or\
             x["titel"].lower().find("competizione a") != -1
@@ -1296,7 +1296,7 @@ class HelperFunctions:
         A function to amend the `variante` column for Ferrari 812 (stg 2)
         """
         if x["marke"] == "Ferrari" and x["modell"] == "812"\
-        and x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"])\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
         and (
             x["titel"].lower().find("competi") != -1 or\
             x["fahrzeugbeschreibung_mod"].lower().find("competi") != -1
@@ -1310,7 +1310,7 @@ class HelperFunctions:
         A function to amend the `variante` column for Ferrari 812 (stg 3)
         """
         if x["marke"] == "Ferrari" and x["modell"] == "812"\
-        and x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"])\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
         and (
             x["titel"].lower().find("gts") != -1
         ):
@@ -1336,7 +1336,7 @@ class HelperFunctions:
         A function to amend the `variante` column for Ferrari 812 (stg 5)
         """
         if x["marke"] == "Ferrari" and x["modell"] == "812"\
-        and x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]):
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"])):
             if x["form"] == "Coupe":
                 return "812 Superfast"
             elif x["form"] == "Cabrio":
@@ -1390,7 +1390,7 @@ class HelperFunctions:
         A function to amend the `variante` column for Ferrari F8 (stg 2)
         """
         if x["marke"] == "Ferrari" and x["modell"] == "F8"\
-        and x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"])\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
         and (x["leistung"] >= 710 and x["leistung"] <= 730):
             if x["form"] == "Coupe":
                 return "F8 Tributo"
