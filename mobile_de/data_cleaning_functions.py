@@ -171,12 +171,12 @@ class HelperFunctions:
         """
         A function to amend the `form` column for BMW M3
         """
-        if x["form"].lower().find("kombi") != -1 or x["form"].lower().find("touring") != -1:
+        if x["form"].lower().find("kombi") != -1:
             return "Touring"
         elif x["form"].lower().find("limo") != -1:
             return "Limousine"
-        elif x["marke"] == "BMW" and x["modell"] == "M3" and x["leistung"] in [480, 510, 551] and x["form"].lower().find("sportwagen") != -1 or x["form"].lower().find("coupe") != -1:
-            return "Coupe"
+        elif x["leistung"] >= 480 and x["leistung"] <= 555 and x["form"].lower().find("sportwagen") != -1 or x["form"].lower().find("coupe") != -1:
+            return "Limousine"
         else:
             return x["form"]
     
@@ -519,9 +519,9 @@ class HelperFunctions:
         A function to amend the `getriebe` column for BMW M3
         """
         if (x["getriebe"] == "" or x["getriebe"] is None or pd.isnull(x["getriebe"]) or x["getriebe"].lower().find("automatik") != -1)\
-        and x["leistung"] in [510, 551]:
+        and (x["modell"] == "M3 G80" or x["modell"] == "M3 G81"):
             return "8-Gang-Automatikgetriebe"
-        elif (x["getriebe"] == "" or x["getriebe"] is None or pd.isnull(x["getriebe"]) or x["getriebe"].lower().find("schaltung") != -1)\
+        elif (x["modell"] == "M3 G80" or x["modell"] == "M3 G81") and (x["getriebe"] == "" or x["getriebe"] is None or pd.isnull(x["getriebe"]) or x["getriebe"].lower().find("schaltung") != -1)\
         and x["leistung"] == 480:
             return "6-Gang-Schaltgetriebe"
         else:
@@ -699,6 +699,41 @@ class HelperFunctions:
         """
         if x["marke"] == "Mercedes-Benz" and x["modell"] == "G 63 AMG" and x["leistung"] == 585:
             return "G 63 (W464)"
+        else:
+            return x["modell"]
+        
+    def amend_modell_col_bmw_m3(self, x):
+        """
+        A function to amend the `modell` column for BMW M3
+        """
+        if x["marke"] == "BMW" and x["modell"] == "M3"\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
+        and x["leistung"] == 510 and x["titel"].lower().find("touring") != -1:
+            return "M3 G81"
+        
+        elif x["marke"] == "BMW" and x["modell"] == "M3"\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
+        and x["form"] == "Kombi" and x["leistung"] == 510:
+            return "M3 G81"
+        
+        elif x["marke"] == "BMW" and x["modell"] == "M3"\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
+        and x["titel"].lower().find("cs") != -1\
+        and x["leistung"] == 551:
+            return "M3 G80"
+        
+        elif x["marke"] == "BMW" and x["modell"] == "M3"\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
+        and x["leistung"] == 480:
+            return "M3 G80"
+        
+        elif x["marke"] == "BMW" and x["modell"] == "M3"\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
+        and x["leistung"] == 510:
+            if any(l in x["titel"].lower() for l in ["xdrive", "x drive", "allrad", "xd"]):
+                return "M3 G80"
+            else:
+                return "M3 G80"
         else:
             return x["modell"]
     
@@ -1030,22 +1065,34 @@ class HelperFunctions:
         """
         A function to amend the `variante` column for BMW M3
         """
-        if x["marke"] == "BMW" and x["modell"] == "M3" and x["form"] == "Limousine" and x["leistung"] == 480\
-        and x["getriebe"] == "6-Gang-Schaltgetriebe":
-            return "M3"
-        elif x["marke"] == "BMW" and x["modell"] == "M3" and x["form"] == "Touring" and x["leistung"] == 510:
+        if x["marke"] == "BMW" and x["modell"] == "M3"\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
+        and x["leistung"] == 510 and x["titel"].lower().find("touring") != -1:
             return "M3 Competition Touring M xDrive"
-        elif x["marke"] == "BMW" and x["modell"] == "M3" and x["form"] == "Limousine" and x["leistung"] == 551\
-        and x["titel"].lower().find("cs") != -1:
+        
+        elif x["marke"] == "BMW" and x["modell"] == "M3"\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
+        and x["form"] == "Kombi" and x["leistung"] == 510:
+            return "M3 Competition Touring M xDrive"
+        
+        elif x["marke"] == "BMW" and x["modell"] == "M3"\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
+        and x["titel"].lower().find("cs") != -1\
+        and x["leistung"] == 551:
             return "M3 CS"
-        elif x["marke"] == "BMW" and x["modell"] == "M3" and x["form"] == "Limousine" and x["leistung"] == 510:
-            if any(l in x["titel"].lower() for l in ["xDrive", "x Drive", "Allrad", "xD"]):
+        
+        elif x["marke"] == "BMW" and x["modell"] == "M3"\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
+        and x["leistung"] == 480:
+            return "M3"
+        
+        elif x["marke"] == "BMW" and x["modell"] == "M3"\
+        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
+        and x["leistung"] == 510:
+            if any(l in x["titel"].lower() for l in ["xdrive", "x drive", "allrad", "xd"]):
                 return "M3 Competition M xDrive"
             else:
-                if x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]):
-                    return "M3 Competition"
-                else:
-                    return x["variante"]
+                return "M3 Competition"
         else:
             return x["variante"]
     
@@ -2867,41 +2914,51 @@ class CleaningFunctions(HelperFunctions):
 
         ###------------------------------###------------------------------###
 
-        ## Amend the `Getriebe` column
-        # Spalte H = getriebe = Wenn Automatik und (Leere), und Leistung entweder 510 oder 551 dann ändere auf "8-Gang-Automatikgetriebe"
-        # Spalte H = getriebe = Wenn Schaltung und (Leere), und Leistung 480, dann ändere auf "6-Gang-Schaltgetriebe"
-        df_clean_5 = df_clean_4.copy()
-
-        df_clean_5["getriebe"] = df_clean_5.apply(lambda x: self.amend_getriebe_col_bmw_m3(x), axis=1)
-
-        ###------------------------------###------------------------------###
-
         ## Amend the `Marke` col based on the `titel` col
         # Spalte A = marke = Wenn Spalte D Titel G Power oder G-Power enthält, dann ändere auf "BMW | G-Power"
         # Spalte A = marke = Wenn Spalte D Titel Aulitzky enthält, dann ändere auf "BMW | Aulitzky"
         # Spalte A = marke = Wenn Spalte D Titel Schnitzer enthält, dann ändere auf "BMW | AC Schnitzer"
-        df_clean_6 = df_clean_5.copy()
+        df_clean_5 = df_clean_4.copy()
 
         bmw_m3_dict = {
             "g power": "G-Power",
             "g-power": "G-Power",
             "aulitzky": "Aulitzky",
             "schnitzer": "AC Schnitzer",
+            "grail": "Grail"
         }
 
         for key, value in bmw_m3_dict.items():
-            df_clean_6["marke"] = df_clean_6.apply(lambda x: self.amend_marke_col_various_brands(x, key, value, "BMW"), axis=1)
+            df_clean_5["marke"] = df_clean_5.apply(lambda x: self.amend_marke_col_various_brands(x, key, value, "BMW"), axis=1)
 
         ###------------------------------###------------------------------###
 
-        # Spalte C = Variante = Wenn Marke BMW, und Modell M3, und Form Limousine, und Leistung 480, und getriebe 6-Gang-Schaltgetriebe,dann ändere variante auf "M3".
-        # Spalte C = Variante = Wenn Marke BMW, und Modell M3, und Form Touring, und Leistung 510, ,dann ändere variante auf "M3 Competition Touring M xDrive".
-        # Spalte C = Variante = Wenn Marke BMW, und Modell M3, und Form Limousine, und titel steht CS, und Leistung 551, ,dann ändere variante auf "M3 CS".
-        # Spalte C = Variante = Wenn Marke BMW, und Modell M3, und Form Limousine, und titel steht entweder xDrive oder x Drive oder Allrad oder xD, und Leistung 510, ,dann ändere variante auf "M3 Competition M xDrive".
-        # Spalte C = Variante = Wenn Marke BMW, und Modell M3, und Form Limousine, und Leistung 510,dann ändere variante auf "M3 Competition".   (=also alle Modelle bei denen im Titel nicht entweder xDrive oder x Drive oder Allrad oder xD steht)
+        ## Amend the Variante column
+        # Wenn Marke BMW, und Modell M3, und Variante ist (leer), und Titel steht Touring, und Leistung 510, DANN  ändere Variante auf "M3 Competition Touring M xDrive" und Modell auf "M3 G81"
+        # Wenn Marke BMW, und Modell M3, und Variante ist (leer), und Form ist Kombi, und Leistung 510, DANN  ändere Variante auf "M3 Competition Touring M xDrive" und Modell auf "M3 G81"
+        # Wenn Marke BMW, und Modell M3,und Variante (leer), und titel steht CS, und Leistung 551, ,dann ändere Variante auf "M3 CS" und Modell auf "M3 G80".
+        # Wenn Marke BMW, und Modell M3, und Variante (leer), und Leistung 480,dann ändere variante auf "M3" und Modell auf "M3 G80"
+        # Wenn Marke BMW, und Modell M3, und Variante (leer), und Leistung 510, und titel steht entweder xDrive oder x Drive oder Allrad oder xD,dann ändere variante auf "M3 Competition M xDrive" und Modell auf "M3 G80".
+        # Wenn Marke BMW, und Modell M3, und Variante (leer),  und Leistung 510, dann ändere variante auf "M3 Competition" und Modell auf "M3 G80".
         df_clean_6 = df_clean_5.copy()
 
         df_clean_6["variante"] = df_clean_6.apply(lambda x: self.amend_variante_col_bmw_m3(x), axis=1)
+
+        ###------------------------------###------------------------------###
+        
+        ## Amend the modell column
+        df_clean_7 = df_clean_6.copy()
+
+        df_clean_7["modell"] = df_clean_7.apply(lambda x: self.amend_modell_col_bmw_m3(x), axis=1)
+
+        ###------------------------------###------------------------------###
+
+        ## Amend the `Getriebe` column
+        # Spalte H = getriebe = Wenn Automatik und (Leere), und Leistung entweder 510 oder 551 dann ändere auf "8-Gang-Automatikgetriebe"
+        # Spalte H = getriebe = Wenn Schaltung und (Leere), und Leistung 480, dann ändere auf "6-Gang-Schaltgetriebe"
+        df_clean_5 = df_clean_4.copy()
+
+        df_clean_5["getriebe"] = df_clean_5.apply(lambda x: self.amend_getriebe_col_bmw_m3(x), axis=1)
 
         ###------------------------------###------------------------------###
 
