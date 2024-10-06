@@ -3667,7 +3667,6 @@ class CleaningFunctions(HelperFunctions):
         df_clean_7["variante"] = df_clean_7.apply(lambda x: self.amend_variante_col_ferrari_812_stg_3(x), axis=1)
         df_clean_7["variante"] = df_clean_7.apply(lambda x: self.amend_variante_col_ferrari_812_stg_4(x), axis=1)
         df_clean_7["variante"] = df_clean_7.apply(lambda x: self.amend_variante_col_ferrari_812_stg_5(x), axis=1)
-        df_clean_7["form"] = df_clean_7.apply(lambda x: self.amend_form_col_ferrari_812_stg_3(x), axis=1)
 
         ###------------------------------###------------------------------###
 
