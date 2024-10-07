@@ -402,10 +402,13 @@ class HelperFunctions:
             return "6-Gang Schaltgetriebe"
         elif x["modell"] in ["991.1", "991.2"] and x["variante"] == "GT3":
             return "PDK"
-        elif x["modell"] in ["991.1", "991.2"] and (x["variante"].lower().find("gt3") != -1 or x["variante"].lower().find("gt3 rs") != -1) and x["getriebe"].lower().find("automatik") != -1:
-            return "PDK"
-        elif x["modell"] in ["991.1", "991.2"] and (x["variante"].lower().find("gt3") != -1) and x["getriebe"].lower().find("schaltgetriebe") != -1:
-            return "6-Gang Schaltgetriebe"
+        elif x["getriebe"] is not None:
+            if x["modell"] in ["991.1", "991.2"] and (x["variante"].lower().find("gt3") != -1 or x["variante"].lower().find("gt3 rs") != -1) and x["getriebe"].lower().find("automatik") != -1:
+                return "PDK"
+            elif x["modell"] in ["991.1", "991.2"] and (x["variante"].lower().find("gt3") != -1) and x["getriebe"].lower().find("schaltgetriebe") != -1:
+                return "6-Gang Schaltgetriebe"
+            else:
+                return x["getriebe"]
         else:
             return x["getriebe"]
 
@@ -642,28 +645,6 @@ class HelperFunctions:
             return x["marke"]
         
     ###------------------------------###------------------------------###
-    
-    def amend_modell_col_porsche_991(self, x):
-        """
-        A function to amend the `modell` column for Porsche 991
-        """
-        if x["marke"] == "Porsche" and x["modell"] == "991":
-            if x["leistung"] == 500 and x["titel"].lower().find("touring") != -1:
-                return "991.2"
-            elif x["leistung"] == 475 and x["titel"].lower().find("gt3") != -1:
-                return "991.1"
-            elif x["leistung"] == 500 and any(l in x["titel"].lower() for l in ["gt3rs", "gt3 rs"]):
-                return "991.1"
-            elif x["leistung"] == 500 and x["titel"].lower().find("991.2") != -1:
-                return "991.2"
-            elif x["leistung"] == 500 and x["titel"].lower().find("gt3") != -1:
-                return "991.2"
-            elif x["leistung"] == 520 and any(l in x["titel"].lower() for l in ["gt3rs", "gt3 rs"]):
-                return "991.2"
-            else:
-                return x["modell"]
-        else:
-            return x["modell"]
 
     def amend_modell_and_variante_cols_stg_1_mercedes_benz_g_63_amg(self, x, col_to_amend):
         """
@@ -694,29 +675,25 @@ class HelperFunctions:
         """
         A function to amend the `modell` column for BMW M3
         """
+        # We delete the variante leer condition because the variante function will insert values in this column
         if x["marke"] == "BMW" and x["modell"] == "M3"\
-        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
         and x["leistung"] == 510 and x["titel"].lower().find("touring") != -1:
             return "M3 G81"
         
         elif x["marke"] == "BMW" and x["modell"] == "M3"\
-        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
         and x["form"] == "Kombi" and x["leistung"] == 510:
             return "M3 G81"
         
         elif x["marke"] == "BMW" and x["modell"] == "M3"\
-        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
         and x["titel"].lower().find("cs") != -1\
         and x["leistung"] == 551:
             return "M3 G80"
         
         elif x["marke"] == "BMW" and x["modell"] == "M3"\
-        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
         and x["leistung"] == 480:
             return "M3 G80"
         
         elif x["marke"] == "BMW" and x["modell"] == "M3"\
-        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
         and x["leistung"] == 510:
             if any(l in x["titel"].lower() for l in ["xdrive", "x drive", "allrad", "xd"]):
                 return "M3 G80"
@@ -729,18 +706,16 @@ class HelperFunctions:
         """
         A function to amend the `modell` column for Porsche 992 GT3
         """
+        # We delete the variante leer condition because the variante function will insert values in this column
         if x["marke"] == "Porsche" and x["modell"] == "992"\
-        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
         and x["leistung"] == 525 and (x["titel"].lower().find("gt3 rs") != -1 or x["titel"].lower().find("gt 3 rs") != -1 or x["titel"].lower().find("gt3rs") != -1):
             return "992.1"
         
         elif x["marke"] == "Porsche" and x["modell"] == "992"\
-        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
         and x["leistung"] == 510 and (x["titel"].lower().find("touring") == -1 and x["fahrzeugbeschreibung_mod"].lower().find("touring") == -1):
             return "992.1"
         
         elif x["marke"] == "Porsche" and x["modell"] == "992"\
-        and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"]))\
         and x["leistung"] == 510:
             return "992.1"
         else:
@@ -750,7 +725,7 @@ class HelperFunctions:
         """
         A function to amend the `modell` column for Porsche 991
         """
-        if x["marke"] == "Porsche" and x["modell"] == "991" and (x["variante"] == "" or x["variante"] is None or pd.isnull(x["variante"])):
+        if x["marke"] == "Porsche" and x["modell"] == "991": # We delete the variante leer condition because the variante function will insert values in this column
             if (x["leistung"] >= 474 and x["leistung"] <= 476) and (x["titel"].lower().find("gt3") != -1 or x["titel"].lower().find("gt 3") != -1):
                 return "991.1"
             elif (x["titel"].lower().find("touring") != -1):
@@ -1912,9 +1887,9 @@ class CleaningFunctions(HelperFunctions):
         ## Amend the `Getriebe` col
         # Spalte H = getriebe = Wenn Automatik, dann ändere auf "PDK"
         # Spalte H = getriebe = Wenn Schaltgetriebe, dann ändere auf "6-Gang Schaltgetriebe"
-        df_clean_6 = df_clean_5.copy()
+        df_clean_8 = df_clean_7.copy()
 
-        df_clean_6["getriebe"] = df_clean_6.apply(lambda x: self.amend_getriebe_col_porsche_991(x), axis=1)
+        df_clean_8["getriebe"] = df_clean_8.apply(lambda x: self.amend_getriebe_col_porsche_991(x), axis=1)
 
         ###------------------------------###------------------------------###
 
@@ -1922,18 +1897,18 @@ class CleaningFunctions(HelperFunctions):
         # Neue = Spalte D = Ausstattung	Wenn Marke Porsche, und im Titel steht PTS, dann ändere auf "PTS".
         # Neue = Spalte D = Ausstattung	Wenn Marke Porsche, und im Titel steht Weissach, dann ändere auf "Weissach".
         # Neue = Spalte D = Ausstattung	Wenn Marke Porsche, und im Titel steht PCCB, dann ändere auf "PCCB".
-        df_clean_8 = df_clean_7.copy()
+        df_clean_9 = df_clean_8.copy()
 
-        df_clean_8["ausstattung"] = df_clean_8.apply(lambda x: self.add_ausstattung_col_porsche_991(x), axis=1)
+        df_clean_9["ausstattung"] = df_clean_9.apply(lambda x: self.add_ausstattung_col_porsche_991(x), axis=1)
 
         # Move the Austattung column to be between "variante" and "titel"
-        austattung_col = df_clean_8.pop("ausstattung")
-        df_clean_8.insert(3, "ausstattung", austattung_col)
+        austattung_col = df_clean_9.pop("ausstattung")
+        df_clean_9.insert(3, "ausstattung", austattung_col)
 
         # Drop the fahrzeugbeschreibung_mod column
-        df_clean_8 = df_clean_8.drop("fahrzeugbeschreibung_mod", axis=1)
+        df_clean_9 = df_clean_9.drop("fahrzeugbeschreibung_mod", axis=1)
 
-        return df_clean_8
+        return df_clean_9
     
     ### Porsche
     ## 992 GT3
@@ -2986,25 +2961,25 @@ class CleaningFunctions(HelperFunctions):
         ## Amend the `Getriebe` column
         # Spalte H = getriebe = Wenn Automatik und (Leere), und Leistung entweder 510 oder 551 dann ändere auf "8-Gang-Automatikgetriebe"
         # Spalte H = getriebe = Wenn Schaltung und (Leere), und Leistung 480, dann ändere auf "6-Gang-Schaltgetriebe"
-        df_clean_5 = df_clean_4.copy()
+        df_clean_8 = df_clean_7.copy()
 
-        df_clean_5["getriebe"] = df_clean_5.apply(lambda x: self.amend_getriebe_col_bmw_m3(x), axis=1)
+        df_clean_8["getriebe"] = df_clean_8.apply(lambda x: self.amend_getriebe_col_bmw_m3(x), axis=1)
 
         ###------------------------------###------------------------------###
 
         ## Create a new column `Ausstattung`
-        df_clean_7 = df_clean_6.copy()
+        df_clean_9 = df_clean_8.copy()
 
-        df_clean_7["ausstattung"] = None
+        df_clean_9["ausstattung"] = None
 
         # Move the Austattung column to be between "variante" and "titel"
-        austattung_col = df_clean_7.pop("ausstattung")
-        df_clean_7.insert(3, "ausstattung", austattung_col)
+        austattung_col = df_clean_9.pop("ausstattung")
+        df_clean_9.insert(3, "ausstattung", austattung_col)
 
         # Drop the fahrzeugbeschreibung_mod column
-        df_clean_7 = df_clean_7.drop("fahrzeugbeschreibung_mod", axis=1)
+        df_clean_9 = df_clean_9.drop("fahrzeugbeschreibung_mod", axis=1)
 
-        return df_clean_7
+        return df_clean_9
 
     ### Mercedes-Benz
     ## G 63 AMG
