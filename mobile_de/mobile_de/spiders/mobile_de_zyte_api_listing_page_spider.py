@@ -69,8 +69,8 @@ class ListingPageSpider(scrapy.Spider):
                             {
                                 "action": "click",
                                 "selector": {
-                                    "type": "css",
-                                    "value": "button.sc-aYaIB.bvhjeW.mde-consent-accept-btn"
+                                    "type": "xpath",
+                                    "value": "(//button[contains(@class, 'mde-consent-accept-btn')])[1]"
                                 },
                                 "delay": 0,
                                 "button": "left",
@@ -130,8 +130,8 @@ class ListingPageSpider(scrapy.Spider):
                             {
                                 "action": "click",
                                 "selector": {
-                                    "type": "css",
-                                    "value": "button.sc-aYaIB.bvhjeW.mde-consent-accept-btn"
+                                    "type": "xpath",
+                                    "value": "(//button[contains(@class, 'mde-consent-accept-btn')])[1]"
                                 },
                                 "delay": 0,
                                 "button": "left",
