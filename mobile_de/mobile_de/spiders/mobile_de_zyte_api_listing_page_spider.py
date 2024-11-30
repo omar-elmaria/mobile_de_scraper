@@ -52,42 +52,10 @@ class ListingPageSpider(scrapy.Spider):
             
             # Send the scrapy request
             yield scrapy.Request(
-                url="https://suchen.mobile.de/",
+                url=url,
                 meta={
                     "zyte_api_automap": {
                         "browserHtml": True,
-                        "actions": [
-                            {
-                                "action": "goto",
-                                "options": {
-                                    "waitUntil": "load",
-                                    "timeout": 30
-                                },
-                                "onError": "return",
-                                "url": url
-                            },
-                            {
-                                "action": "click",
-                                "selector": {
-                                    "type": "xpath",
-                                    "value": "(//button[contains(@class, 'mde-consent-accept-btn')])[1]"
-                                },
-                                "delay": 0,
-                                "button": "left",
-                                "onError": "return"
-                            },
-                            {
-                                "action": "waitForTimeout",
-                                "timeout": 5,
-                                "onError": "return"
-                            },
-                            {
-                                "action": "scrollBottom",
-                                "timeout": 5,
-                                "maxScrollDelay": 1.5,
-                                "onError": "return"
-                            }
-                        ],
                         "productList": True,
                         "productListOptions": {"extractFrom":"browserHtml"}
                     },
@@ -104,51 +72,22 @@ class ListingPageSpider(scrapy.Spider):
         productList = response.raw_api_response["productList"]
         num_pages = min(int(num_listings_extractor(productList)) // 21 + 1, max_num_pages)
 
+        # Log the raw response
+        logging.info(f"Raw response of the request to extract the total number of pages {response.raw_api_response['productList']}")
+
         # Log a message indicating the number of pages for the marke and modell
         logging.info(f"Number of pages for {response.meta['marke']} {response.meta['modell']}: {num_pages}")
 
         # Send requests to all the pages of the marke-modell combo
         for page in range(1, num_pages + 1):
             paginated_url = response.meta["target_url"] + f"&pageNumber={page}"
-            logging.info(f"Extracting the URLs of car pages of {response.meta['marke']} {response.meta['modell']} page {num_pages} from {paginated_url}...")
+            logging.info(f"Extracting the URLs of car pages of {response.meta['marke']} {response.meta['modell']} page {page} from {paginated_url}...")
             yield scrapy.Request(
-                url="https://suchen.mobile.de/",
+                url=paginated_url,
                 meta={
                     "zyte_api_automap": {
                         "browserHtml": True,
                         "productList": True,
-                        "actions": [
-                            {
-                                "action": "goto",
-                                "options": {
-                                    "waitUntil": "load",
-                                    "timeout": 30
-                                },
-                                "onError": "return",
-                                "url": paginated_url
-                            },
-                            {
-                                "action": "click",
-                                "selector": {
-                                    "type": "xpath",
-                                    "value": "(//button[contains(@class, 'mde-consent-accept-btn')])[1]"
-                                },
-                                "delay": 0,
-                                "button": "left",
-                                "onError": "return"
-                            },
-                            {
-                                "action": "waitForTimeout",
-                                "timeout": 5,
-                                "onError": "return"
-                            },
-                            {
-                                "action": "scrollBottom",
-                                "timeout": 5,
-                                "maxScrollDelay": 1.5,
-                                "onError": "return"
-                            }
-                        ],
                         "productListOptions": {"extractFrom":"browserHtml"}
                     },
                     "marke": response.meta["marke"],
@@ -170,6 +109,9 @@ class ListingPageSpider(scrapy.Spider):
 
         # Parse the API response and extract the car page URLs
         productList = response.raw_api_response["productList"]
+
+        # Log the raw response
+        logging.info(f"Raw response of the request to URLs of the car pages {productList}")
 
         # Yield the car page URLs in the format required for the car page spider
         for i in productList["products"]:
