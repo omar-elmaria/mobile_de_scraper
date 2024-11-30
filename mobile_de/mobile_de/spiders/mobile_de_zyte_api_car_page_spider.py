@@ -57,6 +57,7 @@ class CarPageSpider(scrapy.Spider):
                 callback=self.parse,
                 dont_filter=True,  # Don't filter duplicate requests
                 meta={
+                    "zyte_api_automap": {"browserHtml": True},
                     "marke": url["marke"],
                     "modell": url["modell"],
                     "page_rank": page_rank,
