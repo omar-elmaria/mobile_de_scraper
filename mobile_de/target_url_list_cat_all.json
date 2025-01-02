@@ -300,6 +300,11 @@
         "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&ms=6325%3B11%3B%3B%3B&ref=dsp&s=Car&vc=Car"
     ],
     [
+        "Corvette",
+        "Z06",
+        "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&ms=6325%3B7%3B%3B&ref=dsp&s=Car&vc=Car"
+    ],
+    [
         "Dodge",
         "Viper",
         "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&ms=7700%3B12%3B%3B%3B&ref=dsp&s=Car&vc=Car"
@@ -558,6 +563,11 @@
         "Lamborghini",
         "Urus",
         "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&ms=14600%3B13%3B%3B%3B&ref=dsp&s=Car&vc=Car"
+    ],
+    [
+        "Lamborghini",
+        "Miura",
+        "https://suchen.mobile.de/fahrzeuge/search.html?isSearchRequest=true&ms=14600%3B8%3B%3B&ref=dsp&s=Car&vc=Car"
     ],
     [
         "Lamborghini",
