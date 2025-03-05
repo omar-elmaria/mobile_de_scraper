@@ -106,7 +106,7 @@ class CarPageSpider(scrapy.Spider):
         fahrzeughalter = response.xpath("//div[text()='Fahrzeughalter']/following-sibling::div/text()").get()
         
         # Extract the standort
-        standort = response.xpath("//div[@data-testid='seller-title-address']/span/text()").get()
+        standort = response.xpath("//div[@data-testid='seller-title-address']//div[2]/text()").get()
 
         # Extract the vehicle description and join it
         fahrzeug_beschreibung = response.xpath("//div[@data-testid='vip-vehicle-description-text']//text()").getall()
