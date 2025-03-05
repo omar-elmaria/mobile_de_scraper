@@ -123,7 +123,7 @@ def main():
     df_data_all_car_brands_cleaned["preis"] = df_data_all_car_brands_cleaned["preis"].apply(lambda x: int(''.join(re.findall(pattern=r"\d+", string=x))) if x is not None else x)
     df_data_all_car_brands_cleaned["kilometer"] = df_data_all_car_brands_cleaned["kilometer"].apply(lambda x: int(''.join(re.findall(pattern=r"\d+", string=x))) if x is not None else x)
     df_data_all_car_brands_cleaned["fahrzeughalter"] = df_data_all_car_brands_cleaned["fahrzeughalter"].apply(lambda x: int(x) if x is not None else x)
-    df_data_all_car_brands_cleaned["standort"] = df_data_all_car_brands_cleaned["standort"].apply(lambda x: re.findall(pattern=r"[A-za-z]+(?=-)", string=x)[0] if x is not None else x)
+    df_data_all_car_brands_cleaned["standort"] = df_data_all_car_brands_cleaned["standort"].apply(lambda x: re.findall(pattern=r"[A-za-z]+(?=-)", string=x)[0] if x is not None and "-" in x else x)
     df_data_all_car_brands_cleaned["crawled_timestamp"] = datetime.now()
 
     # Print a status message
